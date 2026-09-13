@@ -13,14 +13,45 @@ export interface ApiResponse<T = any> {
   errors?: any;
 }
 
-const defaultBaseUrl = import.meta?.env?.PROD ? '/api' : 'http://localhost:5000/api';
+/**
+ * Resolves the appropriate API base URL:
+ * - On deployed domains (e.g. *.vercel.app, production): Always uses relative '/api' unless
+ *   a valid remote https:// URL is provided (prevents mixed content/localhost failures).
+ * - On local development (localhost / 127.0.0.1): Uses VITE_API_URL or http://localhost:5000/api.
+ */
+export function getApiBaseUrl(): string {
+  const envUrl = (import.meta as any)?.env?.VITE_API_URL?.trim();
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+    // In production browser environments (Vercel, custom domain)
+    if (!isLocalhost) {
+      if (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+        return '/api';
+      }
+      return envUrl;
+    }
+  }
+
+  return envUrl || (import.meta?.env?.PROD ? '/api' : 'http://localhost:5000/api');
+}
 
 const api = axios.create({
-  baseURL: import.meta?.env?.VITE_API_URL || defaultBaseUrl,
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Dynamically ensure request always targets the correct runtime base URL
+api.interceptors.request.use((config) => {
+  if (!config.baseURL || config.baseURL.includes('localhost')) {
+    config.baseURL = getApiBaseUrl();
+  }
+  return config;
 });
 
 api.interceptors.response.use(

@@ -1,4 +1,4 @@
-import api from './api';
+import api, { getApiBaseUrl } from './api';
 
 export interface HealthData {
   server: 'connected' | 'disconnected';
@@ -23,7 +23,7 @@ export interface HealthStatus {
 export const healthService = {
   async checkHealth(): Promise<HealthStatus> {
     const startTime = performance.now();
-    const apiUrl = api.defaults.baseURL || '/api';
+    const apiUrl = getApiBaseUrl();
     try {
       const res = await api.get<{ data: HealthData }>('/health', {
         headers: { 'Cache-Control': 'no-cache' },

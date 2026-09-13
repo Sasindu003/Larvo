@@ -35,6 +35,7 @@ import {
 } from '../../services/order.service';
 import { useAuth } from '../../context/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
+import { getApiBaseUrl } from '../../services/api';
 
 // ── Status Config & Colors ───────────────────────────────────────────────────
 
@@ -262,7 +263,7 @@ export const AdminOrdersPage: React.FC = () => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    const apiBase = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+    const apiBase = getApiBaseUrl();
     const hostBase = apiBase.replace(/\/api\/?$/, '');
     return `${hostBase}${url.startsWith('/') ? '' : '/'}${url}`;
   };
