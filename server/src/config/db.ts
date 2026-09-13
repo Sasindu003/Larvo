@@ -1,9 +1,15 @@
 import mongoose from 'mongoose';
 import dns from 'dns';
 
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch {}
+// Only use custom DNS fallback in local development on Windows machines with SRV lookup bugs.
+// NEVER override DNS in production on Vercel/AWS Lambda as it breaks internal VPC DNS resolution.
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    if (process.platform === 'win32') {
+      dns.setServers(['8.8.8.8', '1.1.1.1']);
+    }
+  } catch {}
+}
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -21,7 +27,16 @@ if (!global.mongooseCache) {
 }
 
 export const connectDB = async (): Promise<typeof mongoose> => {
-  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || '';
+  let mongoUri = (process.env.MONGO_URI || process.env.MONGODB_URI || '').trim();
+
+  // Strip accidental surrounding quotes if copied with quotes into Vercel env settings
+  if (
+    (mongoUri.startsWith('"') && mongoUri.endsWith('"')) ||
+    (mongoUri.startsWith("'") && mongoUri.endsWith("'"))
+  ) {
+    mongoUri = mongoUri.slice(1, -1).trim();
+  }
+
   if (!mongoUri) {
     throw new Error('Neither MONGO_URI nor MONGODB_URI is defined in environment variables');
   }
@@ -32,13 +47,14 @@ export const connectDB = async (): Promise<typeof mongoose> => {
 
   if (!cached.promise) {
     const opts: mongoose.ConnectOptions = {
+      dbName: 'shop',
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 8000,
       socketTimeoutMS: 45000,
     };
 
     cached.promise = mongoose.connect(mongoUri, opts).then((mongooseInstance) => {
-      console.log(`MongoDB Connected: ${mongooseInstance.connection.host}`);
+      console.log(`MongoDB Connected: ${mongooseInstance.connection.host} (DB: ${mongooseInstance.connection.name})`);
       return mongooseInstance;
     });
   }

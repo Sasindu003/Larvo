@@ -59,10 +59,31 @@ api.interceptors.response.use(
     return response.data as any;
   },
   (error: AxiosError<ApiResponse>) => {
+    let message = error.message || 'An unexpected error occurred';
+    let errors = undefined;
+
+    const resData: any = error.response?.data;
+    if (resData) {
+      if (typeof resData === 'string') {
+        try {
+          const parsed = JSON.parse(resData);
+          message = parsed.error ? `${parsed.message}: ${parsed.error}` : parsed.message || message;
+          errors = parsed.errors;
+        } catch {
+          if (typeof resData.length === 'number' && resData.length < 200) {
+            message = resData;
+          }
+        }
+      } else if (typeof resData === 'object') {
+        message = resData.error ? `${resData.message}: ${resData.error}` : resData.message || message;
+        errors = resData.errors;
+      }
+    }
+
     const normalizedError: ApiError = {
-      message: error.response?.data?.message || error.message || 'An unexpected error occurred',
+      message,
       status: error.response?.status,
-      errors: error.response?.data?.errors,
+      errors,
     };
     return Promise.reject(normalizedError);
   }
