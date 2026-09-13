@@ -40,6 +40,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.end(
       JSON.stringify({
         success: false,
+        data: {
+          server: 'connected',
+          db: 'disconnected',
+        },
         message: 'Failed to connect to database',
         error: (error as Error).message,
       })

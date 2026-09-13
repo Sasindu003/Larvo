@@ -62,6 +62,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     data: {
+      server: 'connected',
       status: 'ok',
       db: dbStatus,
       dbName: isConnected ? mongoose.connection.name : undefined,
