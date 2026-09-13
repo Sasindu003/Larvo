@@ -1,13 +1,18 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import dns from 'dns';
 import { seedDepartments } from './department.seed';
 import { seedCategories } from './category.seed';
 import { seedProducts } from './product.seed';
 
 dotenv.config();
 
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {}
+
 const runAllSeeds = async () => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/shop';
   console.log('==================================================');
   console.log('           STARTING DATABASE SEEDING              ');
   console.log('==================================================');

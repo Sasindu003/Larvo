@@ -1,4 +1,9 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {}
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -16,9 +21,9 @@ if (!global.mongooseCache) {
 }
 
 export const connectDB = async (): Promise<typeof mongoose> => {
-  const mongoUri = process.env.MONGO_URI || '';
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || '';
   if (!mongoUri) {
-    throw new Error('MONGO_URI is not defined in environment variables');
+    throw new Error('Neither MONGO_URI nor MONGODB_URI is defined in environment variables');
   }
 
   if (cached.conn && cached.conn.connection.readyState === 1) {
