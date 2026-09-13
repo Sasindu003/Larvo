@@ -1,5 +1,6 @@
 import { Category, ICategory } from '../models/Category';
 import { Department } from '../models/Department';
+import { Product } from '../models/Product';
 import { AppError } from '../middleware/error.middleware';
 import { CreateCategoryInput, UpdateCategoryInput } from '../validators/category.validator';
 
@@ -128,7 +129,6 @@ export class CategoryService {
       throw new AppError('Category not found', 404);
     }
 
-    const { Product } = await import('../models/Product');
     const activeProductCount = await Product.countDocuments({
       category: categoryId,
       status: 'active',

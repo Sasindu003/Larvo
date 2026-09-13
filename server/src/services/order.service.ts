@@ -78,7 +78,11 @@ export const orderService = {
       if (existing) {
         existing.quantity += item.quantity;
       } else {
-        itemMap.set(key, { ...item });
+        itemMap.set(key, {
+          productId: item.productId,
+          variantSku: item.variantSku,
+          quantity: item.quantity,
+        });
       }
     }
     const consolidatedItems = Array.from(itemMap.values());

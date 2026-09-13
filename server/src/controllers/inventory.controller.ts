@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
-import { inventoryService } from '../services/inventory.service';
+import { inventoryService, AvailabilityItem } from '../services/inventory.service';
 import { z } from 'zod';
 
 const validateInventorySchema = z.array(
@@ -18,7 +18,7 @@ export const validateInventory = asyncHandler(async (req: Request, res: Response
     throw new Error('Invalid input: ' + result.error.errors.map(e => e.message).join(', '));
   }
   
-  const availability = await inventoryService.checkAvailability(result.data);
+  const availability = await inventoryService.checkAvailability(result.data as AvailabilityItem[]);
 
   // SEC-01: If unauthenticated (anonymous guest), strip exact quantity fields to prevent stock scraping.
   // Returns boolean per SKU only ({ sku, ok }), preserving full availability/shortfall for authenticated users.
