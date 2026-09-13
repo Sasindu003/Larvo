@@ -5,6 +5,7 @@ import { router } from './routes/AppRouter';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { DatabaseStatusIndicator } from './components/ui/DatabaseStatusIndicator';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <WishlistProvider>
           <Toaster position="top-center" />
           <RouterProvider router={router} />
+          <DatabaseStatusIndicator />
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>

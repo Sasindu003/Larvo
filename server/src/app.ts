@@ -64,6 +64,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
     data: {
       status: 'ok',
       db: dbStatus,
+      dbName: isConnected ? mongoose.connection.name : undefined,
+      host: isConnected ? mongoose.connection.host : undefined,
+      timestamp: new Date().toISOString(),
     },
   });
 });
