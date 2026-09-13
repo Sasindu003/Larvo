@@ -18,7 +18,10 @@ declare global {
  * Exported as both `protect` (legacy) and `requireAuth` (canonical P19+).
  */
 export const protect = asyncHandler(async (req: Request, _res: Response, next: NextFunction) => {
-  const token = req.cookies?.slt;
+  let token = req.cookies?.slt;
+  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
 
   if (!token) {
     throw new AppError('Not authenticated — please log in', 401);

@@ -29,7 +29,7 @@ function signTokenAndSetCookie(user: any, res: Response) {
   res.cookie('slt', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge,
     path: '/',
   });
@@ -121,6 +121,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.cookie('slt', '', {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     expires: new Date(0),
     path: '/',
   });

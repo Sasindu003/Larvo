@@ -54,6 +54,15 @@ app.use(
   })
 );
 
+// Root & health endpoints
+app.get(['/', '/api'], (_req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'Larvo API is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Public health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
   const isConnected = mongoose.connection.readyState === 1;
