@@ -57,9 +57,12 @@ export const invoiceService = {
    * Get direct URL to the PDF stream endpoint.
    */
   getInvoicePdfUrl(orderId: string): string {
+    const isLocal =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const base = (
-      (import.meta?.env?.VITE_API_URL as string) ||
-      (import.meta?.env?.PROD
+      import.meta.env.VITE_API_URL ||
+      (!isLocal
         ? 'https://larvo-server.vercel.app/api'
         : 'http://localhost:5000/api')
     ).replace(/\/+$/, '');

@@ -262,9 +262,12 @@ export const AdminOrdersPage: React.FC = () => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
+    const isLocal =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const apiBase =
-      ((import.meta as any).env?.VITE_API_URL as string) ||
-      (import.meta?.env?.PROD
+      (import.meta as any).env?.VITE_API_URL ||
+      (!isLocal
         ? 'https://larvo-server.vercel.app/api'
         : 'http://localhost:5000/api');
     const hostBase = apiBase.replace(/\/api\/?$/, '');
