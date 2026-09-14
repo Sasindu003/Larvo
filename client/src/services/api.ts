@@ -13,10 +13,11 @@ export interface ApiResponse<T = any> {
   errors?: any;
 }
 
-const baseURL = import.meta?.env?.VITE_API_URL as string;
-if (!baseURL) {
-  throw new Error('[Larvo] VITE_API_URL is not defined. Check client/.env or your Vercel project environment variables.');
-}
+const baseURL: string =
+  (import.meta?.env?.VITE_API_URL as string) ||
+  (import.meta?.env?.PROD
+    ? 'https://larvo-server.vercel.app/api'
+    : 'http://localhost:5000/api');
 
 const api = axios.create({
   baseURL,

@@ -57,7 +57,12 @@ export const invoiceService = {
    * Get direct URL to the PDF stream endpoint.
    */
   getInvoicePdfUrl(orderId: string): string {
-    const base = ((import.meta?.env?.VITE_API_URL as string) || '').replace(/\/+$/, '');
+    const base = (
+      (import.meta?.env?.VITE_API_URL as string) ||
+      (import.meta?.env?.PROD
+        ? 'https://larvo-server.vercel.app/api'
+        : 'http://localhost:5000/api')
+    ).replace(/\/+$/, '');
     return `${base}/invoices/${orderId}/pdf`;
   },
 
