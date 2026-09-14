@@ -1,12 +1,6 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-// Configure axios to send cookies with every request
-const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-});
+import api, { ApiResponse } from './api';
+import type { UserRole } from '../config/roles';
+import type { Address } from './user.service';
 
 export interface RegisterData {
   name: string;
@@ -19,9 +13,6 @@ export interface LoginData {
   password: string;
 }
 
-import type { UserRole } from '../config/roles';
-import type { Address } from './user.service';
-
 export interface User {
   _id: string;
   name: string;
@@ -33,7 +24,10 @@ export interface User {
 }
 
 function extractError(error: any): never {
-  if (error.response?.data?.message) {
+  if (error?.message) {
+    throw new Error(error.message);
+  }
+  if (error?.response?.data?.message) {
     throw new Error(error.response.data.message);
   }
   throw error;
@@ -43,7 +37,7 @@ export const authService = {
   async register(data: RegisterData) {
     try {
       const res = await api.post('/auth/register', data);
-      return res.data;
+      return res;
     } catch (error: any) {
       extractError(error);
     }
@@ -52,7 +46,7 @@ export const authService = {
   async login(data: LoginData) {
     try {
       const res = await api.post('/auth/login', data);
-      return res.data;
+      return res;
     } catch (error: any) {
       extractError(error);
     }
@@ -61,7 +55,7 @@ export const authService = {
   async logout() {
     try {
       const res = await api.post('/auth/logout');
-      return res.data;
+      return res;
     } catch (error: any) {
       extractError(error);
     }
@@ -69,8 +63,8 @@ export const authService = {
 
   async getMe(): Promise<User> {
     try {
-      const res = await api.get('/auth/me');
-      return res.data.data.user;
+      const res = await api.get<ApiResponse<{ user: User }>>('/auth/me');
+      return (res as any).data?.user || (res as any).data || (res as any);
     } catch (error: any) {
       extractError(error);
     }
@@ -79,7 +73,7 @@ export const authService = {
   async googleLogin(credential: string) {
     try {
       const res = await api.post('/auth/google', { credential });
-      return res.data;
+      return res;
     } catch (error: any) {
       extractError(error);
     }

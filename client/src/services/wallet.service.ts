@@ -1,11 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-});
+import api, { ApiResponse } from './api';
 
 export const POINT_VALUE = 0.01;
 
@@ -78,14 +71,11 @@ export interface PaginatedAdminWallets {
   pages: number;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
 function extractError(error: any): never {
-  if (error.response?.data?.message) {
+  if (error?.message) {
+    throw new Error(error.message);
+  }
+  if (error?.response?.data?.message) {
     throw new Error(error.response.data.message);
   }
   throw error;
@@ -98,7 +88,7 @@ export const walletService = {
   async getMyWallet(): Promise<Wallet> {
     try {
       const res = await api.get<ApiResponse<Wallet>>('/wallet/me');
-      return res.data.data;
+      return (res as any).data || (res as any);
     } catch (err) {
       return extractError(err);
     }
@@ -112,7 +102,7 @@ export const walletService = {
       const res = await api.get<ApiResponse<PaginatedTransactions>>('/wallet/me/transactions', {
         params: { page, limit },
       });
-      return res.data.data;
+      return (res as any).data || (res as any);
     } catch (err) {
       return extractError(err);
     }
@@ -130,7 +120,7 @@ export const walletService = {
       const res = await api.get<ApiResponse<PaginatedAdminWallets>>('/admin/wallets', {
         params,
       });
-      return res.data.data;
+      return (res as any).data || (res as any);
     } catch (err) {
       return extractError(err);
     }
@@ -142,7 +132,7 @@ export const walletService = {
   async getAdminWalletByUser(userId: string): Promise<AdminWallet> {
     try {
       const res = await api.get<ApiResponse<AdminWallet>>(`/admin/wallets/${userId}`);
-      return res.data.data;
+      return (res as any).data || (res as any);
     } catch (err) {
       return extractError(err);
     }
@@ -163,7 +153,7 @@ export const walletService = {
           params: { page, limit },
         }
       );
-      return res.data.data;
+      return (res as any).data || (res as any);
     } catch (err) {
       return extractError(err);
     }
@@ -184,7 +174,7 @@ export const walletService = {
       const res = await api.post<
         ApiResponse<{ wallet: AdminWallet; transaction: PointsTransaction }>
       >(`/admin/wallets/${userId}/adjust`, data);
-      return res.data.data;
+      return (res as any).data || (res as any);
     } catch (err) {
       return extractError(err);
     }

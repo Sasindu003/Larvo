@@ -262,7 +262,7 @@ export const AdminOrdersPage: React.FC = () => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    const apiBase = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+    const apiBase = ((import.meta as any).env?.VITE_API_URL as string) || '';
     const hostBase = apiBase.replace(/\/api\/?$/, '');
     return `${hostBase}${url.startsWith('/') ? '' : '/'}${url}`;
   };
