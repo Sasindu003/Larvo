@@ -204,22 +204,35 @@ export const AdminProductsPage: React.FC = () => {
 
   const openEdit = (p: Product) => {
     const cat = typeof p.category === 'object' ? (p.category as Category) : null;
+    const catId = cat ? cat._id : typeof p.category === 'string' ? p.category : '';
+    const fullCat = cat?.department ? cat : categories.find((c) => c._id === catId);
+    const dept = fullCat?.department;
     const deptId =
-      cat && typeof cat.department === 'object'
-        ? (cat.department as any)._id
-        : typeof cat?.department === 'string'
-        ? cat.department
+      dept && typeof dept === 'object'
+        ? (dept as any)._id
+        : typeof dept === 'string'
+        ? dept
         : '';
+
+    if (deptId) {
+      const cats = categories.filter((c) => {
+        const d = c.department;
+        if (!d) return false;
+        const dId = typeof d === 'object' ? (d as any)._id : d;
+        return dId === deptId;
+      });
+      setFilteredCats(cats);
+    }
 
     setEditTarget(p);
     setForm({
       name: p.name,
       description: p.description,
       departmentId: deptId,
-      categoryId: cat ? cat._id : typeof p.category === 'string' ? p.category : '',
+      categoryId: catId,
       images: p.images.join('\n'),
       basePrice: String(p.basePrice),
-      discountPrice: p.discountPrice !== null ? String(p.discountPrice) : '',
+      discountPrice: p.discountPrice !== null && p.discountPrice !== undefined ? String(p.discountPrice) : '',
       status: p.status,
       variants: p.variants.map((v) => ({
         id: Math.random().toString(36).slice(2),
@@ -279,8 +292,8 @@ export const AdminProductsPage: React.FC = () => {
       if (isNaN(v.stock) || v.stock < 0) return setFormError(`Stock must be ≥ 0 for ${v.sku}.`);
     }
 
-    const discountPrice = form.discountPrice ? Number(form.discountPrice) : null;
-    if (discountPrice !== null && discountPrice >= Number(form.basePrice))
+    const discountPrice = form.discountPrice.trim() !== '' ? Number(form.discountPrice) : null;
+    if (discountPrice !== null && !isNaN(discountPrice) && discountPrice >= Number(form.basePrice))
       return setFormError('Discount price must be less than base price.');
 
     setSubmitting(true);

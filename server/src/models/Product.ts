@@ -121,9 +121,17 @@ const productSchema = new Schema<IProduct>(
       default: null,
       min: [0, 'Discount price cannot be negative'],
       validate: {
-        validator(this: IProduct, val: number | null) {
-          if (val === null) return true;
-          return val < this.basePrice;
+        validator(this: any, val: number | null) {
+          if (val === null || val === undefined) return true;
+          let basePrice = this?.basePrice;
+          if (basePrice === undefined && this && typeof this.getUpdate === 'function') {
+            const update = this.getUpdate();
+            basePrice = update?.$set?.basePrice ?? update?.basePrice;
+          }
+          if (basePrice !== undefined && basePrice !== null) {
+            return val < basePrice;
+          }
+          return true;
         },
         message: 'Discount price must be less than the base price',
       },

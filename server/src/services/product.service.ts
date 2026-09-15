@@ -301,7 +301,7 @@ export const productService = {
     const [total, items] = await Promise.all([
       Product.countDocuments(filter),
       Product.find(filter)
-        .populate('category', 'name slug')
+        .populate('category', 'name slug department')
         .populate('variants.supplier', 'name companyName email status')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -380,6 +380,25 @@ export const productService = {
 
     if (input.category && input.category !== existing.category.toString()) {
       await this.validateProductCategory(input.category);
+    }
+
+    const effectiveBasePrice = input.basePrice !== undefined ? Number(input.basePrice) : existing.basePrice;
+    const effectiveDiscountPrice =
+      input.discountPrice !== undefined
+        ? input.discountPrice === null
+          ? null
+          : Number(input.discountPrice)
+        : existing.discountPrice;
+
+    if (
+      effectiveDiscountPrice !== null &&
+      effectiveDiscountPrice !== undefined &&
+      !isNaN(effectiveDiscountPrice) &&
+      effectiveBasePrice !== undefined &&
+      !isNaN(effectiveBasePrice) &&
+      effectiveDiscountPrice >= effectiveBasePrice
+    ) {
+      throw new AppError('Discount price must be less than the base price', 400);
     }
 
     if (input.variants && input.variants.length > 0) {
