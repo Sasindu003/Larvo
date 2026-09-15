@@ -17,6 +17,7 @@ import {
   LogOut,
   Wallet,
   Package,
+  Truck,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { categoryService, Category } from '../../services/category.service';
@@ -33,6 +34,7 @@ export const Header: React.FC = () => {
   const { totalWishlist } = useWishlist();
   const isAuthenticated = status === 'authenticated';
   const isAdminUser = user && ['staff', 'admin', 'owner'].includes(user.role);
+  const isDeliveryUser = user && ['delivery_manager', 'admin', 'owner'].includes(user.role);
 
   const handleLogout = async () => {
     try {
@@ -541,6 +543,18 @@ export const Header: React.FC = () => {
               </span>
             </button>
 
+            {/* Delivery Portal Shortcut — for delivery_manager / admin / owner */}
+            {isDeliveryUser && (
+              <Link
+                to="/delivery/orders"
+                className="hidden sm:inline-flex p-2 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-full transition-colors"
+                title="Delivery Portal"
+                aria-label="Delivery Portal"
+              >
+                <Truck className="w-5 h-5" />
+              </Link>
+            )}
+
             {/* Admin Portal Shortcut — only for staff/admin/owner */}
             {isAdminUser && (
               <Link
@@ -602,6 +616,16 @@ export const Header: React.FC = () => {
                           <Wallet className="w-3.5 h-3.5 text-ink-500" />
                           <span>Reward Points & Wallet</span>
                         </Link>
+                        {isDeliveryUser && (
+                          <Link
+                            to="/delivery/orders"
+                            onClick={() => setAccountDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs text-sky-700 hover:bg-sky-50 transition-colors font-medium"
+                          >
+                            <Truck className="w-3.5 h-3.5 text-sky-600" />
+                            <span>Delivery Portal</span>
+                          </Link>
+                        )}
                         {isAdminUser && (
                           <Link
                             to="/admin"
@@ -943,14 +967,27 @@ export const Header: React.FC = () => {
                   <span>Reward Points & Wallet</span>
                 </Link>
 
-                <Link
-                  to="/admin"
-                  onClick={() => setDrawerOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-amber-800 hover:bg-amber-50 transition-colors"
-                >
-                  <Shield className="w-4 h-4 text-amber-600" />
-                  <span>Admin / Staff Portal</span>
-                </Link>
+                {isDeliveryUser && (
+                  <Link
+                    to="/delivery/orders"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-sky-800 hover:bg-sky-50 transition-colors"
+                  >
+                    <Truck className="w-4 h-4 text-sky-600" />
+                    <span>Delivery Portal</span>
+                  </Link>
+                )}
+
+                {isAdminUser && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-amber-800 hover:bg-amber-50 transition-colors"
+                  >
+                    <Shield className="w-4 h-4 text-amber-600" />
+                    <span>Admin / Staff Portal</span>
+                  </Link>
+                )}
               </div>
             </div>
 

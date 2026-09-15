@@ -84,6 +84,14 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     allowedRoles: ROLES.STAFF_AND_ABOVE,
   },
   {
+    title: 'Delivery Ops',
+    slug: 'delivery',
+    href: '/delivery/orders',
+    iconName: 'Truck',
+    description: 'Courier dispatch & fulfillment queue',
+    allowedRoles: ROLES.DELIVERY,
+  },
+  {
     title: 'Returns',
     slug: 'returns',
     href: '/admin/returns',

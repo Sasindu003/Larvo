@@ -33,8 +33,8 @@ interface AuthContextValue {
   status: AuthStatus;
   /** true during initial /me check — use to avoid flashing logged-out state */
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  googleLogin: (credential: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  googleLogin: (credential: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -66,11 +66,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     const res = await authService.login({ email, password });
     dispatch({ type: 'SET_USER', user: res.data.user });
+    return res.data.user;
   };
 
   const googleLogin = async (credential: string) => {
     const res = await authService.googleLogin(credential);
     dispatch({ type: 'SET_USER', user: res.data.user });
+    return res.data.user;
   };
 
   const logout = async () => {

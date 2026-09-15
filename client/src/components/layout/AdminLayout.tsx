@@ -128,6 +128,18 @@ export const AdminLayout: React.FC = () => {
             <span className="hidden sm:inline">Storefront</span>
           </Link>
 
+          {/* Quick link to Delivery Portal */}
+          {(user.role === 'admin' || user.role === 'owner' || user.role === 'delivery_manager') && (
+            <Link
+              to="/delivery/orders"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sky-400 hover:text-white hover:bg-sky-950/60 rounded-lg border border-sky-800/60 transition-colors"
+              title="Open Delivery Operations Portal"
+            >
+              <Truck className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden sm:inline">Delivery Portal</span>
+            </Link>
+          )}
+
           {/* Current User Pill */}
           <div className="flex items-center gap-2.5 pl-3 border-l border-slate-800">
             <div className="text-right hidden sm:block">
