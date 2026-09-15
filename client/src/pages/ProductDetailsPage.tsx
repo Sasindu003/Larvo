@@ -460,7 +460,6 @@ export const ProductDetailsPage: React.FC = () => {
                   ))}
                 </span>
                 <span className="text-xs font-semibold text-ink-700">{product.ratingAvg.toFixed(1)}</span>
-                <span className="text-xs text-ink-400">({product.ratingCount} reviews)</span>
               </div>
             )}
           </div>
@@ -667,13 +666,6 @@ export const ProductDetailsPage: React.FC = () => {
               <span>{selectedVariant.material}</span>
             </div>
           )}
-
-          {/* ── Reviews Placeholder ────────────────────────────────────── */}
-          <div className="border border-dashed border-sand-300 rounded-xl p-5 text-center mt-2 bg-sand-50">
-            <p className="text-xs font-semibold uppercase tracking-widest text-ink-400">
-              Customer Reviews — Coming in P30
-            </p>
-          </div>
         </div>
       </div>
     </div>
