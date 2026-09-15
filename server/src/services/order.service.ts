@@ -132,6 +132,7 @@ export const orderService = {
           color: variant.color,
           unitPrice,
           quantity: item.quantity,
+          lineTotal: unitPrice * item.quantity,
         });
       }
 

@@ -750,10 +750,14 @@ export const CheckoutPage: React.FC = () => {
   }
 
   // Summary calculations (uses createdOrder values if order already created, else cart/coupon)
-  const effectiveSubtotal = createdOrder ? createdOrder.subtotal : subtotal;
-  const discountAmount = createdOrder ? createdOrder.discountTotal : (appliedCoupon?.discountAmount || 0);
-  const shippingFee = createdOrder ? createdOrder.shippingFee : (subtotal >= 1500 ? 0 : 60);
-  const grandTotal = createdOrder ? createdOrder.total : (Math.max(0, subtotal - discountAmount) + shippingFee);
+  const effectiveSubtotal = createdOrder ? (createdOrder.subtotal ?? subtotal) : subtotal;
+  const discountAmount = createdOrder
+    ? (createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0)
+    : (appliedCoupon?.discountAmount || 0);
+  const shippingFee = createdOrder ? (createdOrder.shippingFee ?? 0) : (subtotal >= 1500 ? 0 : 60);
+  const grandTotal = createdOrder
+    ? (createdOrder.total ?? 0)
+    : (Math.max(0, subtotal - discountAmount) + shippingFee);
   const pointsRequired = Math.ceil(grandTotal / 0.01);
 
   return (
@@ -2202,7 +2206,7 @@ export const CheckoutPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Package className="w-5 h-5 text-ink-700" />
                         <h3 className="font-display font-bold text-ink-950 text-base">
-                          Purchased Items ({createdOrder.items.reduce((s, i) => s + i.quantity, 0)})
+                          Purchased Items ({createdOrder.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0})
                         </h3>
                       </div>
                       <span className="text-xs text-ink-500 font-medium">Standard Delivery</span>
@@ -2239,11 +2243,11 @@ export const CheckoutPage: React.FC = () => {
 
                           <div className="text-right flex-shrink-0">
                             <span className="text-sm font-bold text-ink-950">
-                              ৳{item.lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              ৳{((item.lineTotal ?? (item.unitPrice * item.quantity)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </span>
                             {item.quantity > 1 && (
                               <p className="text-[11px] text-ink-500">
-                                ৳{item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} each
+                                ৳{(item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} each
                               </p>
                             )}
                           </div>
@@ -2264,12 +2268,12 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                       <div className="text-xs text-ink-600 space-y-1 pl-6">
                         <p className="font-semibold text-ink-950 text-sm">{user?.name || 'Customer'}</p>
-                        <p>{createdOrder.shippingAddress.line1}</p>
-                        {createdOrder.shippingAddress.line2 && <p>{createdOrder.shippingAddress.line2}</p>}
+                        <p>{createdOrder.shippingAddress?.line1}</p>
+                        {createdOrder.shippingAddress?.line2 && <p>{createdOrder.shippingAddress.line2}</p>}
                         <p>
-                          {createdOrder.shippingAddress.city}, {createdOrder.shippingAddress.province || ''} {createdOrder.shippingAddress.postalCode}
+                          {createdOrder.shippingAddress?.city}, {createdOrder.shippingAddress?.province || ''} {createdOrder.shippingAddress?.postalCode}
                         </p>
-                        <p>{createdOrder.shippingAddress.country}</p>
+                        <p>{createdOrder.shippingAddress?.country}</p>
                       </div>
                     </div>
 
@@ -2283,24 +2287,24 @@ export const CheckoutPage: React.FC = () => {
                         <div className="flex justify-between">
                           <span>Subtotal:</span>
                           <span className="font-medium text-ink-900">
-                            ৳{createdOrder.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            ৳{(createdOrder.subtotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </span>
                         </div>
-                        {createdOrder.discountTotal > 0 && (
+                        {((createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0) > 0) && (
                           <div className="flex justify-between text-emerald-700 font-semibold">
                             <span>Discount:</span>
-                            <span>-৳{createdOrder.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            <span>-৳{(createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
                           <span>Shipping:</span>
                           <span className="font-medium text-ink-900">
-                            {createdOrder.shippingFee === 0 ? 'FREE' : `৳${createdOrder.shippingFee.toFixed(2)}`}
+                            {(createdOrder.shippingFee ?? 0) === 0 ? 'FREE' : `৳${(createdOrder.shippingFee ?? 0).toFixed(2)}`}
                           </span>
                         </div>
                         <div className="border-t border-sand-200 pt-2 flex justify-between font-bold text-sm text-ink-950">
                           <span>Total:</span>
-                          <span>৳{createdOrder.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          <span>৳{(createdOrder.total ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="pt-1.5 text-[11px] text-ink-500">
                           Method:{' '}
@@ -2403,13 +2407,13 @@ export const CheckoutPage: React.FC = () => {
 
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex justify-between text-ink-600">
-                  <span>Items Subtotal ({createdOrder ? createdOrder.items.reduce((s, i) => s + i.quantity, 0) : totalItems})</span>
+                  <span>Items Subtotal ({createdOrder ? (createdOrder.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0) : totalItems})</span>
                   <span className="font-semibold text-ink-950">
                     ৳{effectiveSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 
-                {(appliedCoupon || (createdOrder && createdOrder.discountTotal > 0)) && (
+                {(appliedCoupon || (createdOrder && (createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0) > 0)) && (
                   <div className="flex justify-between text-emerald-700 text-xs sm:text-sm font-semibold">
                     <span className="flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />

@@ -21,6 +21,7 @@ export interface IOrderItem {
   color: string;
   unitPrice: number;
   quantity: number;
+  lineTotal?: number;
 }
 
 export interface IAddressSnapshot {
@@ -60,8 +61,9 @@ const orderItemSchema = new Schema<IOrderItem>(
     color: { type: String, required: true },
     unitPrice: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
+    lineTotal: { type: Number },
   },
-  { _id: false }
+  { _id: false, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 const addressSchema = new Schema<IAddressSnapshot>(
@@ -114,8 +116,16 @@ const orderSchema = new Schema<IOrder>(
     deliveredAt: { type: Date, default: null },
     pointsPaid: { type: Number, default: 0, min: 0 },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
+
+orderSchema.virtual('discountTotal').get(function (this: IOrder) {
+  return this.discountAmount ?? 0;
+});
 
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
