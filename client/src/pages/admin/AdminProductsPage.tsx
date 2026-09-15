@@ -3,6 +3,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Archive,
+  ArchiveRestore,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -95,7 +96,7 @@ const StatusBadge: React.FC<{ status: ProductStatus }> = ({ status }) => {
 
 export const AdminProductsPage: React.FC = () => {
   const { user } = useAuth();
-  const canArchive = user?.role === 'admin' || user?.role === 'owner';
+  const canArchive = user?.role === 'staff' || user?.role === 'admin' || user?.role === 'owner';
 
   // List state
   const [products, setProducts] = useState<Product[]>([]);
@@ -340,12 +341,23 @@ export const AdminProductsPage: React.FC = () => {
     setArchiving(true);
     try {
       await productService.archiveProduct(archiveTarget._id);
+      toast.success('Product archived successfully');
       setArchiveTarget(null);
       fetchProducts(page, search, statusFilter);
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Archive failed.');
+      toast.error(err?.message || 'Archive failed.');
     } finally {
       setArchiving(false);
+    }
+  };
+
+  const handleRestore = async (product: Product) => {
+    try {
+      await productService.updateProduct(product._id, { status: 'active' });
+      toast.success(`'${product.name}' restored to active status`);
+      fetchProducts(page, search, statusFilter);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to restore product.');
     }
   };
 
@@ -510,14 +522,24 @@ export const AdminProductsPage: React.FC = () => {
                         >
                           <Edit2 size={15} />
                         </button>
-                        {canArchive && p.status !== 'archived' && (
-                          <button
-                            onClick={() => setArchiveTarget(p)}
-                            title="Archive"
-                            className="p-1.5 rounded-md hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
-                          >
-                            <Archive size={15} />
-                          </button>
+                        {canArchive && (
+                          p.status === 'archived' ? (
+                            <button
+                              onClick={() => handleRestore(p)}
+                              title="Restore to Active"
+                              className="p-1.5 rounded-md hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 transition-colors"
+                            >
+                              <ArchiveRestore size={15} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setArchiveTarget(p)}
+                              title="Archive"
+                              className="p-1.5 rounded-md hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
+                            >
+                              <Archive size={15} />
+                            </button>
+                          )
                         )}
                       </div>
                     </td>

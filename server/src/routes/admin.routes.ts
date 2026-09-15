@@ -151,7 +151,7 @@ router.patch(
 router.delete(
   '/products/:id',
   requireAuth,
-  requireRole('admin', 'owner'),
+  requireRole('staff', 'admin', 'owner'),
   archiveProduct
 );
 
