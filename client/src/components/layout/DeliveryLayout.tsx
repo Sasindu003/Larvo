@@ -135,13 +135,15 @@ export const DeliveryLayout: React.FC = () => {
 
         {/* Right User & Actions */}
         <div className="flex items-center gap-3">
-          <Link
-            to="/"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Storefront
-          </Link>
+          {(user.role === 'admin' || user.role === 'owner') && (
+            <Link
+              to="/"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Storefront
+            </Link>
+          )}
 
           <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-800 text-xs">
             <div className="text-right">
@@ -211,14 +213,16 @@ export const DeliveryLayout: React.FC = () => {
             })}
 
             <div className="pt-4 border-t border-slate-800 space-y-2">
-              <Link
-                to="/"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2.5 p-3 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Return to Storefront
-              </Link>
+              {(user.role === 'admin' || user.role === 'owner') && (
+                <Link
+                  to="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 p-3 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Return to Storefront
+                </Link>
+              )}
 
               {(user.role === 'admin' || user.role === 'owner') && (
                 <Link
