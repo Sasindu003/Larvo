@@ -334,7 +334,7 @@ export const orderService = {
   async submitPaymentSlip(
     userId: string | Types.ObjectId,
     orderId: string,
-    slipFilename: string
+    slipUrlOrFilename: string
   ): Promise<{ order: IOrder; payment: IPayment }> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
@@ -364,7 +364,9 @@ export const orderService = {
       }
     }
 
-    const slipImageUrl = `/uploads/payment-slips/${slipFilename}`;
+    const slipImageUrl = slipUrlOrFilename.startsWith('/')
+      ? slipUrlOrFilename
+      : `/api/files/${slipUrlOrFilename}`;
 
     const payment = await Payment.findOneAndUpdate(
       { order: order._id },

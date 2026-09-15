@@ -23,11 +23,13 @@ import deliveryRoutes from './routes/delivery.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import staffRoutes from './routes/staff.routes';
 import returnRoutes from './routes/return.routes';
+import fileRoutes from './routes/file.routes';
 
 const app = express();
 
-// Serve uploaded files statically (dev mode; replace with cloud bucket in prod)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Stream files (payment slips, images) directly from MongoDB GridFS
+app.use(['/uploads', '/api/uploads'], fileRoutes);
+app.use('/api/files', fileRoutes);
 
 // Body parsers & cookies
 app.use(express.json());

@@ -7,6 +7,7 @@ import { CreateOrderSchema } from '../validators/order.validator';
 import { SimulatePaymentSchema } from '../validators/simulate-payment.validator';
 import { UpdateOrderStatusSchema } from '../validators/update-status.validator';
 import { UpdateTrackingSchema } from '../validators/update-tracking.validator';
+import { uploadToGridFS } from '../services/gridfs.service';
 
 /**
  * @desc    Create a new order in pending_payment status
@@ -80,12 +81,27 @@ export const uploadPaymentSlip = asyncHandler(async (req: Request, res: Response
     throw new AppError('Authentication required', 401);
   }
 
-  if (!req.file) {
+  if (!req.file || !req.file.buffer) {
     throw new AppError('Payment slip file is required', 400);
   }
 
   const { orderId } = req.params;
-  const result = await orderService.submitPaymentSlip(req.user._id, orderId, req.file.filename);
+
+  const sanitizedOriginalName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const uniqueFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${sanitizedOriginalName}`;
+
+  const gridFile = await uploadToGridFS(
+    req.file.buffer,
+    uniqueFilename,
+    req.file.mimetype,
+    {
+      orderId,
+      uploadedBy: req.user._id.toString(),
+      type: 'payment_slip',
+    }
+  );
+
+  const result = await orderService.submitPaymentSlip(req.user._id, orderId, gridFile.url);
 
   res.status(200).json({
     success: true,
