@@ -247,14 +247,14 @@ export const WalletPage: React.FC = () => {
             <p className="text-xs text-sand-300 mt-1">
               Worth{' '}
               <strong className="text-white font-semibold">
-                ৳{fiatEquivalent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                Rs. {fiatEquivalent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </strong>{' '}
               on your next purchase
             </p>
           </div>
 
           <div className="mt-6 pt-4 border-t border-ink-800/80 flex items-center justify-between text-[11px] text-sand-400">
-            <span>Rate: 100 pts = ৳1.00</span>
+            <span>Rate: 100 pts = Rs. 1.00</span>
             <Link
               to="/products"
               className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"

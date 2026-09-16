@@ -199,7 +199,7 @@ export const couponService = {
     if (coupon.minOrderAmount != null && subtotal < coupon.minOrderAmount) {
       return {
         valid: false,
-        message: `Minimum order amount of ৳${coupon.minOrderAmount} required`,
+        message: `Minimum order amount of Rs. ${coupon.minOrderAmount} required`,
       };
     }
 

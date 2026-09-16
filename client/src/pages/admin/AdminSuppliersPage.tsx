@@ -876,7 +876,7 @@ export const AdminSuppliersPage: React.FC = () => {
                               <span className="text-[10px] text-slate-500 font-mono">/{p.slug}</span>
                             </div>
                           </div>
-                          <span className="text-xs font-semibold text-slate-700 flex-shrink-0 ml-2">৳{p.basePrice.toLocaleString()}</span>
+                          <span className="text-xs font-semibold text-slate-700 flex-shrink-0 ml-2">Rs. {p.basePrice.toLocaleString()}</span>
                         </div>
 
                         {/* Variants pill list */}

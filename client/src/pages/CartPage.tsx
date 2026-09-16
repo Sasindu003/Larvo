@@ -86,7 +86,7 @@ export const CartPage: React.FC = () => {
                         {item.name}
                       </Link>
                       <span className="font-bold text-ink-950 text-base whitespace-nowrap">
-                        ${(item.unitPrice * item.quantity).toFixed(2)}
+                        Rs. {(item.unitPrice * item.quantity).toFixed(2)}
                       </span>
                     </div>
 
@@ -103,7 +103,7 @@ export const CartPage: React.FC = () => {
                     </div>
 
                     <p className="text-xs text-ink-500 pt-0.5">
-                      ${item.unitPrice.toFixed(2)} each
+                      Rs. {item.unitPrice.toFixed(2)} each
                     </p>
                   </div>
 
@@ -166,13 +166,13 @@ export const CartPage: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div className="flex justify-between text-ink-600">
                 <span>Items Subtotal ({totalItems})</span>
-                <span className="font-semibold text-ink-950">${subtotal.toFixed(2)}</span>
+                <span className="font-semibold text-ink-950">Rs. {subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-ink-600">
                 <span>Shipping</span>
                 <span className="font-semibold text-ink-950">
-                  {subtotal >= 150 ? (
-                    <span className="text-emerald-700 font-bold">FREE (over $150)</span>
+                  {subtotal >= 1500 ? (
+                    <span className="text-emerald-700 font-bold">FREE (over Rs. 1,500)</span>
                   ) : (
                     'Calculated at checkout'
                   )}
@@ -180,7 +180,7 @@ export const CartPage: React.FC = () => {
               </div>
               <div className="border-t border-sand-200 pt-3 flex justify-between text-sm font-bold text-ink-950">
                 <span>Total Amount</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>Rs. {subtotal.toFixed(2)}</span>
               </div>
             </div>
 

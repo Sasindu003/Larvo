@@ -98,7 +98,7 @@ function uniqueColors(variants: ProductVariant[]): string[] {
 }
 
 function formatPrice(price: number): string {
-  return `$${price.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
+  return `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────

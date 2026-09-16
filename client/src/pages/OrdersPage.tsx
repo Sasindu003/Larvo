@@ -420,7 +420,7 @@ export const OrdersPage: React.FC = () => {
               <div>
                 <span className="text-xs text-ink-500 block">Total Amount</span>
                 <span className="text-2xl font-bold font-display text-ink-950">
-                  ${selectedOrder.total?.toLocaleString() || '0'}
+                  Rs. {selectedOrder.total?.toLocaleString() || '0'}
                 </span>
               </div>
               {selectedOrder.status !== 'pending_payment' &&
@@ -740,9 +740,9 @@ export const OrdersPage: React.FC = () => {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold text-ink-900">
-                      ${(item.unitPrice * item.quantity).toLocaleString()}
+                      Rs. {(item.unitPrice * item.quantity).toLocaleString()}
                     </p>
-                    <p className="text-[10px] text-ink-400">${item.unitPrice} each</p>
+                    <p className="text-[10px] text-ink-400">Rs. {item.unitPrice} each</p>
                   </div>
                 </div>
               ))}
@@ -784,23 +784,23 @@ export const OrdersPage: React.FC = () => {
               <div className="space-y-2 text-xs divide-y divide-sand-50">
                 <div className="flex justify-between text-ink-600 pt-1">
                   <span>Subtotal</span>
-                  <span className="font-medium text-ink-900">${selectedOrder.subtotal?.toLocaleString() || '0'}</span>
+                  <span className="font-medium text-ink-900">Rs. {selectedOrder.subtotal?.toLocaleString() || '0'}</span>
                 </div>
                 {selectedOrder.discountAmount ? (
                   <div className="flex justify-between text-teal-700 pt-2">
                     <span>Discount {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
-                    <span className="font-semibold">-${selectedOrder.discountAmount.toLocaleString()}</span>
+                    <span className="font-semibold">-Rs. {selectedOrder.discountAmount.toLocaleString()}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between text-ink-600 pt-2">
                   <span>Shipping Fee</span>
                   <span className="font-medium text-ink-900">
-                    {selectedOrder.shippingFee === 0 ? 'Free' : `$${selectedOrder.shippingFee}`}
+                    {selectedOrder.shippingFee === 0 ? 'Free' : `Rs. ${selectedOrder.shippingFee}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-ink-950 font-bold text-sm pt-3 border-t border-sand-200">
                   <span>Total</span>
-                  <span>${selectedOrder.total?.toLocaleString() || '0'}</span>
+                  <span>Rs. {selectedOrder.total?.toLocaleString() || '0'}</span>
                 </div>
                 {selectedOrder.pointsPaid > 0 && (
                   <div className="flex justify-between text-amber-700 font-semibold pt-2">
@@ -1128,7 +1128,7 @@ export const OrdersPage: React.FC = () => {
 
                   <div className="text-right">
                     <span className="text-base sm:text-lg font-bold font-display text-ink-950">
-                      ${order.total?.toLocaleString() || '0'}
+                      Rs. {order.total?.toLocaleString() || '0'}
                     </span>
                     <span className="text-[11px] text-ink-400 block">
                       {order.items.reduce((sum, it) => sum + it.quantity, 0)} items

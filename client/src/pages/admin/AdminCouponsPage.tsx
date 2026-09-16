@@ -346,20 +346,20 @@ export const AdminCouponsPage: React.FC = () => {
                               <span>{c.discountValue}% Off</span>
                               {c.maxDiscountAmount && (
                                 <span className="text-[10px] text-slate-500 font-normal">
-                                  (up to ৳{c.maxDiscountAmount})
+                                  (up to Rs. {c.maxDiscountAmount})
                                 </span>
                               )}
                             </>
                           ) : (
                             <>
                               <Coins className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>৳{c.discountValue} Flat</span>
+                              <span>Rs. {c.discountValue} Flat</span>
                             </>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-slate-300">
-                        {c.minOrderAmount > 0 ? `৳${c.minOrderAmount}` : 'None'}
+                        {c.minOrderAmount > 0 ? `Rs. ${c.minOrderAmount}` : 'None'}
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-[11px] text-slate-400 flex items-center gap-1">
@@ -496,12 +496,12 @@ export const AdminCouponsPage: React.FC = () => {
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-violet-500"
                   >
                     <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount (৳)</option>
+                    <option value="fixed">Fixed Amount (Rs.)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">
-                    {form.discountType === 'percentage' ? 'Discount Percentage (%) *' : 'Discount Value (৳) *'}
+                    {form.discountType === 'percentage' ? 'Discount Percentage (%) *' : 'Discount Value (Rs.) *'}
                   </label>
                   <input
                     type="number"
@@ -520,7 +520,7 @@ export const AdminCouponsPage: React.FC = () => {
               {/* Min Order & Max Discount */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Min Order Amount (৳)</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Min Order Amount (Rs.)</label>
                   <input
                     type="number"
                     min="0"
@@ -532,7 +532,7 @@ export const AdminCouponsPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Max Discount Cap (৳)</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Max Discount Cap (Rs.)</label>
                   <input
                     type="number"
                     min="1"

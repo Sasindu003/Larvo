@@ -190,11 +190,11 @@ export const CartDrawer: React.FC = () => {
 
                         <div className="text-right">
                           <span className="text-xs font-bold text-ink-950">
-                            ${(item.unitPrice * item.quantity).toFixed(2)}
+                            Rs. {(item.unitPrice * item.quantity).toFixed(2)}
                           </span>
                           {item.quantity > 1 && (
                             <span className="block text-[10px] text-ink-500">
-                              (${item.unitPrice.toFixed(2)} each)
+                              (Rs. {item.unitPrice.toFixed(2)} each)
                             </span>
                           )}
                         </div>
@@ -212,7 +212,7 @@ export const CartDrawer: React.FC = () => {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-ink-600">
                   <span>Subtotal</span>
-                  <span className="font-bold text-ink-950 text-sm">${subtotal.toFixed(2)}</span>
+                  <span className="font-bold text-ink-950 text-sm">Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-ink-500">
                   <span>Shipping & Taxes</span>

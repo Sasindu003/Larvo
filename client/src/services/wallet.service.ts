@@ -181,7 +181,7 @@ export const walletService = {
   },
 
   /**
-   * Convert points to currency value (৳)
+   * Convert points to currency value (Rs.)
    */
   pointsToCurrency(points: number): number {
     return Number((points * POINT_VALUE).toFixed(2));

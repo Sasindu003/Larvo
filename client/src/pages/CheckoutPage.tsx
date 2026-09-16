@@ -984,7 +984,7 @@ export const CheckoutPage: React.FC = () => {
                                 {item.name}
                               </Link>
                               <span className="font-bold text-ink-950 text-base whitespace-nowrap">
-                                ৳{(item.unitPrice * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                Rs. {(item.unitPrice * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                               </span>
                             </div>
 
@@ -1054,7 +1054,7 @@ export const CheckoutPage: React.FC = () => {
                                 </button>
                               </div>
                               <span className="text-ink-400 ml-1">
-                                × ৳{item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} each
+                                × Rs. {item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} each
                               </span>
                             </div>
 
@@ -1412,7 +1412,7 @@ export const CheckoutPage: React.FC = () => {
                           </p>
                           {appliedCoupon.coupon?.minOrderAmount && appliedCoupon.coupon.minOrderAmount > 0 && (
                             <p className="text-xs text-emerald-700">
-                              Min. order requirement of ৳{appliedCoupon.coupon.minOrderAmount} met
+                              Min. order requirement of Rs. {appliedCoupon.coupon.minOrderAmount} met
                             </p>
                           )}
                         </div>
@@ -1421,7 +1421,7 @@ export const CheckoutPage: React.FC = () => {
                       <div className="flex items-center sm:flex-col sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-emerald-200/60">
                         <span className="text-xs text-emerald-700 font-medium">You Save</span>
                         <span className="text-lg sm:text-xl font-bold text-emerald-800 font-display">
-                          -৳{appliedCoupon.discountAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          -Rs. {appliedCoupon.discountAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
@@ -1614,7 +1614,7 @@ export const CheckoutPage: React.FC = () => {
                               <div>
                                 <span className="text-ink-500">Amount Due:</span>{' '}
                                 <strong className="text-ink-900 font-bold text-sm">
-                                  ৳{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  Rs. {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </strong>
                               </div>
                             </div>
@@ -1965,7 +1965,7 @@ export const CheckoutPage: React.FC = () => {
                                 <>
                                   <CreditCard className="w-4 h-4" />
                                   <span>
-                                    Authorize Payment (৳{grandTotal.toFixed(2)})
+                                    Authorize Payment (Rs. {grandTotal.toFixed(2)})
                                   </span>
                                 </>
                               )}
@@ -2031,7 +2031,7 @@ export const CheckoutPage: React.FC = () => {
                                 {walletBalance !== null ? `${walletBalance.toLocaleString()} Points` : '...'}
                                 {walletBalance !== null && (
                                   <span className="text-ink-500 font-normal ml-1">
-                                    (৳{(walletBalance * 0.01).toFixed(2)})
+                                    (Rs. {(walletBalance * 0.01).toFixed(2)})
                                   </span>
                                 )}
                               </strong>
@@ -2041,13 +2041,13 @@ export const CheckoutPage: React.FC = () => {
                               <strong className="text-ink-950">
                                 {pointsRequired.toLocaleString()} Points
                                 <span className="text-ink-500 font-normal ml-1">
-                                  (৳{grandTotal.toFixed(2)})
+                                  (Rs. {grandTotal.toFixed(2)})
                                 </span>
                               </strong>
                             </div>
                             <div className="border-t border-sand-100 pt-2 flex items-center justify-between text-xs">
                               <span className="text-ink-600">Conversion Rate:</span>
-                              <span className="text-ink-500 font-mono">1 Point = ৳0.01</span>
+                              <span className="text-ink-500 font-mono">1 Point = Rs. 0.01</span>
                             </div>
                           </div>
 
@@ -2108,7 +2108,7 @@ export const CheckoutPage: React.FC = () => {
                               ) : (
                                 <>
                                   <Sparkles className="w-4 h-4 text-amber-300" />
-                                  <span>Pay ৳{grandTotal.toFixed(2)} with Points</span>
+                                  <span>Pay Rs. {grandTotal.toFixed(2)} with Points</span>
                                 </>
                               )}
                             </Button>
@@ -2243,11 +2243,11 @@ export const CheckoutPage: React.FC = () => {
 
                           <div className="text-right flex-shrink-0">
                             <span className="text-sm font-bold text-ink-950">
-                              ৳{((item.lineTotal ?? (item.unitPrice * item.quantity)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              Rs. {((item.lineTotal ?? (item.unitPrice * item.quantity)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </span>
                             {item.quantity > 1 && (
                               <p className="text-[11px] text-ink-500">
-                                ৳{(item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} each
+                                Rs. {(item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} each
                               </p>
                             )}
                           </div>
@@ -2287,24 +2287,24 @@ export const CheckoutPage: React.FC = () => {
                         <div className="flex justify-between">
                           <span>Subtotal:</span>
                           <span className="font-medium text-ink-900">
-                            ৳{(createdOrder.subtotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            Rs. {(createdOrder.subtotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </span>
                         </div>
                         {((createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0) > 0) && (
                           <div className="flex justify-between text-emerald-700 font-semibold">
                             <span>Discount:</span>
-                            <span>-৳{(createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            <span>-Rs. {(createdOrder.discountTotal ?? createdOrder.discountAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
                           <span>Shipping:</span>
                           <span className="font-medium text-ink-900">
-                            {(createdOrder.shippingFee ?? 0) === 0 ? 'FREE' : `৳${(createdOrder.shippingFee ?? 0).toFixed(2)}`}
+                            {(createdOrder.shippingFee ?? 0) === 0 ? 'FREE' : `Rs. ${(createdOrder.shippingFee ?? 0).toFixed(2)}`}
                           </span>
                         </div>
                         <div className="border-t border-sand-200 pt-2 flex justify-between font-bold text-sm text-ink-950">
                           <span>Total:</span>
-                          <span>৳{(createdOrder.total ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          <span>Rs. {(createdOrder.total ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="pt-1.5 text-[11px] text-ink-500">
                           Method:{' '}
@@ -2409,7 +2409,7 @@ export const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-ink-600">
                   <span>Items Subtotal ({createdOrder ? (createdOrder.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0) : totalItems})</span>
                   <span className="font-semibold text-ink-950">
-                    ৳{effectiveSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Rs. {effectiveSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 
@@ -2420,7 +2420,7 @@ export const CheckoutPage: React.FC = () => {
                       Promo ({createdOrder?.coupon?.code || appliedCoupon?.code || 'Applied'})
                     </span>
                     <span>
-                      -৳{discountAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      -Rs. {discountAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 )}
@@ -2429,9 +2429,9 @@ export const CheckoutPage: React.FC = () => {
                   <span>Estimated Delivery</span>
                   <span className="font-semibold text-ink-950">
                     {shippingFee === 0 ? (
-                      <span className="text-emerald-700 font-bold">FREE (Over ৳1,500)</span>
+                      <span className="text-emerald-700 font-bold">FREE (Over Rs. 1,500)</span>
                     ) : (
-                      `৳${shippingFee.toFixed(2)}`
+                      `Rs. ${shippingFee.toFixed(2)}`
                     )}
                   </span>
                 </div>
@@ -2439,7 +2439,7 @@ export const CheckoutPage: React.FC = () => {
                 <div className="border-t border-sand-200 pt-3 flex justify-between text-base font-bold text-ink-950">
                   <span>Estimated Total</span>
                   <span>
-                    ৳{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Rs. {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 

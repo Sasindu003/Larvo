@@ -225,7 +225,7 @@ export const Header: React.FC = () => {
       <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-ink-200 transition-shadow duration-200">
         {/* Top Announcement Bar */}
         <div className="bg-ink-950 text-cream-100 text-[11px] font-medium py-1.5 px-4 text-center tracking-wider uppercase">
-          <span>Complimentary domestic express shipping on orders over $150</span>
+          <span>Complimentary domestic express shipping on orders over Rs. 1,500</span>
         </div>
 
         {/* Main Navigation Bar */}
@@ -480,11 +480,11 @@ export const Header: React.FC = () => {
                               </span>
                             )}
                             <span className="text-xs font-semibold text-ink-900">
-                              ${item.discountPrice || item.basePrice}
+                              Rs. {item.discountPrice || item.basePrice}
                             </span>
                             {item.discountPrice && (
                               <span className="text-[10px] text-ink-400 line-through">
-                                ${item.basePrice}
+                                Rs. {item.basePrice}
                               </span>
                             )}
                           </div>
@@ -782,7 +782,7 @@ export const Header: React.FC = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-ink-900 truncate">{item.name}</p>
-                        <p className="text-[11px] font-semibold text-ink-700">${item.discountPrice || item.basePrice}</p>
+                        <p className="text-[11px] font-semibold text-ink-700">Rs. {item.discountPrice || item.basePrice}</p>
                       </div>
                     </Link>
                   ))}

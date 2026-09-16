@@ -674,7 +674,7 @@ export const AdminReturnsPage: React.FC = () => {
                   {typeof selectedReturn.order === 'object' && selectedReturn.order?.total != null && (
                     <p className="text-slate-700">
                       <span className="text-slate-400 font-medium">Order Total: </span>
-                      <span className="font-semibold">${selectedReturn.order.total.toFixed(2)}</span>
+                      <span className="font-semibold">Rs. {selectedReturn.order.total.toFixed(2)}</span>
                     </p>
                   )}
                   {typeof selectedReturn.user === 'object' && selectedReturn.user && (

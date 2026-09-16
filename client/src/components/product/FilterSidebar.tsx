@@ -231,26 +231,26 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           <SectionTitle icon={<DollarSign className="w-3.5 h-3.5" />} label="Price Range" />
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-400 font-medium pointer-events-none">$</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-ink-400 font-medium pointer-events-none">Rs.</span>
               <input
                 type="number"
                 min="0"
                 placeholder="Min"
                 value={filters.minPrice}
                 onChange={(e) => onFilterChange('minPrice', e.target.value)}
-                className="w-full pl-6 pr-2.5 py-2 text-xs bg-sand-50 border border-sand-300 rounded-lg text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-700 focus:ring-1 focus:ring-ink-200"
+                className="w-full pl-8 pr-2.5 py-2 text-xs bg-sand-50 border border-sand-300 rounded-lg text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-700 focus:ring-1 focus:ring-ink-200"
               />
             </div>
             <span className="text-xs text-ink-400 font-medium">–</span>
             <div className="relative flex-1">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-400 font-medium pointer-events-none">$</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-ink-400 font-medium pointer-events-none">Rs.</span>
               <input
                 type="number"
                 min="0"
                 placeholder="Max"
                 value={filters.maxPrice}
                 onChange={(e) => onFilterChange('maxPrice', e.target.value)}
-                className="w-full pl-6 pr-2.5 py-2 text-xs bg-sand-50 border border-sand-300 rounded-lg text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-700 focus:ring-1 focus:ring-ink-200"
+                className="w-full pl-8 pr-2.5 py-2 text-xs bg-sand-50 border border-sand-300 rounded-lg text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-700 focus:ring-1 focus:ring-ink-200"
               />
             </div>
           </div>

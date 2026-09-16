@@ -66,12 +66,12 @@ export const SeasonalOffers: React.FC = () => {
     if (coupon.discountType === 'percentage') {
       return `${coupon.discountValue}% OFF`;
     }
-    return `$${coupon.discountValue} FLAT OFF`;
+    return `Rs. ${coupon.discountValue} FLAT OFF`;
   };
 
   const formatConditions = (coupon: Coupon) => {
     if (coupon.minOrderAmount && coupon.minOrderAmount > 0) {
-      return `Orders over $${coupon.minOrderAmount}`;
+      return `Orders over Rs. ${coupon.minOrderAmount}`;
     }
     return 'No minimum order';
   };

@@ -235,7 +235,7 @@ export const HeroBanner: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10 border-t border-white/10 bg-ink-950/90 text-ink-300 py-3.5 px-6 sm:px-12 text-xs">
         <div className="flex items-center gap-3 py-2 sm:py-0 justify-start sm:justify-center">
           <Truck className="w-4 h-4 text-sand-300 shrink-0" />
-          <span className="font-medium text-ink-200">Express Delivery on Orders $150+</span>
+          <span className="font-medium text-ink-200">Express Delivery on Orders Rs. 1,500+</span>
         </div>
         <div className="flex items-center gap-3 py-2 sm:py-0 justify-start sm:justify-center">
           <ShieldCheck className="w-4 h-4 text-sand-300 shrink-0" />

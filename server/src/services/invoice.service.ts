@@ -246,10 +246,10 @@ export const invoiceService = {
         .text(item.variantSku || '-', 250, itemY, { width: 85, ellipsis: true })
         .text(`${item.size || '-'} / ${item.color || '-'}`, 340, itemY, { width: 75 })
         .text(item.quantity.toString(), 420, itemY, { width: 30, align: 'right' })
-        .text(`$${item.unitPrice.toFixed(2)}`, 460, itemY, { width: 45, align: 'right' })
+        .text(`Rs. ${item.unitPrice.toFixed(2)}`, 450, itemY, { width: 55, align: 'right' })
         .font('Helvetica-Bold')
         .fillColor('#0f172a')
-        .text(`$${lineTotal.toFixed(2)}`, 510, itemY, { width: 40, align: 'right' });
+        .text(`Rs. ${lineTotal.toFixed(2)}`, 505, itemY, { width: 50, align: 'right' });
 
       itemY += 22;
 
@@ -326,15 +326,15 @@ export const invoiceService = {
       .font('Helvetica')
       .fillColor('#64748b')
       .text('Subtotal:', rightLabelX, rightY)
-      .text(`$${snapshot.subtotal.toFixed(2)}`, rightValueX, rightY, { width: 75, align: 'right' });
+      .text(`Rs. ${snapshot.subtotal.toFixed(2)}`, rightValueX - 10, rightY, { width: 85, align: 'right' });
     rightY += 16;
 
     if (snapshot.discountAmount > 0) {
       doc
         .fillColor('#059669')
         .text('Discount:', rightLabelX, rightY)
-        .text(`-$${snapshot.discountAmount.toFixed(2)}`, rightValueX, rightY, {
-          width: 75,
+        .text(`-Rs. ${snapshot.discountAmount.toFixed(2)}`, rightValueX - 10, rightY, {
+          width: 85,
           align: 'right',
         });
       rightY += 16;
@@ -344,10 +344,10 @@ export const invoiceService = {
       .fillColor('#64748b')
       .text('Shipping:', rightLabelX, rightY)
       .text(
-        snapshot.shippingFee === 0 ? 'FREE' : `$${snapshot.shippingFee.toFixed(2)}`,
-        rightValueX,
+        snapshot.shippingFee === 0 ? 'FREE' : `Rs. ${snapshot.shippingFee.toFixed(2)}`,
+        rightValueX - 10,
         rightY,
-        { width: 75, align: 'right' }
+        { width: 85, align: 'right' }
       );
     rightY += 18;
 
@@ -364,7 +364,7 @@ export const invoiceService = {
       .font('Helvetica-Bold')
       .fillColor('#0f172a')
       .text('Total Amount:', rightLabelX, rightY)
-      .text(`$${snapshot.total.toFixed(2)}`, rightValueX, rightY, { width: 75, align: 'right' });
+      .text(`Rs. ${snapshot.total.toFixed(2)}`, rightValueX - 10, rightY, { width: 85, align: 'right' });
 
     // ── Footer ─────────────────────────────────────────────────────────────
     doc

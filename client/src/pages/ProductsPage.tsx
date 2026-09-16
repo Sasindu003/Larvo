@@ -279,7 +279,7 @@ export const ProductsPage: React.FC = () => {
                 )}
                 {(filters.minPrice || filters.maxPrice) && (
                   <FilterChip
-                    label={`$${filters.minPrice || '0'}–$${filters.maxPrice || '∞'}`}
+                    label={`Rs. ${filters.minPrice || '0'}–Rs. ${filters.maxPrice || '∞'}`}
                     onRemove={() => {
                       handleFilterChange('minPrice', '');
                       handleFilterChange('maxPrice', '');

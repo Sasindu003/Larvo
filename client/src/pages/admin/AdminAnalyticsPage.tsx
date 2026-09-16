@@ -42,12 +42,10 @@ type DatePreset = '7d' | '30d' | '90d' | 'this_month' | 'custom';
 type Granularity = 'day' | 'week' | 'month';
 
 function formatCurrency(val: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return `Rs. ${(val || 0).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(val);
+  })}`;
 }
 
 function formatDate(date: Date): string {
@@ -450,7 +448,7 @@ export const AdminAnalyticsPage: React.FC = () => {
                     stroke="#94a3b8"
                     fontSize={11}
                     tickLine={false}
-                    tickFormatter={(val) => `$${val}`}
+                    tickFormatter={(val) => `Rs. ${val}`}
                   />
                   <Tooltip
                     contentStyle={{

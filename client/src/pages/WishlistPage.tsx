@@ -200,11 +200,11 @@ export const WishlistPage: React.FC = () => {
                   {/* Price */}
                   <div className="flex items-baseline gap-2 mt-1.5">
                     <span className="text-sm sm:text-base font-bold text-ink-950">
-                      ${hasDiscount ? product.discountPrice : product.basePrice}
+                      Rs. {hasDiscount ? product.discountPrice : product.basePrice}
                     </span>
                     {hasDiscount && (
                       <span className="text-xs text-ink-400 line-through">
-                        ${product.basePrice}
+                        Rs. {product.basePrice}
                       </span>
                     )}
                   </div>

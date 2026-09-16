@@ -715,7 +715,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
 
                       {/* Total Cost */}
                       <td className="px-4 py-3 font-semibold text-slate-900">
-                        ${orderTotalCost.toFixed(2)}
+                        Rs. {orderTotalCost.toFixed(2)}
                       </td>
 
                       {/* Expected Delivery */}
@@ -933,7 +933,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                         <th className="px-3 py-2">Product</th>
                         <th className="px-3 py-2">Variant / SKU</th>
                         <th className="px-3 py-2 w-24">Ordered Qty</th>
-                        <th className="px-3 py-2 w-28">Unit Cost ($)</th>
+                        <th className="px-3 py-2 w-28">Unit Cost (Rs.)</th>
                         <th className="px-3 py-2 w-24 text-right">Line Total</th>
                         <th className="px-3 py-2 w-10"></th>
                       </tr>
@@ -1012,7 +1012,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
 
                             {/* Line Total */}
                             <td className="p-2 text-right font-semibold text-slate-800">
-                              ${lineTotal.toFixed(2)}
+                              Rs. {lineTotal.toFixed(2)}
                             </td>
 
                             {/* Delete Row */}
@@ -1036,7 +1036,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                           Grand Total:
                         </td>
                         <td className="px-3 py-2 text-right text-indigo-600 font-bold">
-                          ${formTotalCost.toFixed(2)}
+                          Rs. {formTotalCost.toFixed(2)}
                         </td>
                         <td></td>
                       </tr>
@@ -1166,7 +1166,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                     <div>
                       <span className="text-slate-400 block">Total Order Cost:</span>
                       <span className="font-bold text-indigo-600 text-sm">
-                        ${(
+                        Rs. {(
                           selectedOrder.totalCost ||
                           (selectedOrder.items || []).reduce(
                             (sum, it) => sum + (it.orderedQty || 0) * (it.unitCost || 0),
@@ -1274,10 +1274,10 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                               {it.receivedQty || 0}
                             </td>
                             <td className="px-4 py-2.5 text-right text-slate-600">
-                              ${(it.unitCost || 0).toFixed(2)}
+                              Rs. {(it.unitCost || 0).toFixed(2)}
                             </td>
                             <td className="px-4 py-2.5 text-right font-bold text-slate-900">
-                              ${lineTotal.toFixed(2)}
+                              Rs. {lineTotal.toFixed(2)}
                             </td>
                           </tr>
                         );
@@ -1289,7 +1289,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                           Total Order Value:
                         </td>
                         <td className="px-4 py-2.5 text-right text-indigo-600 font-extrabold text-sm">
-                          ${(
+                          Rs. {(
                             selectedOrder.totalCost ||
                             (selectedOrder.items || []).reduce(
                               (sum, it) => sum + (it.orderedQty || 0) * (it.unitCost || 0),

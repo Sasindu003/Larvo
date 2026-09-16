@@ -241,7 +241,7 @@ export const AdminWalletsPage: React.FC = () => {
             {totalCirculatingPoints.toLocaleString()} <span className="text-xs text-slate-400 font-sans">pts</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            ≈ ৳{walletService.pointsToCurrency(totalCirculatingPoints).toLocaleString(undefined, { minimumFractionDigits: 2 })} fiat value
+            ≈ Rs. {walletService.pointsToCurrency(totalCirculatingPoints).toLocaleString(undefined, { minimumFractionDigits: 2 })} fiat value
           </p>
         </div>
 
@@ -251,9 +251,9 @@ export const AdminWalletsPage: React.FC = () => {
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="mt-2 text-2xl font-bold text-emerald-400 font-display">
-            100 pts <span className="text-xs text-slate-400 font-sans">= ৳1.00</span>
+            100 pts <span className="text-xs text-slate-400 font-sans">= Rs. 1.00</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">1 point = ৳0.01 checkout credit</p>
+          <p className="text-[11px] text-slate-500 mt-1">1 point = Rs. 0.01 checkout credit</p>
         </div>
       </div>
 
@@ -344,7 +344,7 @@ export const AdminWalletsPage: React.FC = () => {
                           {w.balancePoints.toLocaleString()} pts
                         </span>
                         <div className="text-[10px] text-slate-400 font-sans font-normal">
-                          ≈ ৳{fiat.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          ≈ Rs. {fiat.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </div>
                       </td>
 
@@ -487,7 +487,7 @@ export const AdminWalletsPage: React.FC = () => {
                   {drawerWallet.balancePoints.toLocaleString()} pts
                 </div>
                 <div className="text-[10px] text-slate-500">
-                  ≈ ৳{walletService.pointsToCurrency(drawerWallet.balancePoints).toFixed(2)}
+                  ≈ Rs. {walletService.pointsToCurrency(drawerWallet.balancePoints).toFixed(2)}
                 </div>
               </div>
               <div>
@@ -722,7 +722,7 @@ export const AdminWalletsPage: React.FC = () => {
                       {adjustTarget.balancePoints.toLocaleString()} + {parseInt(adjustPoints, 10).toLocaleString()} ={' '}
                       {(adjustTarget.balancePoints + parseInt(adjustPoints, 10)).toLocaleString()} pts{' '}
                       <span className="text-[10px] text-slate-400 font-sans">
-                        (≈ ৳{walletService.pointsToCurrency(adjustTarget.balancePoints + parseInt(adjustPoints, 10)).toFixed(2)})
+                        (≈ Rs. {walletService.pointsToCurrency(adjustTarget.balancePoints + parseInt(adjustPoints, 10)).toFixed(2)})
                       </span>
                     </div>
                   ) : (
@@ -731,7 +731,7 @@ export const AdminWalletsPage: React.FC = () => {
                         {adjustTarget.balancePoints.toLocaleString()} - {parseInt(adjustPoints, 10).toLocaleString()} ={' '}
                         {(adjustTarget.balancePoints - parseInt(adjustPoints, 10)).toLocaleString()} pts{' '}
                         <span className="text-[10px] text-slate-400 font-sans">
-                          (≈ ৳{walletService.pointsToCurrency(Math.max(0, adjustTarget.balancePoints - parseInt(adjustPoints, 10))).toFixed(2)})
+                          (≈ Rs. {walletService.pointsToCurrency(Math.max(0, adjustTarget.balancePoints - parseInt(adjustPoints, 10))).toFixed(2)})
                         </span>
                       </div>
                       {parseInt(adjustPoints, 10) > adjustTarget.balancePoints && (

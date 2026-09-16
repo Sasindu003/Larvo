@@ -490,14 +490,14 @@ export const AdminProductsPage: React.FC = () => {
                       {p.discountPrice ? (
                         <div>
                           <span className="text-violet-400 font-semibold">
-                            ৳{p.discountPrice.toLocaleString()}
+                            Rs. {p.discountPrice.toLocaleString()}
                           </span>
                           <span className="text-slate-500 line-through text-xs ml-1">
-                            ৳{p.basePrice.toLocaleString()}
+                            Rs. {p.basePrice.toLocaleString()}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-300 font-semibold">৳{p.basePrice.toLocaleString()}</span>
+                        <span className="text-slate-300 font-semibold">Rs. {p.basePrice.toLocaleString()}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -707,7 +707,7 @@ export const AdminProductsPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    Base Price (৳) *
+                    Base Price (Rs.) *
                   </label>
                   <input
                     type="number"
@@ -722,7 +722,7 @@ export const AdminProductsPage: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    Discount Price (৳)
+                    Discount Price (Rs.)
                   </label>
                   <input
                     type="number"

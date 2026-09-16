@@ -321,10 +321,10 @@ export const InvoicePage: React.FC = () => {
                         {item.quantity}
                       </td>
                       <td className="py-3 px-3 text-right text-ink-600">
-                        ${item.unitPrice.toFixed(2)}
+                        Rs. {item.unitPrice.toFixed(2)}
                       </td>
                       <td className="py-3 px-3 text-right font-bold text-ink-950">
-                        ${lineTotal.toFixed(2)}
+                        Rs. {lineTotal.toFixed(2)}
                       </td>
                     </tr>
                   );
@@ -346,26 +346,26 @@ export const InvoicePage: React.FC = () => {
           <div className="w-full sm:w-72 space-y-2 text-xs">
             <div className="flex justify-between text-ink-600">
               <span>Subtotal</span>
-              <span className="font-medium text-ink-900">${snapshot.subtotal.toFixed(2)}</span>
+              <span className="font-medium text-ink-900">Rs. {snapshot.subtotal.toFixed(2)}</span>
             </div>
 
             {snapshot.discountAmount > 0 && (
               <div className="flex justify-between text-emerald-700 font-semibold">
                 <span>Discount</span>
-                <span>-${snapshot.discountAmount.toFixed(2)}</span>
+                <span>-Rs. {snapshot.discountAmount.toFixed(2)}</span>
               </div>
             )}
 
             <div className="flex justify-between text-ink-600">
               <span>Shipping Fee</span>
               <span className="font-medium text-ink-900">
-                {snapshot.shippingFee === 0 ? 'FREE' : `$${snapshot.shippingFee.toFixed(2)}`}
+                {snapshot.shippingFee === 0 ? 'FREE' : `Rs. ${snapshot.shippingFee.toFixed(2)}`}
               </span>
             </div>
 
             <div className="border-t border-sand-200 pt-2.5 mt-2 flex justify-between text-sm sm:text-base font-bold text-ink-950">
               <span>Total Paid</span>
-              <span>${snapshot.total.toFixed(2)}</span>
+              <span>Rs. {snapshot.total.toFixed(2)}</span>
             </div>
           </div>
         </div>
