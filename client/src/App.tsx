@@ -1,6 +1,7 @@
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { Analytics } from '@vercel/analytics/react';
 import { router } from './routes/AppRouter';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -13,6 +14,7 @@ export default function App() {
         <WishlistProvider>
           <Toaster position="top-center" />
           <RouterProvider router={router} />
+          <Analytics />
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>
