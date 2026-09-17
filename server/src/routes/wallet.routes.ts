@@ -3,9 +3,17 @@ import { requireAuth } from '../middleware/auth.middleware';
 import {
   getMyWallet,
   getMyTransactions,
+  getConversionRate,
 } from '../controllers/wallet.controller';
 
 const router = Router();
+
+/**
+ * @desc    Get points conversion value per Rs. 1
+ * @route   GET /api/wallet/rate
+ * @access  Public
+ */
+router.get('/rate', getConversionRate);
 
 /**
  * @desc    Get current customer's wallet balance
@@ -22,3 +30,4 @@ router.get('/me', requireAuth, getMyWallet);
 router.get('/me/transactions', requireAuth, getMyTransactions);
 
 export default router;
+

@@ -26,6 +26,7 @@ import {
   AdminWallet,
   PointsTransaction,
   PointsTransactionType,
+  ConversionRate,
 } from '../../services/wallet.service';
 import { useDebounce } from '../../hooks/useDebounce';
 
@@ -39,6 +40,13 @@ export const AdminWalletsPage: React.FC = () => {
   const debouncedSearch = useDebounce(search, 300);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState('');
+
+  // ── Points Conversion Rate State ───────────────────────────────────────────
+  const [rate, setRate] = useState<ConversionRate>({ pointsPerRupee: 100, pointValue: 0.01 });
+  const [rateModalOpen, setRateModalOpen] = useState(false);
+  const [inputRate, setInputRate] = useState('100');
+  const [rateUpdating, setRateUpdating] = useState(false);
+  const [rateError, setRateError] = useState('');
 
   // ── Drawer / Ledger History State ────────────────────────────────────────────
   const [drawerWallet, setDrawerWallet] = useState<AdminWallet | null>(null);
@@ -55,6 +63,7 @@ export const AdminWalletsPage: React.FC = () => {
   const [adjustReason, setAdjustReason] = useState<string>('');
   const [adjustSubmitting, setAdjustSubmitting] = useState(false);
   const [adjustError, setAdjustError] = useState<string>('');
+
 
   // ── Fetch Wallets List ───────────────────────────────────────────────────────
   const fetchWallets = useCallback(async () => {
@@ -76,9 +85,43 @@ export const AdminWalletsPage: React.FC = () => {
     }
   }, [page, debouncedSearch]);
 
+  // ── Fetch Conversion Rate ──────────────────────────────────────────────────
+  const fetchRate = useCallback(async () => {
+    try {
+      const res = await walletService.getConversionRate();
+      setRate(res);
+      setInputRate(res.pointsPerRupee.toString());
+    } catch (err: any) {
+      console.error('Failed to load conversion rate:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchWallets();
-  }, [fetchWallets]);
+    fetchRate();
+  }, [fetchWallets, fetchRate]);
+
+  const handleUpdateRate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRateError('');
+    const parsed = Number(inputRate);
+    if (isNaN(parsed) || parsed <= 0) {
+      setRateError('Please enter a valid positive number greater than 0');
+      return;
+    }
+    setRateUpdating(true);
+    try {
+      const updated = await walletService.updateConversionRate(parsed);
+      setRate(updated);
+      toast.success(`Conversion rate updated: ${updated.pointsPerRupee} pts = Rs. 1.00`);
+      setRateModalOpen(false);
+    } catch (err: any) {
+      setRateError(err.message || 'Failed to update conversion rate');
+    } finally {
+      setRateUpdating(false);
+    }
+  };
+
 
   // ── Fetch Drawer Transactions ────────────────────────────────────────────────
   const fetchDrawerHistory = useCallback(
@@ -241,19 +284,32 @@ export const AdminWalletsPage: React.FC = () => {
             {totalCirculatingPoints.toLocaleString()} <span className="text-xs text-slate-400 font-sans">pts</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            ≈ Rs. {walletService.pointsToCurrency(totalCirculatingPoints).toLocaleString(undefined, { minimumFractionDigits: 2 })} fiat value
+            ≈ Rs. {walletService.pointsToCurrency(totalCirculatingPoints, rate.pointsPerRupee).toLocaleString(undefined, { minimumFractionDigits: 2 })} fiat value
           </p>
         </div>
 
         <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400 font-medium">Point Conversion Rate</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <button
+              type="button"
+              onClick={() => {
+                setInputRate(rate.pointsPerRupee.toString());
+                setRateError('');
+                setRateModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-violet-300 hover:text-white bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/30 rounded-lg transition-colors cursor-pointer"
+            >
+              <Sliders className="w-3 h-3" />
+              <span>Customize</span>
+            </button>
           </div>
           <div className="mt-2 text-2xl font-bold text-emerald-400 font-display">
-            100 pts <span className="text-xs text-slate-400 font-sans">= Rs. 1.00</span>
+            {rate.pointsPerRupee} pts <span className="text-xs text-slate-400 font-sans">= Rs. 1.00</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">1 point = Rs. 0.01 checkout credit</p>
+          <p className="text-[11px] text-slate-500 mt-1">
+            1 point = Rs. {rate.pointValue.toFixed(4)} checkout credit
+          </p>
         </div>
       </div>
 
@@ -327,7 +383,7 @@ export const AdminWalletsPage: React.FC = () => {
                   const userName = w.user?.name || 'Unknown';
                   const userEmail = w.user?.email || '—';
                   const userRole = w.user?.role || 'customer';
-                  const fiat = walletService.pointsToCurrency(w.balancePoints);
+                  const fiat = walletService.pointsToCurrency(w.balancePoints, rate.pointsPerRupee);
 
                   return (
                     <tr key={w._id} className="hover:bg-slate-800/30 transition-colors">
@@ -722,7 +778,7 @@ export const AdminWalletsPage: React.FC = () => {
                       {adjustTarget.balancePoints.toLocaleString()} + {parseInt(adjustPoints, 10).toLocaleString()} ={' '}
                       {(adjustTarget.balancePoints + parseInt(adjustPoints, 10)).toLocaleString()} pts{' '}
                       <span className="text-[10px] text-slate-400 font-sans">
-                        (≈ Rs. {walletService.pointsToCurrency(adjustTarget.balancePoints + parseInt(adjustPoints, 10)).toFixed(2)})
+                        (≈ Rs. {walletService.pointsToCurrency(adjustTarget.balancePoints + parseInt(adjustPoints, 10), rate.pointsPerRupee).toFixed(2)})
                       </span>
                     </div>
                   ) : (
@@ -731,7 +787,7 @@ export const AdminWalletsPage: React.FC = () => {
                         {adjustTarget.balancePoints.toLocaleString()} - {parseInt(adjustPoints, 10).toLocaleString()} ={' '}
                         {(adjustTarget.balancePoints - parseInt(adjustPoints, 10)).toLocaleString()} pts{' '}
                         <span className="text-[10px] text-slate-400 font-sans">
-                          (≈ Rs. {walletService.pointsToCurrency(Math.max(0, adjustTarget.balancePoints - parseInt(adjustPoints, 10))).toFixed(2)})
+                          (≈ Rs. {walletService.pointsToCurrency(Math.max(0, adjustTarget.balancePoints - parseInt(adjustPoints, 10)), rate.pointsPerRupee).toFixed(2)})
                         </span>
                       </div>
                       {parseInt(adjustPoints, 10) > adjustTarget.balancePoints && (
@@ -797,7 +853,175 @@ export const AdminWalletsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Customize Points Conversion Rate Modal ────────────────────────────── */}
+      {rateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div
+            className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-violet-600/20 text-violet-400 flex items-center justify-center border border-violet-500/20">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white font-display">
+                    Point Conversion Rate
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Set conversion value manually per Rs. 1.00
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRateModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current Rate Banner */}
+            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">Currently Active:</span>
+              <span className="font-mono font-bold text-emerald-400">
+                {rate.pointsPerRupee} pts = Rs. 1.00{' '}
+                <span className="text-slate-400 font-sans text-[11px] font-normal">
+                  (1 pt = Rs. {rate.pointValue.toFixed(4)})
+                </span>
+              </span>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleUpdateRate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Points per Rs. 1.00 <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    required
+                    min="0.01"
+                    step="any"
+                    value={inputRate}
+                    onChange={(e) => {
+                      setInputRate(e.target.value);
+                      setRateError('');
+                    }}
+                    placeholder="e.g. 100 or 50 or 200"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-violet-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-sans">
+                    pts / Rs. 1
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500 block mt-1">
+                  Defines how many reward points equal exactly Rs. 1.00 across order checkout and returns.
+                </span>
+              </div>
+
+              {/* Quick Presets */}
+              <div>
+                <div className="text-[11px] font-medium text-slate-400 mb-1.5">Common Presets:</div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: '10 pts', val: '10' },
+                    { label: '50 pts', val: '50' },
+                    { label: '100 pts', val: '100' },
+                    { label: '200 pts', val: '200' },
+                  ].map((p) => (
+                    <button
+                      key={p.val}
+                      type="button"
+                      onClick={() => {
+                        setInputRate(p.val);
+                        setRateError('');
+                      }}
+                      className={`py-1 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                        inputRate === p.val
+                          ? 'bg-violet-600/30 text-violet-200 border-violet-500/50 font-semibold'
+                          : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-800'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Conversion Preview */}
+              {inputRate && !isNaN(Number(inputRate)) && Number(inputRate) > 0 && (
+                <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-3 text-xs space-y-2">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Conversion Simulation:</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">1 Point Fiat Worth:</span>
+                      <strong className="text-emerald-400 font-mono">
+                        Rs. {(1 / Number(inputRate)).toFixed(4)}
+                      </strong>
+                    </div>
+                    <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Rs. 1,000 Order Cost:</span>
+                      <strong className="text-amber-400 font-mono">
+                        {Math.ceil(1000 * Number(inputRate)).toLocaleString()} pts
+                      </strong>
+                    </div>
+                    <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">1,000 Points Worth:</span>
+                      <strong className="text-white font-mono">
+                        Rs. {(1000 / Number(inputRate)).toFixed(2)}
+                      </strong>
+                    </div>
+                    <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Rs. 500 Return Refund:</span>
+                      <strong className="text-sky-400 font-mono">
+                        {Math.round(500 * Number(inputRate)).toLocaleString()} pts
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Alert */}
+              {rateError && (
+                <div className="p-3 bg-rose-950/30 border border-rose-800 rounded-lg text-xs text-rose-300 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{rateError}</span>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setRateModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={rateUpdating || !inputRate || isNaN(Number(inputRate)) || Number(inputRate) <= 0}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+                >
+                  {rateUpdating && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Save Conversion Rate</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
+
   );
 };
 

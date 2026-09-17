@@ -8,6 +8,7 @@ import {
   AdminAdjustWalletSchema,
   WalletTransactionsQuerySchema,
   AdminWalletsQuerySchema,
+  UpdateConversionRateSchema,
 } from '../validators/wallet.validator';
 
 /**
@@ -186,3 +187,51 @@ export const adminAdjustWallet = asyncHandler(async (req: Request, res: Response
     message: 'Wallet balance adjusted successfully',
   });
 });
+
+/**
+ * @desc    Get points conversion value per Rs. 1
+ * @route   GET /api/wallet/rate
+ * @access  Public / Authenticated
+ */
+export const getConversionRate = asyncHandler(async (_req: Request, res: Response) => {
+  const rate = await walletService.getConversionRate();
+
+  res.status(200).json({
+    success: true,
+    data: rate,
+  });
+});
+
+/**
+ * @desc    Admin / Owner: Update points conversion value per Rs. 1
+ * @route   PATCH /api/admin/wallets/rate
+ * @access  Private (admin, owner)
+ */
+export const updateConversionRate = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?._id) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  let body;
+  try {
+    body = UpdateConversionRateSchema.parse(req.body);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const errors = err.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      }));
+      throw new AppError('Validation failed', 422, errors);
+    }
+    throw err;
+  }
+
+  const result = await walletService.updateConversionRate(body.pointsPerRupee, req.user._id);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+    message: `Point conversion rate updated to ${body.pointsPerRupee} points per Rs. 1.00`,
+  });
+});
+

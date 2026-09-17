@@ -144,6 +144,7 @@ export const CheckoutPage: React.FC = () => {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletLoading, setWalletLoading] = useState<boolean>(false);
   const [walletActive, setWalletActive] = useState<boolean>(true);
+  const [conversionRate, setConversionRate] = useState<{ pointsPerRupee: number; pointValue: number }>({ pointsPerRupee: 100, pointValue: 0.01 });
   const [payingWithPoints, setPayingWithPoints] = useState<boolean>(false);
   const [submittedPayment, setSubmittedPayment] = useState<Payment | null>(() => {
     if (typeof window !== 'undefined') {
@@ -331,9 +332,13 @@ export const CheckoutPage: React.FC = () => {
   const loadWalletBalance = async () => {
     setWalletLoading(true);
     try {
-      const wallet = await walletService.getMyWallet();
+      const [wallet, rate] = await Promise.all([
+        walletService.getMyWallet(),
+        walletService.getConversionRate().catch(() => ({ pointsPerRupee: 100, pointValue: 0.01 })),
+      ]);
       setWalletBalance(wallet.balancePoints);
       setWalletActive(wallet.active);
+      if (rate) setConversionRate(rate);
     } catch (err: any) {
       console.error('Failed to fetch wallet:', err);
       setWalletBalance(0);
@@ -758,7 +763,7 @@ export const CheckoutPage: React.FC = () => {
   const grandTotal = createdOrder
     ? (createdOrder.total ?? 0)
     : (Math.max(0, subtotal - discountAmount) + shippingFee);
-  const pointsRequired = Math.ceil(grandTotal / 0.01);
+  const pointsRequired = Math.ceil(grandTotal * (conversionRate?.pointsPerRupee || 100));
 
   return (
     <div className="min-h-screen bg-sand-50/50 py-8 sm:py-12">
@@ -2031,7 +2036,7 @@ export const CheckoutPage: React.FC = () => {
                                 {walletBalance !== null ? `${walletBalance.toLocaleString()} Points` : '...'}
                                 {walletBalance !== null && (
                                   <span className="text-ink-500 font-normal ml-1">
-                                    (Rs. {(walletBalance * 0.01).toFixed(2)})
+                                    (Rs. {(walletBalance / (conversionRate?.pointsPerRupee || 100)).toFixed(2)})
                                   </span>
                                 )}
                               </strong>
@@ -2047,7 +2052,12 @@ export const CheckoutPage: React.FC = () => {
                             </div>
                             <div className="border-t border-sand-100 pt-2 flex items-center justify-between text-xs">
                               <span className="text-ink-600">Conversion Rate:</span>
-                              <span className="text-ink-500 font-mono">1 Point = Rs. 0.01</span>
+                              <span className="text-ink-500 font-mono">
+                                {(conversionRate?.pointsPerRupee || 100)} Points = Rs. 1.00
+                                <span className="text-[11px] text-ink-400 ml-1">
+                                  (1 pt = Rs. {(conversionRate?.pointValue || 0.01).toFixed(4)})
+                                </span>
+                              </span>
                             </div>
                           </div>
 

@@ -6,11 +6,17 @@ import {
   PointsTransactionType,
 } from '../models/PointsTransaction';
 import { User } from '../models/User';
+import { Setting } from '../models/Setting';
 import { AppError } from '../middleware/error.middleware';
 import {
   POINT_VALUE,
   REFUND_POINTS_PER_CURRENCY_UNIT,
 } from '../constants/rewardPoints';
+
+export interface ConversionRateResult {
+  pointsPerRupee: number;
+  pointValue: number;
+}
 
 export interface CreditPointsParams {
   userId: string | Types.ObjectId;
@@ -219,13 +225,88 @@ export class WalletService {
     return { wallet: updatedWallet, transaction: tx };
   }
 
+  private cachedPointsPerRupee: number | null = null;
+  private lastCacheTime: number = 0;
+  private readonly CACHE_TTL_MS: number = 60 * 1000;
+
+  /**
+   * Fetch current points per Rs. 1 from MongoDB setting (cached), defaulting to 100.
+   */
+  async getPointsPerRupee(): Promise<number> {
+    const now = Date.now();
+    if (this.cachedPointsPerRupee !== null && now - this.lastCacheTime < this.CACHE_TTL_MS) {
+      return this.cachedPointsPerRupee;
+    }
+
+    try {
+      const doc = await Setting.findOne({ key: 'points_per_rupee' });
+      if (doc && typeof doc.value === 'number' && doc.value > 0) {
+        this.cachedPointsPerRupee = doc.value;
+        this.lastCacheTime = now;
+        return doc.value;
+      }
+    } catch (err) {
+      console.error('Failed to load points_per_rupee setting from DB:', err);
+    }
+
+    this.cachedPointsPerRupee = REFUND_POINTS_PER_CURRENCY_UNIT;
+    this.lastCacheTime = now;
+    return REFUND_POINTS_PER_CURRENCY_UNIT;
+  }
+
+  /**
+   * Get formatted conversion rate object { pointsPerRupee, pointValue }.
+   */
+  async getConversionRate(): Promise<ConversionRateResult> {
+    const pointsPerRupee = await this.getPointsPerRupee();
+    return {
+      pointsPerRupee,
+      pointValue: Number((1 / pointsPerRupee).toFixed(6)),
+    };
+  }
+
+  /**
+   * Update points conversion value per Rs. 1 in MongoDB setting.
+   */
+  async updateConversionRate(
+    pointsPerRupee: number,
+    adminUserId?: string | Types.ObjectId
+  ): Promise<ConversionRateResult> {
+    if (typeof pointsPerRupee !== 'number' || isNaN(pointsPerRupee) || pointsPerRupee <= 0) {
+      throw new AppError('Points per Rupee must be a positive number greater than 0', 400);
+    }
+
+    await Setting.findOneAndUpdate(
+      { key: 'points_per_rupee' },
+      {
+        $set: {
+          value: pointsPerRupee,
+          description: 'Number of reward points equivalent to Rs. 1.00',
+          ...(adminUserId ? { updatedBy: new Types.ObjectId(adminUserId.toString()) } : {}),
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    this.cachedPointsPerRupee = pointsPerRupee;
+    this.lastCacheTime = Date.now();
+
+    return {
+      pointsPerRupee,
+      pointValue: Number((1 / pointsPerRupee).toFixed(6)),
+    };
+  }
+
   /**
    * Calculate refundable points considering order discounts proportionally.
+   * Can accept dynamic pointsPerRupee or uses cached/default rate.
    */
   calculateRefundPoints(
     order: { subtotal: number; discountAmount?: number },
-    returnItems: Array<{ unitPrice: number; quantity: number }>
+    returnItems: Array<{ unitPrice: number; quantity: number }>,
+    pointsPerRupee?: number
   ): number {
+    const rate = pointsPerRupee ?? this.cachedPointsPerRupee ?? REFUND_POINTS_PER_CURRENCY_UNIT;
     const returnedGross = returnItems.reduce(
       (acc, item) => acc + item.unitPrice * item.quantity,
       0
@@ -238,14 +319,24 @@ export class WalletService {
       0,
       Math.floor(returnedGross - proportionalDiscount)
     );
-    return refundAmount * REFUND_POINTS_PER_CURRENCY_UNIT;
+    return Math.round(refundAmount * rate);
   }
 
   /**
    * Convert currency amount to required points.
+   * Can accept dynamic pointsPerRupee or uses cached/default rate.
    */
-  currencyToPoints(amount: number): number {
-    return Math.ceil(amount / POINT_VALUE);
+  currencyToPoints(amount: number, pointsPerRupee?: number): number {
+    const rate = pointsPerRupee ?? this.cachedPointsPerRupee ?? REFUND_POINTS_PER_CURRENCY_UNIT;
+    return Math.ceil(amount * rate);
+  }
+
+  /**
+   * Convert points to currency value (Rs.).
+   */
+  pointsToCurrency(points: number, pointsPerRupee?: number): number {
+    const rate = pointsPerRupee ?? this.cachedPointsPerRupee ?? REFUND_POINTS_PER_CURRENCY_UNIT;
+    return Number((points / rate).toFixed(2));
   }
 
   /**
@@ -257,9 +348,11 @@ export class WalletService {
   ): Promise<boolean> {
     const wallet = await Wallet.findOne({ user: userId });
     if (!wallet || !wallet.active) return false;
-    const requiredPoints = this.currencyToPoints(orderTotal);
+    const rate = await this.getPointsPerRupee();
+    const requiredPoints = this.currencyToPoints(orderTotal, rate);
     return wallet.balancePoints >= requiredPoints;
   }
+
 
   /**
    * Get user's wallet document.

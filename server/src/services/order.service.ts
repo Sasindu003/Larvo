@@ -241,7 +241,9 @@ export const orderService = {
         throw new AppError('You do not have access to this order', 403);
       }
 
-      // 3. Idempotency check: if payment already approved for reward_points, return existing
+      const pointsPerRupee = await walletService.getPointsPerRupee();
+
+      // 3. Idempotency check: if already paid with reward points, return existing payment
       const existingPayment = await Payment.findOne({ order: order._id }).session(session);
       if (
         existingPayment &&
@@ -252,7 +254,7 @@ export const orderService = {
         return {
           order,
           payment: existingPayment,
-          pointsDeducted: existingPayment.pointsUsed ?? walletService.currencyToPoints(order.total),
+          pointsDeducted: existingPayment.pointsUsed ?? walletService.currencyToPoints(order.total, pointsPerRupee),
         };
       }
 
@@ -267,7 +269,7 @@ export const orderService = {
       }
 
       // 6. Server computes required points (never trusted from client)
-      const pointsRequired = walletService.currencyToPoints(order.total);
+      const pointsRequired = walletService.currencyToPoints(order.total, pointsPerRupee);
 
       // 7. Atomically debit wallet points with floor guard and idempotency
       const { transaction } = await walletService.debit({

@@ -22,6 +22,8 @@ import {
   getAdminWalletByUser,
   getAdminWalletTransactions,
   adminAdjustWallet,
+  getConversionRate,
+  updateConversionRate,
 } from '../controllers/wallet.controller';
 import {
   getAdminOrders,
@@ -254,6 +256,31 @@ router.post(
   requireRole('admin', 'owner'),
   adminAdjustWallet
 );
+
+/**
+ * @desc    Get current points conversion value per Rs. 1
+ * @route   GET /api/admin/wallets/rate
+ * @access  admin, owner
+ */
+router.get(
+  '/wallets/rate',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  getConversionRate
+);
+
+/**
+ * @desc    Admin / Owner customize points conversion value per Rs. 1
+ * @route   PATCH /api/admin/wallets/rate
+ * @access  admin, owner
+ */
+router.patch(
+  '/wallets/rate',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  updateConversionRate
+);
+
 
 // ── Orders ───────────────────────────────────────────────────────────────────
 

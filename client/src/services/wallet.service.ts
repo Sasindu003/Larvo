@@ -2,6 +2,12 @@ import api, { ApiResponse } from './api';
 
 export const POINT_VALUE = 0.01;
 
+export interface ConversionRate {
+  pointsPerRupee: number;
+  pointValue: number;
+}
+
+
 export interface Wallet {
   _id: string;
   user: string;
@@ -181,11 +187,45 @@ export const walletService = {
   },
 
   /**
+   * Get points conversion value per Rs. 1
+   */
+  async getConversionRate(): Promise<ConversionRate> {
+    try {
+      const res = await api.get<ApiResponse<ConversionRate>>('/wallet/rate');
+      return (res as any).data || (res as any);
+    } catch (err) {
+      return extractError(err);
+    }
+  },
+
+  /**
+   * Admin / Owner: Update points conversion value per Rs. 1
+   */
+  async updateConversionRate(pointsPerRupee: number): Promise<ConversionRate> {
+    try {
+      const res = await api.patch<ApiResponse<ConversionRate>>('/admin/wallets/rate', {
+        pointsPerRupee,
+      });
+      return (res as any).data || (res as any);
+    } catch (err) {
+      return extractError(err);
+    }
+  },
+
+  /**
    * Convert points to currency value (Rs.)
    */
-  pointsToCurrency(points: number): number {
-    return Number((points * POINT_VALUE).toFixed(2));
+  pointsToCurrency(points: number, pointsPerRupee = 100): number {
+    return Number((points / pointsPerRupee).toFixed(2));
+  },
+
+  /**
+   * Convert currency amount to required points
+   */
+  currencyToPoints(amount: number, pointsPerRupee = 100): number {
+    return Math.ceil(amount * pointsPerRupee);
   },
 };
+
 
 export default walletService;

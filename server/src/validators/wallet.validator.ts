@@ -25,3 +25,11 @@ export const AdminWalletsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(20),
   q: z.string().trim().optional(),
 });
+
+export const UpdateConversionRateSchema = z.object({
+  pointsPerRupee: z
+    .coerce
+    .number({ required_error: 'Points per Rupee is required' })
+    .positive('Points per Rupee must be greater than 0'),
+});
+

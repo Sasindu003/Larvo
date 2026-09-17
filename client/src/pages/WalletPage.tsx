@@ -21,10 +21,12 @@ import {
   Wallet,
   PointsTransaction,
   PointsTransactionType,
+  ConversionRate,
 } from '../services/wallet.service';
 
 export const WalletPage: React.FC = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [rate, setRate] = useState<ConversionRate>({ pointsPerRupee: 100, pointValue: 0.01 });
   const [transactions, setTransactions] = useState<PointsTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
@@ -37,8 +39,12 @@ export const WalletPage: React.FC = () => {
   const fetchWallet = useCallback(async () => {
     try {
       setError(null);
-      const data = await walletService.getMyWallet();
+      const [data, rateData] = await Promise.all([
+        walletService.getMyWallet(),
+        walletService.getConversionRate().catch(() => ({ pointsPerRupee: 100, pointValue: 0.01 })),
+      ]);
       setWallet(data);
+      if (rateData) setRate(rateData);
     } catch (err: any) {
       setError(err.message || 'Failed to load wallet data');
     }
@@ -180,7 +186,7 @@ export const WalletPage: React.FC = () => {
   const balance = wallet?.balancePoints ?? 0;
   const lifetimeEarned = wallet?.lifetimeEarnedPoints ?? 0;
   const lifetimeSpent = wallet?.lifetimeSpentPoints ?? 0;
-  const fiatEquivalent = walletService.pointsToCurrency(balance);
+  const fiatEquivalent = walletService.pointsToCurrency(balance, rate.pointsPerRupee);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -254,7 +260,7 @@ export const WalletPage: React.FC = () => {
           </div>
 
           <div className="mt-6 pt-4 border-t border-ink-800/80 flex items-center justify-between text-[11px] text-sand-400">
-            <span>Rate: 100 pts = Rs. 1.00</span>
+            <span>Rate: {rate.pointsPerRupee} pts = Rs. 1.00</span>
             <Link
               to="/products"
               className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"

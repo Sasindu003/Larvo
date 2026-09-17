@@ -214,6 +214,8 @@ export class ReturnService {
       ReturnRequest.countDocuments(query),
     ]);
 
+    const pointsPerRupee = await walletService.getPointsPerRupee();
+
     const results = returnDocs.map((doc: any) => {
       let estimatedRefundPoints: number | null = null;
 
@@ -240,7 +242,8 @@ export class ReturnService {
               subtotal: order.subtotal || 0,
               discountAmount: order.discountAmount || 0,
             },
-            returnItems
+            returnItems,
+            pointsPerRupee
           );
         }
       }
@@ -303,12 +306,14 @@ export class ReturnService {
         };
       });
 
+      const pointsPerRupee = await walletService.getPointsPerRupee();
       const estimatedPoints = walletService.calculateRefundPoints(
         {
           subtotal: order.subtotal || 0,
           discountAmount: order.discountAmount || 0,
         },
-        returnItems
+        returnItems,
+        pointsPerRupee
       );
 
       returnRequest.status = 'pickup_scheduled';
@@ -436,6 +441,7 @@ export class ReturnService {
       };
     });
 
+    const pointsPerRupee = await walletService.getPointsPerRupee();
     const refundPoints =
       existing.estimatedRefundPoints != null && existing.estimatedRefundPoints > 0
         ? existing.estimatedRefundPoints
@@ -444,7 +450,8 @@ export class ReturnService {
               subtotal: order.subtotal || 0,
               discountAmount: order.discountAmount || 0,
             },
-            returnItems
+            returnItems,
+            pointsPerRupee
           );
 
     const idempotencyKey = `return_refund:${existing._id.toString()}`;
