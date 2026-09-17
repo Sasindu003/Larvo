@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-export type UserRole = 'customer' | 'staff' | 'admin' | 'owner' | 'delivery_manager';
+export type UserRole = 'customer' | 'staff' | 'admin' | 'owner' | 'delivery_manager' | 'supplier';
 
 export interface IAddress {
   _id?: Types.ObjectId;
@@ -21,6 +21,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash?: string;
   role: UserRole;
+  supplierId?: Types.ObjectId;
   addresses: IAddress[];
   wishlist: Types.ObjectId[];
   googleId?: string | null;
@@ -63,9 +64,10 @@ const UserSchema = new Schema<IUser>(
     active: { type: Boolean, default: true, index: true },
     role: {
       type:    String,
-      enum:    ['customer', 'staff', 'admin', 'owner', 'delivery_manager'],
+      enum:    ['customer', 'staff', 'admin', 'owner', 'delivery_manager', 'supplier'],
       default: 'customer',
     },
+    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', default: null, index: true },
     addresses: { type: [AddressSchema], default: [] },
     wishlist:  [{ type: Schema.Types.ObjectId, ref: 'Product' }],
   },

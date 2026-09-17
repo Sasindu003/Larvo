@@ -75,10 +75,38 @@ export const createSupplier = asyncHandler(async (req: Request, res: Response) =
 
   const supplier = await supplierService.createSupplier(parsed);
 
+  let credentials: { email: string; tempPassword: string } | null = null;
+  // If requested or auto-create enabled (defaults to true if createAccount !== false)
+  if (req.body.createAccount !== false) {
+    try {
+      const accountRes = await supplierService.createSupplierAccount(supplier._id.toString());
+      credentials = accountRes.credentials;
+    } catch {
+      // Ignore if user account creation fails (e.g. existing email conflict), supplier is still created
+    }
+  }
+
   res.status(201).json({
     success: true,
-    data: { supplier },
-    message: 'Supplier created successfully',
+    data: { supplier, credentials },
+    message: credentials
+      ? 'Supplier and portal account created successfully'
+      : 'Supplier created successfully',
+  });
+});
+
+/**
+ * @desc    Create/generate portal User account for existing supplier
+ * @route   POST /api/admin/suppliers/:id/create-account
+ * @access  Private (admin, owner)
+ */
+export const createSupplierAccount = asyncHandler(async (req: Request, res: Response) => {
+  const result = await supplierService.createSupplierAccount(req.params.id);
+
+  res.status(201).json({
+    success: true,
+    data: result,
+    message: 'Portal account created successfully',
   });
 });
 

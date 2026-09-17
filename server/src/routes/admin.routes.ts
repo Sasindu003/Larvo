@@ -51,6 +51,7 @@ import {
   deactivateSupplier,
   getSupplierProducts,
   deleteSupplier,
+  createSupplierAccount,
 } from '../controllers/supplier.controller';
 import {
   getPurchaseOrders,
@@ -508,16 +509,23 @@ router.get(
   getSupplierProducts
 );
 
-/**
- * @desc    Delete supplier (disallowed if referenced by variants -> 409)
- * @route   DELETE /api/admin/suppliers/:id
- * @access  admin, owner
- */
 router.delete(
   '/suppliers/:id',
   requireAuth,
   requireRole('admin', 'owner'),
   deleteSupplier
+);
+
+/**
+ * @desc    Create/generate portal User account for existing supplier
+ * @route   POST /api/admin/suppliers/:id/create-account
+ * @access  admin, owner
+ */
+router.post(
+  '/suppliers/:id/create-account',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  createSupplierAccount
 );
 
 // ── Purchase Orders ───────────────────────────────────────────────────────────

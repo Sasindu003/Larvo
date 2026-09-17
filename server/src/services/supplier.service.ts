@@ -1,6 +1,8 @@
+import crypto from 'crypto';
 import { Types } from 'mongoose';
 import { AppError } from '../middleware/error.middleware';
 import Supplier, { ISupplier } from '../models/Supplier';
+import User from '../models/User';
 import { Product } from '../models/Product';
 import {
   CreateSupplierInput,
@@ -141,6 +143,11 @@ export class SupplierService {
 
     supplier.status = 'inactive';
     await supplier.save();
+
+    if (supplier.userId) {
+      await User.findByIdAndUpdate(supplier.userId, { active: false });
+    }
+
     return supplier;
   }
 
@@ -159,7 +166,63 @@ export class SupplierService {
 
     supplier.status = 'active';
     await supplier.save();
+
+    if (supplier.userId) {
+      await User.findByIdAndUpdate(supplier.userId, { active: true });
+    }
+
     return supplier;
+  }
+
+  /**
+   * Create or link portal User account for a supplier.
+   * Generates a secure temporary password and returns credentials.
+   */
+  async createSupplierAccount(id: string): Promise<{ supplier: ISupplier; credentials: { email: string; tempPassword: string } }> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid supplier ID format', 400);
+    }
+
+    const supplier = await Supplier.findById(id);
+    if (!supplier) {
+      throw new AppError('Supplier not found', 404);
+    }
+
+    if (supplier.userId) {
+      const existingUser = await User.findById(supplier.userId);
+      if (existingUser) {
+        throw new AppError('Portal account already exists for this supplier', 409);
+      }
+    }
+
+    const email = supplier.email.toLowerCase().trim();
+    const existingEmailUser = await User.findOne({ email });
+    if (existingEmailUser) {
+      throw new AppError(`A user account with email '${email}' already exists in the system`, 409);
+    }
+
+    // Generate readable, secure temporary password (e.g., Supp#a8b7c6d5)
+    const tempPassword = `Supp#${crypto.randomBytes(4).toString('hex')}`;
+
+    const user = await User.create({
+      name: supplier.name || supplier.companyName,
+      email,
+      passwordHash: tempPassword,
+      role: 'supplier',
+      supplierId: supplier._id,
+      active: supplier.status === 'active',
+    });
+
+    supplier.userId = user._id as Types.ObjectId;
+    await supplier.save();
+
+    return {
+      supplier,
+      credentials: {
+        email,
+        tempPassword,
+      },
+    };
   }
 
   /**

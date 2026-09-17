@@ -18,6 +18,7 @@ import {
   Wallet,
   Package,
   Truck,
+  Building2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { categoryService, Category } from '../../services/category.service';
@@ -35,6 +36,7 @@ export const Header: React.FC = () => {
   const isAuthenticated = status === 'authenticated';
   const isAdminUser = user && ['staff', 'admin', 'owner'].includes(user.role);
   const isDeliveryUser = user && ['delivery_manager', 'admin', 'owner'].includes(user.role);
+  const isSupplierUser = user && ['supplier'].includes(user.role);
 
   const handleLogout = async () => {
     try {
@@ -555,6 +557,18 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
+            {/* Supplier Portal Shortcut */}
+            {isSupplierUser && (
+              <Link
+                to="/supplier/purchase-orders"
+                className="hidden sm:inline-flex p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-full transition-colors"
+                title="Supplier Portal"
+                aria-label="Supplier Portal"
+              >
+                <Building2 className="w-5 h-5" />
+              </Link>
+            )}
+
             {/* Admin Portal Shortcut — only for staff/admin/owner */}
             {isAdminUser && (
               <Link
@@ -624,6 +638,16 @@ export const Header: React.FC = () => {
                           >
                             <Truck className="w-3.5 h-3.5 text-sky-600" />
                             <span>Delivery Portal</span>
+                          </Link>
+                        )}
+                        {isSupplierUser && (
+                          <Link
+                            to="/supplier/purchase-orders"
+                            onClick={() => setAccountDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-xs text-indigo-700 hover:bg-indigo-50 transition-colors font-medium"
+                          >
+                            <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Supplier Portal</span>
                           </Link>
                         )}
                         {isAdminUser && (

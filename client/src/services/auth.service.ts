@@ -18,6 +18,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  supplierId?: string;
   addresses: Address[];
   wishlist: string[];
   createdAt: string;

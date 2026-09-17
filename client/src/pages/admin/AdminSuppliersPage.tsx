@@ -17,6 +17,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   ShieldAlert,
+  ShieldCheck,
+  Key,
+  Copy,
+  Check,
   Package,
   Trash2,
 } from 'lucide-react';
@@ -52,6 +56,9 @@ export const AdminSuppliersPage: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [credentialsModal, setCredentialsModal] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [copiedPassword, setCopiedPassword] = useState(false);
+  const [creatingAccount, setCreatingAccount] = useState(false);
 
   const [selectedSupplier, setSelectedSupplier] = useState<ISupplier | null>(null);
   const [supplierProducts, setSupplierProducts] = useState<SupplierProductItem[]>([]);
@@ -164,16 +171,37 @@ export const AdminSuppliersPage: React.FC = () => {
     setSubmitting(true);
     setFormError(null);
     try {
-      const created = await supplierService.createSupplier(formData);
-      toast.success(`Supplier "${created.companyName}" created successfully`);
+      const res = await supplierService.createSupplier(formData);
+      const supplier = res.supplier;
+      toast.success(`Supplier "${supplier.companyName}" created successfully`);
       setCreateModalOpen(false);
       fetchSuppliers();
+      if (res.credentials) {
+        setCredentialsModal(res.credentials);
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to create supplier';
       setFormError(msg);
       toast.error(msg);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Create Portal Account for selected supplier
+  const handleCreateAccount = async () => {
+    if (!selectedSupplier) return;
+    setCreatingAccount(true);
+    try {
+      const res = await supplierService.createSupplierAccount(selectedSupplier._id);
+      setSelectedSupplier({ ...selectedSupplier, userId: res.supplier.userId });
+      setCredentialsModal(res.credentials);
+      toast.success('Portal account created successfully!');
+      fetchSuppliers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to create portal account');
+    } finally {
+      setCreatingAccount(false);
     }
   };
 
@@ -861,6 +889,43 @@ export const AdminSuppliersPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Portal Access Status & Actions */}
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  {selectedSupplier.userId ? (
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                      <ShieldAlert className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-xs font-bold text-white block">
+                      {selectedSupplier.userId ? 'Portal Account Active' : 'No Portal Access'}
+                    </span>
+                    <span className="text-[11px] text-slate-400 block">
+                      {selectedSupplier.userId
+                        ? 'Supplier can log into the supplier portal with their email'
+                        : 'Supplier does not have an active portal login yet'}
+                    </span>
+                  </div>
+                </div>
+
+                {!selectedSupplier.userId && canMutate && (
+                  <button
+                    type="button"
+                    disabled={creatingAccount}
+                    onClick={handleCreateAccount}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors disabled:opacity-50"
+                  >
+                    {creatingAccount ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+                    Create Portal Account
+                  </button>
+                )}
+              </div>
+
               {/* Associated Products */}
               <div className="pt-2 border-t border-slate-800">
                 <div className="flex items-center justify-between mb-2">
@@ -1061,6 +1126,89 @@ export const AdminSuppliersPage: React.FC = () => {
                 >
                   {submitting && <RefreshCw className="w-4 h-4 animate-spin" />}
                   Confirm Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── One-Time Credentials Modal ─────────────────────────────────────── */}
+      {credentialsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Key className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-base font-bold text-white">Supplier Portal Credentials</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setCredentialsModal(null);
+                  setCopiedPassword(false);
+                }}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2.5">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-400 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-amber-200">Important: Save these credentials now</p>
+                  <p className="text-[11px] leading-relaxed text-amber-300/90">
+                    This temporary password is shown <strong>once only</strong>. Provide it to the supplier so they can access their portal.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    Login Email
+                  </label>
+                  <div className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono text-xs select-all">
+                    {credentialsModal.email}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    Temporary Password
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-indigo-300 font-mono text-sm tracking-wider select-all font-semibold">
+                      {credentialsModal.tempPassword}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(credentialsModal.tempPassword);
+                        setCopiedPassword(true);
+                        toast.success('Password copied to clipboard');
+                        setTimeout(() => setCopiedPassword(false), 2500);
+                      }}
+                      className="px-3 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                    >
+                      {copiedPassword ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                      {copiedPassword ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCredentialsModal(null);
+                    setCopiedPassword(false);
+                  }}
+                  className="px-5 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors"
+                >
+                  Done
                 </button>
               </div>
             </div>

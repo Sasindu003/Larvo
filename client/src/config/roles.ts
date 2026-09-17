@@ -1,8 +1,8 @@
-export type UserRole = 'customer' | 'staff' | 'admin' | 'owner' | 'delivery_manager';
+export type UserRole = 'customer' | 'staff' | 'admin' | 'owner' | 'delivery_manager' | 'supplier';
 
 export const ROLES = {
   /** All roles — any authenticated user */
-  ANY: ['customer', 'staff', 'admin', 'owner', 'delivery_manager'] as const,
+  ANY: ['customer', 'staff', 'admin', 'owner', 'delivery_manager', 'supplier'] as const,
 
   /** Staff, Admin, and Owner */
   STAFF_AND_ABOVE: ['staff', 'admin', 'owner'] as const,
@@ -15,6 +15,9 @@ export const ROLES = {
 
   /** Delivery operations */
   DELIVERY: ['delivery_manager', 'admin', 'owner'] as const,
+
+  /** Supplier portal */
+  SUPPLIER: ['supplier'] as const,
 } as const;
 
 export interface AdminNavItem {

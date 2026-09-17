@@ -10,6 +10,7 @@ export interface ISupplier extends Document {
   address?: string;
   status: SupplierStatus;
   notes?: string;
+  userId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,6 +59,12 @@ const supplierSchema = new Schema<ISupplier>(
       type: String,
       trim: true,
       default: '',
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true,
     },
   },
   {

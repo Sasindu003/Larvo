@@ -29,6 +29,10 @@ import { AdminSuppliersPage } from '../pages/admin/AdminSuppliersPage';
 import { AdminPurchaseOrdersPage } from '../pages/admin/AdminPurchaseOrdersPage';
 import { DeliveryOrdersPage } from '../pages/delivery/DeliveryOrdersPage';
 import { DeliveryReturnsPage } from '../pages/delivery/DeliveryReturnsPage';
+import { SupplierLayout } from '../components/layout/SupplierLayout';
+import { SupplierProfilePage } from '../pages/supplier/SupplierProfilePage';
+import { SupplierPurchaseOrdersPage } from '../pages/supplier/SupplierPurchaseOrdersPage';
+import { SupplierProductsPage } from '../pages/supplier/SupplierProductsPage';
 import { OrdersPage } from '../pages/OrdersPage';
 import { InvoicePage } from '../pages/InvoicePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -186,6 +190,24 @@ export const router = createBrowserRouter([
       { index: true, element: <DeliveryOrdersPage /> },
       { path: 'orders', element: <DeliveryOrdersPage /> },
       { path: 'returns', element: <DeliveryReturnsPage /> },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  {
+    path: '/supplier',
+    element: (
+      <ProtectedRoute>
+        <RoleRoute roles={ROLES.SUPPLIER}>
+          <SupplierLayout />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
+    errorElement: <NotFoundPage />,
+    children: [
+      { index: true, element: <SupplierPurchaseOrdersPage /> },
+      { path: 'purchase-orders', element: <SupplierPurchaseOrdersPage /> },
+      { path: 'products', element: <SupplierProductsPage /> },
+      { path: 'profile', element: <SupplierProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

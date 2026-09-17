@@ -40,6 +40,8 @@ export const LoginPage: React.FC = () => {
         navigate(redirect);
       } else if (loggedUser.role === 'delivery_manager') {
         navigate('/delivery/orders');
+      } else if (loggedUser.role === 'supplier') {
+        navigate('/supplier/purchase-orders');
       } else if (['staff', 'admin', 'owner'].includes(loggedUser.role)) {
         navigate('/admin');
       } else {
