@@ -140,6 +140,11 @@ export const ProfilePage: React.FC = () => {
       return;
     }
 
+    if (addressForm.phone && !/^\d{10,13}$/.test(addressForm.phone.trim())) {
+      toast.error('Phone number must contain only numbers and be 10 to 13 digits long');
+      return;
+    }
+
     setAddressLoading(true);
     try {
       if (editingAddressId) {
@@ -585,11 +590,15 @@ export const ProfilePage: React.FC = () => {
                   </label>
                   <input
                     type="tel"
+                    maxLength={13}
                     value={addressForm.phone}
-                    onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
-                    placeholder="+66 81 234 5678"
-                    className="w-full bg-cream-50 border border-sand-300 rounded-lg px-3 py-2 text-xs text-ink-900 focus:bg-white focus:outline-none focus:border-ink-600"
+                    onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '').slice(0, 13) })}
+                    placeholder="e.g. 0771234567"
+                    className="w-full bg-cream-50 border border-sand-300 rounded-lg px-3 py-2 text-xs text-ink-900 focus:bg-white focus:outline-none focus:border-ink-600 font-mono"
                   />
+                  <span className="text-[11px] text-ink-500 mt-1 block">
+                    Numbers only, 10–13 digits {addressForm.phone ? `(${addressForm.phone.length}/13)` : ''}
+                  </span>
                 </div>
               </div>
 

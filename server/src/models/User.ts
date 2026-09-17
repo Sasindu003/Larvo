@@ -40,7 +40,14 @@ const AddressSchema = new Schema<IAddress>(
     province:   { type: String, required: true },
     postalCode: { type: String, required: true },
     country:    { type: String, required: true, default: 'Thailand' },
-    phone:      { type: String, trim: true },
+    phone:      {
+      type: String,
+      trim: true,
+      validate: {
+        validator: (v: string) => !v || /^\d{10,13}$/.test(v),
+        message: 'Phone number must contain only numbers and be 10 to 13 digits long',
+      },
+    },
     isDefault:  { type: Boolean, default: false },
   },
   { _id: true }

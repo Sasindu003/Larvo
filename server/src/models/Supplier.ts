@@ -38,6 +38,10 @@ const supplierSchema = new Schema<ISupplier>(
       type: String,
       required: [true, 'Phone number is required'],
       trim: true,
+      validate: {
+        validator: (v: string) => /^\d{10,13}$/.test(v),
+        message: 'Phone number must contain only numbers and be 10 to 13 digits long',
+      },
     },
     address: {
       type: String,

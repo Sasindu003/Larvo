@@ -156,6 +156,11 @@ export const AdminSuppliersPage: React.FC = () => {
       return;
     }
 
+    if (!/^\d{10,13}$/.test(formData.phone.trim())) {
+      setFormError('Phone number must contain only numbers and be 10 to 13 digits long (no letters or words).');
+      return;
+    }
+
     setSubmitting(true);
     setFormError(null);
     try {
@@ -178,6 +183,11 @@ export const AdminSuppliersPage: React.FC = () => {
     if (!selectedSupplier) return;
     if (!formData.companyName.trim() || !formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
       setFormError('Please fill in all required fields.');
+      return;
+    }
+
+    if (!/^\d{10,13}$/.test(formData.phone.trim())) {
+      setFormError('Phone number must contain only numbers and be 10 to 13 digits long (no letters or words).');
       return;
     }
 
@@ -591,11 +601,15 @@ export const AdminSuppliersPage: React.FC = () => {
                   <input
                     type="tel"
                     required
-                    placeholder="+1 (555) 012-3456"
+                    maxLength={13}
+                    placeholder="e.g. 0771234567"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 13) })}
+                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
                   />
+                  <span className="text-[11px] text-slate-500 mt-1 block">
+                    Numbers only, 10–13 digits {formData.phone ? `(${formData.phone.length}/13)` : ''}
+                  </span>
                 </div>
               </div>
 
@@ -718,10 +732,15 @@ export const AdminSuppliersPage: React.FC = () => {
                   <input
                     type="tel"
                     required
+                    maxLength={13}
+                    placeholder="e.g. 0771234567"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 13) })}
+                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
                   />
+                  <span className="text-[11px] text-slate-500 mt-1 block">
+                    Numbers only, 10–13 digits {formData.phone ? `(${formData.phone.length}/13)` : ''}
+                  </span>
                 </div>
               </div>
 

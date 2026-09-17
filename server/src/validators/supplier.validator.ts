@@ -19,8 +19,7 @@ export const CreateSupplierSchema = z.object({
   phone: z
     .string({ required_error: 'Phone number is required' })
     .trim()
-    .min(5, 'Phone number must be at least 5 characters')
-    .max(30, 'Phone number cannot exceed 30 characters'),
+    .regex(/^\d{10,13}$/, 'Phone number must contain only numbers and be 10 to 13 digits long'),
   address: z
     .string()
     .trim()
@@ -41,7 +40,11 @@ export const UpdateSupplierSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   companyName: z.string().trim().min(2).max(100).optional(),
   email: z.string().trim().email('Invalid email address').max(100).optional(),
-  phone: z.string().trim().min(5).max(30).optional(),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\d{10,13}$/, 'Phone number must contain only numbers and be 10 to 13 digits long')
+    .optional(),
   address: z.string().trim().max(500).optional(),
   status: z.enum(['active', 'inactive']).optional(),
   notes: z.string().trim().max(1000).optional(),

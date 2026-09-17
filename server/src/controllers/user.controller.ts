@@ -79,6 +79,15 @@ export const addAddress = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const { isDefault, ...addressData } = req.body;
+
+  if (addressData.phone !== undefined && addressData.phone !== null && addressData.phone !== '') {
+    const cleanPhone = String(addressData.phone).trim();
+    if (!/^\d{10,13}$/.test(cleanPhone)) {
+      throw new AppError('Phone number must contain only numbers and be 10 to 13 digits long', 400);
+    }
+    addressData.phone = cleanPhone;
+  }
+
   const isFirstAddress = user.addresses.length === 0;
   const shouldBeDefault = isDefault || isFirstAddress;
 
@@ -123,6 +132,14 @@ export const updateAddress = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const { isDefault, _id, ...updateData } = req.body;
+
+  if (updateData.phone !== undefined && updateData.phone !== null && updateData.phone !== '') {
+    const cleanPhone = String(updateData.phone).trim();
+    if (!/^\d{10,13}$/.test(cleanPhone)) {
+      throw new AppError('Phone number must contain only numbers and be 10 to 13 digits long', 400);
+    }
+    updateData.phone = cleanPhone;
+  }
 
   // If setting this one to default, unset all others
   if (isDefault) {
