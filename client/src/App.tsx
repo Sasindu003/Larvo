@@ -2,6 +2,7 @@ import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { router } from './routes/AppRouter';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -15,6 +16,7 @@ export default function App() {
           <Toaster position="top-center" />
           <RouterProvider router={router} />
           <Analytics />
+          <SpeedInsights />
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>
