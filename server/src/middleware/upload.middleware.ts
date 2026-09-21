@@ -34,6 +34,8 @@ const upload = multer({
 });
 
 export const uploadSlip = upload.single('slip');
+export const uploadFiles = upload.array('files', 5);
+export const uploadPhotos = upload.array('photos', 5);
 
 export const handleMulterError = (
   err: any,

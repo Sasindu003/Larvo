@@ -25,6 +25,7 @@ import staffRoutes from './routes/staff.routes';
 import returnRoutes from './routes/return.routes';
 import fileRoutes from './routes/file.routes';
 import supplierRoutes from './routes/supplier.routes';
+import reviewRoutes from './routes/review.routes';
 
 const app = express();
 
@@ -121,6 +122,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/returns', returnRoutes);
 app.use('/api/supplier', supplierRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // 404 & Centralized Error Handlers
 app.use(notFound);
