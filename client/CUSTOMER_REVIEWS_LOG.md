@@ -67,3 +67,27 @@ When ready to implement Customer Reviews:
 2. In `client/src/pages/ProductDetailsPage.tsx`:
    - Add interactive review submission form (star rating selector, title, comment).
    - Add review list with pagination, date, verified purchaser badge, and breakdown bars.
+
+---
+
+## 5. Feature Implemented & Restored
+
+**Date**: 2026-09-21  
+**Status**: Fully Implemented & Verified  
+
+### Completed Scope:
+1. **Backend**:
+   - `server/src/models/Review.ts` with compound unique index (`{ product: 1, user: 1 }`), `calcAverageRating` static pipeline updating `Product.ratingAvg` & `Product.ratingCount`, GridFS `photos[]`, helpful voting (`helpfulVotes.up`, `helpfulVotes.down`), and `adminReply`.
+   - `server/src/validators/review.validator.ts` with Zod validation.
+   - `server/src/services/review.service.ts` enforcing strict delivered-order gate: `Order.findOne({ user: userId, 'items.product': productId, status: 'delivered' })`.
+   - `server/src/controllers/review.controller.ts` & `server/src/routes/review.routes.ts` mounted at `/api/reviews`.
+   - `server/src/routes/file.routes.ts` with `POST /upload` saving up to 5 review photos directly to MongoDB GridFS.
+2. **Admin Dashboard**:
+   - `client/src/pages/admin/AdminReviewsPage.tsx` registered at `/admin/reviews` with analytics cards, 5★-1★ breakdown, filters, status toggling (`published`/`hidden`/`flagged`), official store reply modal, photo lightbox, and delete moderation.
+   - Added `Reviews` nav link in `client/src/config/roles.ts` and `MessageSquare` icon in `client/src/components/layout/AdminLayout.tsx`.
+3. **Storefront**:
+   - Restored rating count and review link in `client/src/pages/ProductDetailsPage.tsx`.
+   - Added AliExpress-style photo gallery strip with star overlays and full-screen lightbox.
+   - Added delivered-order eligibility gate: only users with a delivered order for the product can submit reviews. Shows helpful contextual notices for non-delivered/non-purchaser states.
+   - Interactive review submission modal with 5-star rating, review title, detailed comment, and multi-photo upload to GridFS.
+   - Helpful vote buttons (`👍 Helpful / 👎`) with instant feedback.

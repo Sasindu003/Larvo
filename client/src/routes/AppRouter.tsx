@@ -23,6 +23,7 @@ import { AdminCouponsPage } from '../pages/admin/AdminCouponsPage';
 import { AdminWalletsPage } from '../pages/admin/AdminWalletsPage';
 import { AdminOrdersPage } from '../pages/admin/AdminOrdersPage';
 import { AdminReturnsPage } from '../pages/admin/AdminReturnsPage';
+import { AdminReviewsPage } from '../pages/admin/AdminReviewsPage';
 import { AdminStaffPage } from '../pages/admin/AdminStaffPage';
 import { AdminAnalyticsPage } from '../pages/admin/AdminAnalyticsPage';
 import { AdminSuppliersPage } from '../pages/admin/AdminSuppliersPage';
@@ -148,6 +149,7 @@ export const router = createBrowserRouter([
       },
       { path: 'orders', element: <AdminOrdersPage /> },
       { path: 'returns', element: <AdminReturnsPage /> },
+      { path: 'reviews', element: <AdminReviewsPage /> },
       {
         path: 'staff',
         element: (

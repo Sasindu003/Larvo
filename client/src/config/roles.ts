@@ -103,6 +103,14 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     allowedRoles: ROLES.STAFF_AND_ABOVE,
   },
   {
+    title: 'Reviews',
+    slug: 'reviews',
+    href: '/admin/reviews',
+    iconName: 'MessageSquare',
+    description: 'Customer reviews, ratings, and official replies',
+    allowedRoles: ROLES.STAFF_AND_ABOVE,
+  },
+  {
     title: 'Staff',
     slug: 'staff',
     href: '/admin/staff',

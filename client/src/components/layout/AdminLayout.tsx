@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Sparkles,
   Wallet,
+  MessageSquare,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -35,6 +36,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Wallet,
   ShoppingCart,
   RotateCcw,
+  MessageSquare,
   Users,
   BarChart3,
   Truck,
