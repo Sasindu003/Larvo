@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { inventoryService, InventoryValidationResponse } from '../services/inventory.service';
+import { useAuth } from './AuthContext';
 
 export interface CartItem {
   productId: string;
@@ -28,18 +29,70 @@ type CartAction =
   | { type: 'CLEAR_CART' }
   | { type: 'SET_DRAWER_OPEN'; isOpen: boolean };
 
-const CART_STORAGE_KEY = 'larvo_cart_v1';
+export const GUEST_CART_KEY = 'larvo_cart_guest';
+export const ACTIVE_CART_STORAGE_KEY = 'larvo_active_cart_key';
+const LEGACY_CART_KEY = 'larvo_cart_v1';
 
-function getInitialCart(): CartItem[] {
+export function getCartStorageKey(userId?: string | null): string {
+  return userId ? `larvo_cart_${userId}` : GUEST_CART_KEY;
+}
+
+export function loadCartFromStorage(key: string): CartItem[] {
   if (typeof window === 'undefined') return [];
   try {
-    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    const saved = localStorage.getItem(key);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) return parsed;
     }
   } catch (err) {
-    console.error('Failed to parse cart from localStorage:', err);
+    console.error(`Failed to parse cart from ${key}:`, err);
+  }
+  return [];
+}
+
+export function saveCartToStorage(key: string, items: CartItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch (err) {
+    console.error(`Failed to save cart to ${key}:`, err);
+  }
+}
+
+export function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem[] {
+  const merged = [...userItems];
+
+  for (const gItem of guestItems) {
+    const existingIndex = merged.findIndex((item) => item.variantSku === gItem.variantSku);
+    if (existingIndex > -1) {
+      const existing = merged[existingIndex];
+      const maxStock = existing.stock !== undefined ? existing.stock : (gItem.stock !== undefined ? gItem.stock : 99);
+      const combinedQty = Math.min(existing.quantity + gItem.quantity, maxStock);
+      merged[existingIndex] = {
+        ...existing,
+        quantity: combinedQty,
+      };
+    } else {
+      merged.push(gItem);
+    }
+  }
+
+  return merged;
+}
+
+function getInitialCart(): CartItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    // Purge legacy global key to prevent lingering cart items across logout/accounts
+    if (localStorage.getItem(LEGACY_CART_KEY)) {
+      localStorage.removeItem(LEGACY_CART_KEY);
+    }
+
+    const activeKey = localStorage.getItem(ACTIVE_CART_STORAGE_KEY) || GUEST_CART_KEY;
+    return loadCartFromStorage(activeKey);
+  } catch (err) {
+    console.error('Failed to initialize cart from storage:', err);
   }
   return [];
 }
@@ -154,19 +207,80 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, status } = useAuth();
   const [state, dispatch] = useReducer(cartReducer, {
     items: getInitialCart(),
     isDrawerOpen: false,
   });
 
-  // Sync with localStorage on every change
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+  const isInitializedRef = useRef(false);
+
+  // Sync auth state with cart storage & isolate accounts
   useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items));
-    } catch (err) {
-      console.error('Failed to save cart to localStorage:', err);
+    // Wait until auth initialization completes
+    if (status === 'loading' || status === 'idle') {
+      return;
     }
-  }, [state.items]);
+
+    const currentUserId = user?._id || null;
+    const targetKey = getCartStorageKey(currentUserId);
+
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
+      prevUserIdRef.current = currentUserId;
+      localStorage.setItem(ACTIVE_CART_STORAGE_KEY, targetKey);
+
+      const storedItems = loadCartFromStorage(targetKey);
+      dispatch({ type: 'HYDRATE', items: storedItems });
+      return;
+    }
+
+    // No user transition
+    if (prevUserIdRef.current === currentUserId) {
+      return;
+    }
+
+    const previousUserId = prevUserIdRef.current;
+    prevUserIdRef.current = currentUserId;
+    localStorage.setItem(ACTIVE_CART_STORAGE_KEY, targetKey);
+
+    // Scenario 1: Guest logged in (null -> userId)
+    if (!previousUserId && currentUserId) {
+      const guestItems = loadCartFromStorage(GUEST_CART_KEY);
+      const userItems = loadCartFromStorage(targetKey);
+
+      if (guestItems.length > 0) {
+        const merged = mergeCartItems(userItems, guestItems);
+        saveCartToStorage(targetKey, merged);
+        localStorage.removeItem(GUEST_CART_KEY);
+        dispatch({ type: 'HYDRATE', items: merged });
+      } else {
+        dispatch({ type: 'HYDRATE', items: userItems });
+      }
+    }
+    // Scenario 2: User logged out (userId -> null)
+    else if (previousUserId && !currentUserId) {
+      // Current user cart is safely retained in larvo_cart_${previousUserId}
+      // Reset active cart to clean guest cart
+      const guestItems = loadCartFromStorage(GUEST_CART_KEY);
+      dispatch({ type: 'HYDRATE', items: guestItems });
+      dispatch({ type: 'SET_DRAWER_OPEN', isOpen: false });
+    }
+    // Scenario 3: Switched directly between user accounts (userIdA -> userIdB)
+    else {
+      const userItems = loadCartFromStorage(targetKey);
+      dispatch({ type: 'HYDRATE', items: userItems });
+      dispatch({ type: 'SET_DRAWER_OPEN', isOpen: false });
+    }
+  }, [status, user?._id]);
+
+  // Sync with localStorage on every cart mutation
+  useEffect(() => {
+    if (!isInitializedRef.current) return;
+    const targetKey = getCartStorageKey(user?._id);
+    saveCartToStorage(targetKey, state.items);
+  }, [state.items, user?._id]);
 
   const subtotal = useMemo(() => {
     return state.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);

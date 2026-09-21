@@ -76,8 +76,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await authService.logout();
-    dispatch({ type: 'CLEAR_USER' });
+    try {
+      await authService.logout();
+    } catch (err) {
+      console.error('Logout request failed:', err);
+    } finally {
+      dispatch({ type: 'CLEAR_USER' });
+    }
   };
 
   return (
