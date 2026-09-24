@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+﻿import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type POStatus =
   | 'draft'
@@ -47,53 +47,12 @@ const poItemSchema = new Schema<IPOItem>(
   { _id: true }
 );
 
-export type SupplierResponseDecision = 'pending' | 'accepted' | 'declined';
-
-export interface ISupplierResponseItem {
-  poItemId: Types.ObjectId;
-  canSupplyQty: number;
-  unitPrice: number;
-}
-
-export interface ISupplierResponse {
-  decision: SupplierResponseDecision;
-  respondedAt?: Date | null;
-  items: ISupplierResponseItem[];
-  estimatedDeliveryDate?: Date | null;
-  notes?: string;
-}
-
-const supplierResponseItemSchema = new Schema<ISupplierResponseItem>(
-  {
-    poItemId: { type: Schema.Types.ObjectId, required: true },
-    canSupplyQty: { type: Number, required: true, min: 0 },
-    unitPrice: { type: Number, required: true, min: 0 },
-  },
-  { _id: false }
-);
-
-const supplierResponseSchema = new Schema<ISupplierResponse>(
-  {
-    decision: {
-      type: String,
-      enum: ['pending', 'accepted', 'declined'],
-      default: 'pending',
-    },
-    respondedAt: { type: Date, default: null },
-    items: { type: [supplierResponseItemSchema], default: [] },
-    estimatedDeliveryDate: { type: Date, default: null },
-    notes: { type: String, trim: true, default: '' },
-  },
-  { _id: false }
-);
-
 export interface IPurchaseOrder extends Document {
   supplier: Types.ObjectId;
   items: IPOItem[];
   status: POStatus;
   expectedDeliveryDate?: Date | null;
   notes?: string;
-  supplierResponse?: ISupplierResponse;
   createdAt: Date;
   updatedAt: Date;
   totalCost: number;
@@ -114,10 +73,6 @@ const purchaseOrderSchema = new Schema<IPurchaseOrder>(
     },
     expectedDeliveryDate: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
-    supplierResponse: {
-      type: supplierResponseSchema,
-      default: () => ({ decision: 'pending', items: [] }),
-    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

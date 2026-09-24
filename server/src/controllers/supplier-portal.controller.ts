@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
-import { ZodError } from 'zod';
 import { AppError } from '../middleware/error.middleware';
 import Supplier from '../models/Supplier';
 import User from '../models/User';
 import { purchaseOrderService } from '../services/purchase-order.service';
 import { supplierService } from '../services/supplier.service';
-import { SupplierRespondSchema } from '../validators/purchase-order.validator';
 import { asyncHandler } from '../utils/asyncHandler';
 
 /**
@@ -145,36 +143,3 @@ export const changeSupplierPassword = asyncHandler(async (req: Request, res: Res
     message: 'Password updated successfully',
   });
 });
-
-/**
- * @desc    Supplier responds to a purchase order request (accept or decline with feedback)
- * @route   PATCH /api/supplier/purchase-orders/:id/respond
- * @access  Private (supplier, staff, admin, owner)
- */
-export const respondToPurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
-
-  let parsed;
-  try {
-    parsed = SupplierRespondSchema.parse(req.body);
-  } catch (err) {
-    if (err instanceof ZodError) {
-      const errors = err.errors.map((e) => ({ field: e.path.join('.'), message: e.message }));
-      throw new AppError(err.errors[0]?.message || 'Validation failed', 400, errors);
-    }
-    throw err;
-  }
-
-  const updatedPO = await purchaseOrderService.respondToPurchaseOrder(
-    req.params.id,
-    supplierId.toString(),
-    parsed
-  );
-
-  res.status(200).json({
-    success: true,
-    data: { purchaseOrder: updatedPO },
-    message: `Purchase order response submitted successfully (${parsed.decision})`,
-  });
-});
-

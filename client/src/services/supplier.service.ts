@@ -141,11 +141,6 @@ export const supplierPortalService = {
     return res.data!.purchaseOrder;
   },
 
-  respondToPurchaseOrder: async (id: string, data: any): Promise<any> => {
-    const res = await api.patch<any, ApiResponse<{ purchaseOrder: any }>>(`/supplier/purchase-orders/${id}/respond`, data);
-    return res.data!.purchaseOrder;
-  },
-
   getProducts: async (): Promise<SupplierProductsResponse> => {
     const res = await api.get<any, ApiResponse<SupplierProductsResponse>>('/supplier/products');
     return res.data!;
