@@ -79,3 +79,44 @@ export const GetPurchaseOrdersQuerySchema = z.object({
 });
 
 export type GetPurchaseOrdersQuery = z.infer<typeof GetPurchaseOrdersQuerySchema>;
+
+export const SupplierRespondSchema = z
+  .object({
+    decision: z.enum(['accepted', 'declined'], {
+      required_error: 'Decision is required (accepted or declined)',
+    }),
+    items: z
+      .array(
+        z.object({
+          poItemId: z.string({ required_error: 'poItemId is required' }).min(1),
+          canSupplyQty: z
+            .number({ required_error: 'canSupplyQty is required' })
+            .int('Quantity must be an integer')
+            .min(0, 'Quantity cannot be negative'),
+          unitPrice: z
+            .number({ required_error: 'unitPrice is required' })
+            .min(0, 'Unit price cannot be negative'),
+        })
+      )
+      .optional()
+      .default([]),
+    estimatedDeliveryDate: z
+      .string()
+      .datetime({ message: 'Invalid datetime format' })
+      .optional()
+      .nullable()
+      .transform((val) => (val ? new Date(val) : null)),
+    notes: z.string().trim().max(2000).optional().default(''),
+  })
+  .refine(
+    (data) => {
+      if (data.decision === 'accepted' && (!data.items || data.items.length === 0)) {
+        return false;
+      }
+      return true;
+    },
+    { message: 'Accepted response must include item quantities and prices' }
+  );
+
+export type SupplierRespondInput = z.infer<typeof SupplierRespondSchema>;
+

@@ -7,6 +7,7 @@ import {
   getSupplierPurchaseOrderById,
   getSupplierProducts,
   changeSupplierPassword,
+  respondToPurchaseOrder,
 } from '../controllers/supplier-portal.controller';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.use(requireRole('supplier', 'staff', 'admin', 'owner'));
 router.get('/me', getSupplierMe);
 router.get('/purchase-orders', getSupplierPurchaseOrders);
 router.get('/purchase-orders/:id', getSupplierPurchaseOrderById);
+router.patch('/purchase-orders/:id/respond', respondToPurchaseOrder);
 router.get('/products', getSupplierProducts);
 router.patch('/change-password', changeSupplierPassword);
 

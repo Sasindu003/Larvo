@@ -49,6 +49,33 @@ export interface IPOItem {
   unitCost: number;
 }
 
+export type SupplierResponseDecision = 'pending' | 'accepted' | 'declined';
+
+export interface ISupplierResponseItem {
+  poItemId: string;
+  canSupplyQty: number;
+  unitPrice: number;
+}
+
+export interface ISupplierResponse {
+  decision: SupplierResponseDecision;
+  respondedAt?: string | null;
+  items: ISupplierResponseItem[];
+  estimatedDeliveryDate?: string | null;
+  notes?: string;
+}
+
+export interface SupplierRespondPayload {
+  decision: 'accepted' | 'declined';
+  items?: {
+    poItemId: string;
+    canSupplyQty: number;
+    unitPrice: number;
+  }[];
+  estimatedDeliveryDate?: string | null;
+  notes?: string;
+}
+
 export interface IPurchaseOrder {
   _id: string;
   supplier: ISupplier | string;
@@ -56,6 +83,7 @@ export interface IPurchaseOrder {
   status: POStatus;
   expectedDeliveryDate?: string | null;
   notes?: string;
+  supplierResponse?: ISupplierResponse;
   totalCost: number;
   createdAt: string;
   updatedAt: string;

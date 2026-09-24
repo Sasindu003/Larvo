@@ -9,6 +9,7 @@ import {
   UpdatePurchaseOrderInput,
   GetPurchaseOrdersQuery,
   ReceivePOInput,
+  SupplierRespondInput,
 } from '../validators/purchase-order.validator';
 
 export interface PaginatedPurchaseOrders {
@@ -195,6 +196,22 @@ export class PurchaseOrderService {
       );
     }
 
+    if (po.status === 'submitted' && newStatus === 'confirmed') {
+      const decision = po.supplierResponse?.decision;
+      if (decision === 'pending' || !decision) {
+        throw new AppError(
+          'Cannot confirm order: Supplier has not responded to this request yet',
+          400
+        );
+      }
+      if (decision === 'declined') {
+        throw new AppError(
+          'Cannot confirm order: Supplier has declined this request. You can cancel this order.',
+          400
+        );
+      }
+    }
+
     po.status = newStatus;
     await po.save();
 
@@ -316,8 +333,66 @@ export class PurchaseOrderService {
       session.endSession();
     }
   }
+
+  async respondToPurchaseOrder(
+    id: string,
+    supplierId: string,
+    input: SupplierRespondInput
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    if (po.supplier.toString() !== supplierId) {
+      throw new AppError('You do not have permission to respond to this purchase order', 403);
+    }
+
+    if (po.status !== 'submitted') {
+      throw new AppError(
+        `Can only respond to submitted purchase orders. Current status: '${po.status}'`,
+        400
+      );
+    }
+
+    if (po.supplierResponse && po.supplierResponse.decision !== 'pending') {
+      throw new AppError('You have already submitted a response for this purchase order', 409);
+    }
+
+    const poItemIds = new Set(po.items.map((item) => item._id?.toString()));
+    const responseItems = (input.items || []).map((item) => {
+      if (!poItemIds.has(item.poItemId)) {
+        throw new AppError(`Item '${item.poItemId}' does not exist on this purchase order`, 400);
+      }
+      return {
+        poItemId: new Types.ObjectId(item.poItemId),
+        canSupplyQty: item.canSupplyQty,
+        unitPrice: item.unitPrice,
+      };
+    });
+
+    po.supplierResponse = {
+      decision: input.decision,
+      respondedAt: new Date(),
+      items: responseItems,
+      estimatedDeliveryDate: input.estimatedDeliveryDate ?? null,
+      notes: input.notes || '',
+    };
+
+    await po.save();
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
 }
 
 export const purchaseOrderService = new PurchaseOrderService();
 export default purchaseOrderService;
+
 

@@ -743,6 +743,23 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                         >
                           {STATUS_CONFIG[po.status]?.label || po.status}
                         </span>
+                        {po.status === 'submitted' && (
+                          <div className="mt-1">
+                            {po.supplierResponse?.decision === 'accepted' ? (
+                              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Supplier Accepted
+                              </span>
+                            ) : po.supplierResponse?.decision === 'declined' ? (
+                              <span className="text-[10px] text-rose-400 font-semibold flex items-center gap-1">
+                                <XCircle className="w-3 h-3" /> Supplier Declined
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> Awaiting Quote
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Actions */}
@@ -770,17 +787,36 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                         )}
 
                         {/* Quick Advance Status */}
-                        {canMutate && nextStatus && (
-                          <button
-                            type="button"
-                            onClick={() => handleAdvanceStatus(po, nextStatus)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/30 transition-colors"
-                            title={`Advance to ${STATUS_CONFIG[nextStatus]?.label}`}
-                          >
-                            <span>{STATUS_CONFIG[nextStatus]?.label}</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        )}
+                        {canMutate && nextStatus && (() => {
+                          const isGated = po.status === 'submitted' && nextStatus === 'confirmed';
+                          const decision = po.supplierResponse?.decision;
+                          const isPending = isGated && (decision === 'pending' || !decision);
+                          const isDeclined = isGated && decision === 'declined';
+                          const isDisabled = isPending || isDeclined;
+
+                          return (
+                            <button
+                              type="button"
+                              disabled={isDisabled}
+                              onClick={() => handleAdvanceStatus(po, nextStatus)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${
+                                isDisabled
+                                  ? 'bg-slate-800/50 text-slate-500 border-slate-800 cursor-not-allowed'
+                                  : 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border-indigo-500/30'
+                              }`}
+                              title={
+                                isPending
+                                  ? 'Cannot confirm: Awaiting supplier response'
+                                  : isDeclined
+                                  ? 'Cannot confirm: Supplier declined'
+                                  : `Advance to ${STATUS_CONFIG[nextStatus]?.label}`
+                              }
+                            >
+                              <span>{STATUS_CONFIG[nextStatus]?.label}</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          );
+                        })()}
 
                         {/* Cancel Button */}
                         {canMutate && cancellable && (
@@ -1184,6 +1220,111 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Supplier Response & Feedback Card */}
+              {selectedOrder.supplierResponse && (
+                <div
+                  className={`p-4 rounded-xl border ${
+                    selectedOrder.supplierResponse.decision === 'accepted'
+                      ? 'border-emerald-500/30 bg-emerald-500/5'
+                      : selectedOrder.supplierResponse.decision === 'declined'
+                      ? 'border-rose-500/30 bg-rose-500/5'
+                      : 'border-amber-500/30 bg-amber-500/5'
+                  } space-y-3`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {selectedOrder.supplierResponse.decision === 'accepted' ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      ) : selectedOrder.supplierResponse.decision === 'declined' ? (
+                        <XCircle className="w-4 h-4 text-rose-400" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-amber-400" />
+                      )}
+                      <span className="font-bold text-xs uppercase tracking-wider text-slate-200">
+                        {selectedOrder.supplierResponse.decision === 'accepted'
+                          ? 'Supplier Accepted Request & Provided Quote'
+                          : selectedOrder.supplierResponse.decision === 'declined'
+                          ? 'Supplier Declined Order Request'
+                          : 'Awaiting Supplier Response'}
+                      </span>
+                    </div>
+                    {selectedOrder.supplierResponse.respondedAt && (
+                      <span className="text-[11px] text-slate-400">
+                        Responded: {new Date(selectedOrder.supplierResponse.respondedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+
+                  {selectedOrder.supplierResponse.decision === 'pending' && (
+                    <p className="text-xs text-slate-400">
+                      This order request has been submitted to the supplier. The supplier must review the requested quantities and quote their supply price before you can confirm this order.
+                    </p>
+                  )}
+
+                  {selectedOrder.supplierResponse.estimatedDeliveryDate && (
+                    <div className="text-xs text-slate-300">
+                      <span className="text-slate-400 font-medium">Supplier Estimated Delivery:</span>{' '}
+                      <span className="text-white font-semibold">
+                        {new Date(selectedOrder.supplierResponse.estimatedDeliveryDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedOrder.supplierResponse.notes && (
+                    <div className="text-xs text-slate-300">
+                      <span className="text-slate-400 font-medium">Supplier Notes / Reason:</span>{' '}
+                      <span className="text-slate-200">{selectedOrder.supplierResponse.notes}</span>
+                    </div>
+                  )}
+
+                  {selectedOrder.supplierResponse.decision === 'accepted' &&
+                    selectedOrder.supplierResponse.items?.length > 0 && (
+                      <div className="mt-2 border border-slate-800 rounded-lg overflow-hidden">
+                        <div className="p-2 bg-slate-950/90 border-b border-slate-800 text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+                          Supplier Supply & Price Quote
+                        </div>
+                        <table className="w-full text-left text-[11px]">
+                          <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800">
+                            <tr>
+                              <th className="px-3 py-1.5">SKU</th>
+                              <th className="px-3 py-1.5 text-right">Requested Qty</th>
+                              <th className="px-3 py-1.5 text-right">Can Supply Qty</th>
+                              <th className="px-3 py-1.5 text-right">Admin Target Cost</th>
+                              <th className="px-3 py-1.5 text-right">Supplier Quoted Price</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60 bg-slate-950/40">
+                            {selectedOrder.supplierResponse.items.map((it, i) => {
+                              const originalItem = (selectedOrder.items || []).find(
+                                (orig) => orig._id?.toString() === it.poItemId?.toString()
+                              );
+                              return (
+                                <tr key={i}>
+                                  <td className="px-3 py-1.5 text-slate-200 font-mono font-medium">
+                                    {originalItem?.sku || `Item #${i + 1}`}
+                                  </td>
+                                  <td className="px-3 py-1.5 text-right text-slate-400">
+                                    {originalItem?.orderedQty || '?'}
+                                  </td>
+                                  <td className="px-3 py-1.5 text-right font-semibold text-emerald-400">
+                                    {it.canSupplyQty}
+                                  </td>
+                                  <td className="px-3 py-1.5 text-right text-slate-400">
+                                    Rs. {(originalItem?.unitCost || 0).toFixed(2)}
+                                  </td>
+                                  <td className="px-3 py-1.5 text-right font-bold text-white">
+                                    Rs. {it.unitPrice.toFixed(2)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                </div>
+              )}
+
               {/* Status Progression Bar */}
               {selectedOrder.status !== 'cancelled' && (
                 <div className="p-4 border border-slate-800 rounded-xl bg-slate-950 space-y-3">
@@ -1333,17 +1474,42 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     {(PO_VALID_TRANSITIONS[selectedOrder.status] || [])
                       .filter((s) => s !== 'cancelled')
-                      .map((nextSt) => (
-                        <button
-                          key={nextSt}
-                          type="button"
-                          onClick={() => handleAdvanceStatus(selectedOrder, nextSt)}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-colors shadow-sm"
-                        >
-                          <span>Advance to {STATUS_CONFIG[nextSt]?.label || nextSt}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      ))}
+                      .map((nextSt) => {
+                        const isGatedConfirm =
+                          selectedOrder.status === 'submitted' && nextSt === 'confirmed';
+                        const decision = selectedOrder.supplierResponse?.decision;
+                        const isPending = isGatedConfirm && (decision === 'pending' || !decision);
+                        const isDeclined = isGatedConfirm && decision === 'declined';
+                        const isDisabled = isPending || isDeclined;
+
+                        return (
+                          <div key={nextSt} className="flex flex-col items-end">
+                            <button
+                              type="button"
+                              disabled={isDisabled}
+                              onClick={() => handleAdvanceStatus(selectedOrder, nextSt)}
+                              className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-colors shadow-sm ${
+                                isDisabled
+                                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                                  : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                              }`}
+                            >
+                              <span>Advance to {STATUS_CONFIG[nextSt]?.label || nextSt}</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                            {isPending && (
+                              <span className="text-[10px] text-amber-400 mt-1">
+                                Awaiting supplier quote & response
+                              </span>
+                            )}
+                            {isDeclined && (
+                              <span className="text-[10px] text-rose-400 mt-1">
+                                Supplier declined order request
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               )}
