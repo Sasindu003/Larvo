@@ -11,6 +11,7 @@ import {
   ReceivePOSchema,
   SubmitQuoteSchema,
   DeclinePOSchema,
+  DecideQuoteSchema,
 } from '../validators/purchase-order.validator';
 import { POStatus } from '../models/PurchaseOrder';
 
@@ -173,5 +174,21 @@ export const declinePurchaseOrder = asyncHandler(async (req: Request, res: Respo
     success: true,
     data: { purchaseOrder: po },
     message: 'Purchase order declined successfully',
+  });
+});
+
+/**
+ * @desc    Admin approves or rejects a supplier quote
+ * @route   PATCH /api/admin/purchase-orders/:id/decide-quote
+ * @access  Private (admin, owner)
+ */
+export const decideQuote = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = parseOrThrow(DecideQuoteSchema, req.body);
+  const po = await purchaseOrderService.decideQuote(req.params.id, parsed);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: `Quote ${parsed.decision === 'approve' ? 'approved' : 'rejected'} successfully`,
   });
 });

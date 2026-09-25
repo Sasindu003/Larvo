@@ -131,3 +131,12 @@ export const DeclinePOSchema = z.object({
 });
 
 export type DeclinePOInput = z.infer<typeof DeclinePOSchema>;
+
+export const DecideQuoteSchema = z.object({
+  decision: z.enum(['approve', 'reject'], {
+    required_error: 'decision is required',
+    invalid_type_error: 'decision must be "approve" or "reject"',
+  }),
+});
+
+export type DecideQuoteInput = z.infer<typeof DecideQuoteSchema>;

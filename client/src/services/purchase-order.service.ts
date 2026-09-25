@@ -204,6 +204,14 @@ export const purchaseOrderService = {
     return res.data!.purchaseOrder;
   },
 
+  decideQuote: async (id: string, decision: 'approve' | 'reject'): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/admin/purchase-orders/${id}/decide-quote`,
+      { decision }
+    );
+    return res.data!.purchaseOrder;
+  },
+
   declinePurchaseOrder: async (id: string, data: DeclinePOInput): Promise<IPurchaseOrder> => {
     const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
       `/supplier/purchase-orders/${id}/decline`,

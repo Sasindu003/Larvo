@@ -11,6 +11,7 @@ import {
   ReceivePOInput,
   SubmitQuoteInput,
   DeclinePOInput,
+  DecideQuoteInput,
 } from '../validators/purchase-order.validator';
 
 export interface PaginatedPurchaseOrders {
@@ -480,6 +481,57 @@ export class PurchaseOrderService {
 
     // Stub notification hook: notify admin of PO decline
     // TODO(P66): In future phases, notify admin of supplier decline
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Admin approves or rejects a supplier quote.
+   * - PO must be in 'quoted' status (validated via PO_VALID_TRANSITIONS).
+   * - Approve guard: at least one item must have quotedUnitCost > 0.
+   * - approve -> 'admin_approved'; reject -> 'admin_rejected'.
+   * - admin_rejected is terminal per PO_VALID_TRANSITIONS (only -> cancelled).
+   */
+  async decideQuote(id: string, input: DecideQuoteInput): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    // Validate status via PO_VALID_TRANSITIONS
+    const targetStatus = input.decision === 'approve' ? 'admin_approved' : 'admin_rejected';
+    const allowedNext = PO_VALID_TRANSITIONS[po.status];
+    if (!allowedNext || !allowedNext.includes(targetStatus)) {
+      throw new AppError(
+        `Cannot ${input.decision} a quote for a purchase order with status '${po.status}'. Allowed transitions: ${allowedNext && allowedNext.length ? allowedNext.join(', ') : 'none'}`,
+        400
+      );
+    }
+
+    // Quote completeness guard (approve only)
+    if (input.decision === 'approve') {
+      const allZero = po.items.every((item) => item.quotedUnitCost === 0);
+      if (allZero) {
+        throw new AppError(
+          'Cannot approve: no supplier pricing has been provided (all quotedUnitCost values are 0). ' +
+            'Ensure the supplier has submitted a quote via /quote before approving.',
+          400
+        );
+      }
+    }
+
+    po.status = targetStatus;
+    await po.save();
+
+    // Stub notification hook: notify supplier of admin decision
+    // TODO(P67): In future phases, notify supplier of quote approval/rejection
 
     return po.populate([
       { path: 'supplier', select: 'name companyName email status' },
