@@ -23,8 +23,6 @@ const POItemSchema = z.object({
   orderedQty: z.number({ required_error: 'Ordered quantity is required' }).int().min(1, 'Ordered quantity must be at least 1'),
   receivedQty: z.number().int().min(0, 'Received quantity cannot be negative').optional().default(0),
   unitCost: z.number().min(0, 'Unit cost cannot be negative').optional().default(0),
-  quotedQty: z.number().int().min(0, 'Quoted quantity cannot be negative').optional().default(0),
-  quotedUnitCost: z.number().min(0, 'Quoted unit cost cannot be negative').optional().default(0),
 });
 
 export const CreatePurchaseOrderSchema = z.object({
@@ -98,3 +96,38 @@ export const GetPurchaseOrdersQuerySchema = z.object({
 });
 
 export type GetPurchaseOrdersQuery = z.infer<typeof GetPurchaseOrdersQuerySchema>;
+
+const SubmitQuoteLineSchema = z.object({
+  sku: z.string({ required_error: 'SKU is required' }).trim().min(1, 'SKU is required'),
+  quotedQty: z
+    .number({ required_error: 'quotedQty is required' })
+    .int('quotedQty must be an integer')
+    .min(0, 'quotedQty cannot be negative'),
+  quotedUnitCost: z
+    .number({ required_error: 'quotedUnitCost is required' })
+    .min(0, 'quotedUnitCost cannot be negative'),
+});
+
+export const SubmitQuoteSchema = z.object({
+  lines: z
+    .array(SubmitQuoteLineSchema)
+    .min(1, 'At least one quote line is required'),
+  estimatedDeliveryDate: z
+    .string()
+    .datetime({ message: 'Invalid date format' })
+    .optional()
+    .nullable()
+    .transform((val) => (val ? new Date(val) : null)),
+});
+
+export type SubmitQuoteInput = z.infer<typeof SubmitQuoteSchema>;
+
+export const DeclinePOSchema = z.object({
+  declineReason: z
+    .string({ required_error: 'Decline reason is required' })
+    .trim()
+    .min(1, 'Decline reason is required')
+    .max(2000, 'Decline reason cannot exceed 2000 characters'),
+});
+
+export type DeclinePOInput = z.infer<typeof DeclinePOSchema>;

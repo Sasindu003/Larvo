@@ -128,6 +128,21 @@ export interface GetPurchaseOrdersResponse {
   pages: number;
 }
 
+export interface SubmitQuoteLineInput {
+  sku: string;
+  quotedQty: number;
+  quotedUnitCost: number;
+}
+
+export interface SubmitQuoteInput {
+  lines: SubmitQuoteLineInput[];
+  estimatedDeliveryDate?: string | null;
+}
+
+export interface DeclinePOInput {
+  declineReason: string;
+}
+
 export const purchaseOrderService = {
   getPurchaseOrders: async (params?: GetPurchaseOrdersParams): Promise<GetPurchaseOrdersResponse> => {
     const res = await api.get<any, ApiResponse<GetPurchaseOrdersResponse>>('/admin/purchase-orders', { params });
@@ -166,6 +181,33 @@ export const purchaseOrderService = {
     const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
       `/admin/purchase-orders/${id}/receive`,
       { lines }
+    );
+    return res.data!.purchaseOrder;
+  },
+
+  // Supplier Portal methods
+  getSupplierPurchaseOrders: async (params?: GetPurchaseOrdersParams): Promise<GetPurchaseOrdersResponse> => {
+    const res = await api.get<any, ApiResponse<GetPurchaseOrdersResponse>>('/supplier/purchase-orders', { params });
+    return res.data!;
+  },
+
+  getSupplierPurchaseOrderById: async (id: string): Promise<IPurchaseOrder> => {
+    const res = await api.get<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(`/supplier/purchase-orders/${id}`);
+    return res.data!.purchaseOrder;
+  },
+
+  submitQuote: async (id: string, data: SubmitQuoteInput): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/supplier/purchase-orders/${id}/quote`,
+      data
+    );
+    return res.data!.purchaseOrder;
+  },
+
+  declinePurchaseOrder: async (id: string, data: DeclinePOInput): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/supplier/purchase-orders/${id}/decline`,
+      data
     );
     return res.data!.purchaseOrder;
   },

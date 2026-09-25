@@ -9,6 +9,8 @@ import {
   AdvancePOStatusSchema,
   GetPurchaseOrdersQuerySchema,
   ReceivePOSchema,
+  SubmitQuoteSchema,
+  DeclinePOSchema,
 } from '../validators/purchase-order.validator';
 import { POStatus } from '../models/PurchaseOrder';
 
@@ -131,5 +133,45 @@ export const receivePurchaseOrder = asyncHandler(async (req: Request, res: Respo
     success: true,
     data: { purchaseOrder: po },
     message: 'Stock received and inventory updated successfully',
+  });
+});
+
+/**
+ * @desc    Submit quote for a purchase order (supplier only)
+ * @route   PATCH /api/supplier/purchase-orders/:id/quote
+ * @access  Private (supplier)
+ */
+export const submitQuote = asyncHandler(async (req: Request, res: Response) => {
+  const supplierUserId = req.user?._id;
+  if (!supplierUserId) {
+    throw new AppError('Not authenticated', 401);
+  }
+  const parsed = parseOrThrow(SubmitQuoteSchema, req.body);
+  const po = await purchaseOrderService.submitQuote(req.params.id, parsed, supplierUserId);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Quote submitted successfully',
+  });
+});
+
+/**
+ * @desc    Decline a purchase order request (supplier only)
+ * @route   PATCH /api/supplier/purchase-orders/:id/decline
+ * @access  Private (supplier)
+ */
+export const declinePurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
+  const supplierUserId = req.user?._id;
+  if (!supplierUserId) {
+    throw new AppError('Not authenticated', 401);
+  }
+  const parsed = parseOrThrow(DeclinePOSchema, req.body);
+  const po = await purchaseOrderService.declinePurchaseOrder(req.params.id, parsed, supplierUserId);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Purchase order declined successfully',
   });
 });

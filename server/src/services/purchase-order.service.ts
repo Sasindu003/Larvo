@@ -9,6 +9,8 @@ import {
   UpdatePurchaseOrderInput,
   GetPurchaseOrdersQuery,
   ReceivePOInput,
+  SubmitQuoteInput,
+  DeclinePOInput,
 } from '../validators/purchase-order.validator';
 
 export interface PaginatedPurchaseOrders {
@@ -344,6 +346,145 @@ export class PurchaseOrderService {
     } finally {
       session.endSession();
     }
+  }
+
+  /**
+   * Submit a quote for a requested purchase order.
+   * Asserts PO is in 'requested' status (via PO_VALID_TRANSITIONS) and supplier ownership.
+   * Updates per-item quotedQty, quotedUnitCost, optional estimatedDeliveryDate, and sets status to 'quoted'.
+   */
+  async submitQuote(
+    id: string,
+    input: SubmitQuoteInput,
+    supplierUserId: string | Types.ObjectId
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    // Ownership check via Supplier.userId or direct supplier ID
+    const supplier = await Supplier.findById(po.supplier);
+    if (!supplier) {
+      throw new AppError('Supplier record not found', 404);
+    }
+
+    const supplierUserIdStr = supplierUserId?.toString();
+    const isOwner =
+      (supplier.userId && supplier.userId.toString() === supplierUserIdStr) ||
+      supplier._id.toString() === supplierUserIdStr;
+
+    if (!isOwner) {
+      throw new AppError('You do not have permission to quote this purchase order', 403);
+    }
+
+    // Assert status transition via PO_VALID_TRANSITIONS
+    const allowedNext = PO_VALID_TRANSITIONS[po.status];
+    if (!allowedNext || !allowedNext.includes('quoted')) {
+      throw new AppError(
+        `Cannot submit a quote for a purchase order with status '${po.status}'. Allowed transitions: ${allowedNext && allowedNext.length ? allowedNext.join(', ') : 'none'}`,
+        400
+      );
+    }
+
+    // Map lines to items by SKU
+    const itemBySku = new Map<string, (typeof po.items)[number]>();
+    for (const item of po.items) {
+      itemBySku.set(item.sku, item);
+    }
+
+    for (const line of input.lines) {
+      const item = itemBySku.get(line.sku);
+      if (!item) {
+        throw new AppError(
+          `SKU '${line.sku}' does not exist in this purchase order`,
+          400
+        );
+      }
+      item.quotedQty = line.quotedQty;
+      item.quotedUnitCost = line.quotedUnitCost;
+    }
+
+    po.status = 'quoted';
+    if (input.estimatedDeliveryDate !== undefined) {
+      po.estimatedDeliveryDate = input.estimatedDeliveryDate;
+    }
+
+    await po.save();
+
+    // Stub notification hook: notify admin of quote submission
+    // TODO(P66): In future phases, notify admin of supplier quote
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Decline a requested purchase order.
+   * Asserts PO is in 'requested' status (via PO_VALID_TRANSITIONS) and supplier ownership.
+   * Sets declineReason and transitions status to 'declined'.
+   */
+  async declinePurchaseOrder(
+    id: string,
+    reasonOrInput: string | DeclinePOInput,
+    supplierUserId: string | Types.ObjectId
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    // Ownership check via Supplier.userId or direct supplier ID
+    const supplier = await Supplier.findById(po.supplier);
+    if (!supplier) {
+      throw new AppError('Supplier record not found', 404);
+    }
+
+    const supplierUserIdStr = supplierUserId?.toString();
+    const isOwner =
+      (supplier.userId && supplier.userId.toString() === supplierUserIdStr) ||
+      supplier._id.toString() === supplierUserIdStr;
+
+    if (!isOwner) {
+      throw new AppError('You do not have permission to decline this purchase order', 403);
+    }
+
+    // Assert status transition via PO_VALID_TRANSITIONS
+    const allowedNext = PO_VALID_TRANSITIONS[po.status];
+    if (!allowedNext || !allowedNext.includes('declined')) {
+      throw new AppError(
+        `Cannot decline a purchase order with status '${po.status}'. Allowed transitions: ${allowedNext && allowedNext.length ? allowedNext.join(', ') : 'none'}`,
+        400
+      );
+    }
+
+    const declineReason =
+      typeof reasonOrInput === 'string'
+        ? reasonOrInput
+        : reasonOrInput.declineReason;
+
+    po.status = 'declined';
+    po.declineReason = declineReason;
+
+    await po.save();
+
+    // Stub notification hook: notify admin of PO decline
+    // TODO(P66): In future phases, notify admin of supplier decline
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
   }
 }
 

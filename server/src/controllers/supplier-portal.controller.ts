@@ -6,6 +6,10 @@ import User from '../models/User';
 import { purchaseOrderService } from '../services/purchase-order.service';
 import { supplierService } from '../services/supplier.service';
 import { asyncHandler } from '../utils/asyncHandler';
+import {
+  SubmitQuoteSchema,
+  DeclinePOSchema,
+} from '../validators/purchase-order.validator';
 
 /**
  * Helper to ensure supplierId is attached to req.user
@@ -141,5 +145,47 @@ export const changeSupplierPassword = asyncHandler(async (req: Request, res: Res
   res.status(200).json({
     success: true,
     message: 'Password updated successfully',
+  });
+});
+
+/**
+ * @desc    Supplier submits a quote for a purchase order
+ * @route   PATCH /api/supplier/purchase-orders/:id/quote
+ * @access  Private (supplier)
+ */
+export const submitSupplierQuote = asyncHandler(async (req: Request, res: Response) => {
+  const supplierId = getSupplierIdOrThrow(req);
+  const parsed = SubmitQuoteSchema.parse(req.body);
+  const po = await purchaseOrderService.submitQuote(
+    req.params.id,
+    parsed,
+    req.user?._id || supplierId
+  );
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Quote submitted successfully',
+  });
+});
+
+/**
+ * @desc    Supplier declines a purchase order request
+ * @route   PATCH /api/supplier/purchase-orders/:id/decline
+ * @access  Private (supplier)
+ */
+export const declineSupplierPurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
+  const supplierId = getSupplierIdOrThrow(req);
+  const parsed = DeclinePOSchema.parse(req.body);
+  const po = await purchaseOrderService.declinePurchaseOrder(
+    req.params.id,
+    parsed,
+    req.user?._id || supplierId
+  );
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Purchase order declined successfully',
   });
 });
