@@ -53,16 +53,6 @@ import {
   deleteSupplier,
   createSupplierAccount,
 } from '../controllers/supplier.controller';
-import {
-  getPurchaseOrders,
-  getPurchaseOrderById,
-  createPurchaseOrder,
-  updatePurchaseOrder,
-  advancePurchaseOrderStatus,
-  cancelPurchaseOrder,
-  receivePurchaseOrder,
-} from '../controllers/purchase-order.controller';
-
 const router = Router();
 
 /**
@@ -528,10 +518,10 @@ router.post(
   createSupplierAccount
 );
 
-// ── Purchase Orders ───────────────────────────────────────────────────────────
+// ── Purchase Orders (Cleared awaiting fresh update) ──────────────────────────
 
 /**
- * @desc    List purchase orders with status + supplier filter
+ * @desc    List purchase orders (Cleared)
  * @route   GET /api/admin/purchase-orders
  * @access  admin, owner
  */
@@ -539,79 +529,30 @@ router.get(
   '/purchase-orders',
   requireAuth,
   requireRole('admin', 'owner'),
-  getPurchaseOrders
+  (_req: Request, res: Response) => {
+    res.status(200).json({
+      success: true,
+      data: { results: [], total: 0, page: 1, pages: 1 },
+      message: 'Purchase orders cleared',
+    });
+  }
 );
 
 /**
- * @desc    Get single purchase order
- * @route   GET /api/admin/purchase-orders/:id
+ * @desc    Disabled single purchase order & mutations awaiting fresh update
+ * @route   ALL /api/admin/purchase-orders/:id*
  * @access  admin, owner
  */
-router.get(
-  '/purchase-orders/:id',
+router.all(
+  '/purchase-orders/*',
   requireAuth,
   requireRole('admin', 'owner'),
-  getPurchaseOrderById
-);
-
-/**
- * @desc    Create a new purchase order
- * @route   POST /api/admin/purchase-orders
- * @access  admin, owner
- */
-router.post(
-  '/purchase-orders',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  createPurchaseOrder
-);
-
-/**
- * @desc    Update purchase order (draft only)
- * @route   PATCH /api/admin/purchase-orders/:id
- * @access  admin, owner
- */
-router.patch(
-  '/purchase-orders/:id',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  updatePurchaseOrder
-);
-
-/**
- * @desc    Advance purchase order status
- * @route   PATCH /api/admin/purchase-orders/:id/status
- * @access  admin, owner
- */
-router.patch(
-  '/purchase-orders/:id/status',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  advancePurchaseOrderStatus
-);
-
-/**
- * @desc    Cancel a purchase order
- * @route   PATCH /api/admin/purchase-orders/:id/cancel
- * @access  admin, owner
- */
-router.patch(
-  '/purchase-orders/:id/cancel',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  cancelPurchaseOrder
-);
-
-/**
- * @desc    Receive stock against a purchase order (partial or full receipt)
- * @route   PATCH /api/admin/purchase-orders/:id/receive
- * @access  staff, admin, owner
- */
-router.patch(
-  '/purchase-orders/:id/receive',
-  requireAuth,
-  requireRole('staff', 'admin', 'owner'),
-  receivePurchaseOrder
+  (_req: Request, res: Response) => {
+    res.status(503).json({
+      success: false,
+      message: 'Purchase orders feature is disabled awaiting update',
+    });
+  }
 );
 
 export default router;

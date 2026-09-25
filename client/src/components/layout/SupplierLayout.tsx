@@ -3,7 +3,6 @@ import { Link, NavLink, Outlet, useLocation, Navigate } from 'react-router-dom';
 import {
   Building2,
   Package,
-  ClipboardList,
   LogOut,
   Menu,
   X,
@@ -22,9 +21,9 @@ export const SupplierLayout: React.FC = () => {
     return <Navigate to="/login?redirect=/supplier" replace />;
   }
 
-  // Redirect root /supplier to /supplier/purchase-orders
+  // Redirect root /supplier to /supplier/products
   if (location.pathname === '/supplier' || location.pathname === '/supplier/') {
-    return <Navigate to="/supplier/purchase-orders" replace />;
+    return <Navigate to="/supplier/products" replace />;
   }
 
   const handleLogout = async () => {
@@ -37,12 +36,6 @@ export const SupplierLayout: React.FC = () => {
   };
 
   const navLinks = [
-    {
-      label: 'Purchase Orders',
-      href: '/supplier/purchase-orders',
-      icon: ClipboardList,
-      description: 'Stock orders & delivery status',
-    },
     {
       label: 'My Products',
       href: '/supplier/products',

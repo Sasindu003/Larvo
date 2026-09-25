@@ -206,7 +206,7 @@ export const router = createBrowserRouter([
     ),
     errorElement: <NotFoundPage />,
     children: [
-      { index: true, element: <SupplierPurchaseOrdersPage /> },
+      { index: true, element: <SupplierProductsPage /> },
       { path: 'purchase-orders', element: <SupplierPurchaseOrdersPage /> },
       { path: 'products', element: <SupplierProductsPage /> },
       { path: 'profile', element: <SupplierProfilePage /> },
