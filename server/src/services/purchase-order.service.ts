@@ -538,6 +538,48 @@ export class PurchaseOrderService {
       { path: 'items.product', select: 'name slug images basePrice' },
     ]);
   }
+
+  /**
+   * Admin uploads a payment slip and submits to supplier.
+   * Accepts entry from both 'admin_approved' (first submission) and 'payment_rejected' (resubmission).
+   * Transitions status to 'payment_submitted'.
+   */
+  async submitPaymentSlip(id: string, slipUrl: string): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    // Assert status allows transition to payment_submitted
+    const allowedNext = PO_VALID_TRANSITIONS[po.status];
+    if (!allowedNext || !allowedNext.includes('payment_submitted')) {
+      throw new AppError(
+        `Cannot submit payment slip for a purchase order with status '${po.status}'. ` +
+          `Only admin_approved or payment_rejected orders can submit payment slips.`,
+        400
+      );
+    }
+
+    if (!slipUrl || typeof slipUrl !== 'string' || !slipUrl.trim()) {
+      throw new AppError('Payment slip URL is required', 400);
+    }
+
+    po.paymentSlipUrl = slipUrl.trim();
+    po.status = 'payment_submitted';
+    await po.save();
+
+    // Stub notification hook: notify supplier of payment slip submission
+    // TODO(P68): In future phases, notify supplier of payment slip submission
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
 }
 
 export const purchaseOrderService = new PurchaseOrderService();

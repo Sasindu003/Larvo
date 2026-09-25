@@ -14,6 +14,7 @@ import {
   DecideQuoteSchema,
 } from '../validators/purchase-order.validator';
 import { POStatus } from '../models/PurchaseOrder';
+import { uploadToGridFS } from '../services/gridfs.service';
 
 function parseOrThrow<T>(schema: { parse: (v: unknown) => T }, input: unknown): T {
   try {
@@ -190,5 +191,40 @@ export const decideQuote = asyncHandler(async (req: Request, res: Response) => {
     success: true,
     data: { purchaseOrder: po },
     message: `Quote ${parsed.decision === 'approve' ? 'approved' : 'rejected'} successfully`,
+  });
+});
+
+/**
+ * @desc    Upload payment slip for an approved/payment-rejected purchase order
+ * @route   PATCH /api/admin/purchase-orders/:id/payment-slip
+ * @access  Private (admin, owner)
+ */
+export const submitPaymentSlip = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file || !req.file.buffer) {
+    throw new AppError('Payment slip file is required', 400);
+  }
+
+  const { id } = req.params;
+
+  const sanitizedOriginalName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const uniqueFilename = `po-${id}-slip-${Date.now()}-${sanitizedOriginalName}`;
+
+  const gridFile = await uploadToGridFS(
+    req.file.buffer,
+    uniqueFilename,
+    req.file.mimetype,
+    {
+      purchaseOrderId: id,
+      uploadedBy: req.user?._id?.toString(),
+      type: 'po_payment_slip',
+    }
+  );
+
+  const po = await purchaseOrderService.submitPaymentSlip(id, gridFile.url);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Payment slip submitted successfully',
   });
 });

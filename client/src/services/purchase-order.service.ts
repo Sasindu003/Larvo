@@ -212,6 +212,19 @@ export const purchaseOrderService = {
     return res.data!.purchaseOrder;
   },
 
+  submitPaymentSlip: async (id: string, file: File): Promise<IPurchaseOrder> => {
+    const formData = new FormData();
+    formData.append('slip', file);
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/admin/purchase-orders/${id}/payment-slip`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return res.data!.purchaseOrder;
+  },
+
   declinePurchaseOrder: async (id: string, data: DeclinePOInput): Promise<IPurchaseOrder> => {
     const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
       `/supplier/purchase-orders/${id}/decline`,
