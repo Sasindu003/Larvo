@@ -72,7 +72,7 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
 });
 
 /**
- * @desc    Update purchase order (draft only)
+ * @desc    Update purchase order (requested only)
  * @route   PATCH /api/admin/purchase-orders/:id
  * @access  Private (admin, owner)
  */
@@ -104,7 +104,7 @@ export const advancePurchaseOrderStatus = asyncHandler(async (req: Request, res:
 });
 
 /**
- * @desc    Cancel a purchase order (draft, submitted, confirmed only)
+ * @desc    Cancel a purchase order (requested, admin_approved, admin_rejected, payment_rejected, confirmed)
  * @route   PATCH /api/admin/purchase-orders/:id/cancel
  * @access  Private (admin, owner)
  */

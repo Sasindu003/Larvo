@@ -2,8 +2,13 @@ import api, { ApiResponse } from './api';
 import { ISupplier } from './supplier.service';
 
 export type POStatus =
-  | 'draft'
-  | 'submitted'
+  | 'requested'
+  | 'quoted'
+  | 'declined'
+  | 'admin_approved'
+  | 'admin_rejected'
+  | 'payment_submitted'
+  | 'payment_rejected'
   | 'confirmed'
   | 'in_transit'
   | 'partially_received'
@@ -11,8 +16,13 @@ export type POStatus =
   | 'cancelled';
 
 export const PO_STATUSES: POStatus[] = [
-  'draft',
-  'submitted',
+  'requested',
+  'quoted',
+  'declined',
+  'admin_approved',
+  'admin_rejected',
+  'payment_submitted',
+  'payment_rejected',
   'confirmed',
   'in_transit',
   'partially_received',
@@ -21,8 +31,13 @@ export const PO_STATUSES: POStatus[] = [
 ];
 
 export const PO_VALID_TRANSITIONS: Record<POStatus, POStatus[]> = {
-  draft: ['submitted', 'cancelled'],
-  submitted: ['confirmed', 'cancelled'],
+  requested: ['quoted', 'declined', 'cancelled'],
+  quoted: ['admin_approved', 'admin_rejected'],
+  declined: [],
+  admin_approved: ['payment_submitted', 'cancelled'],
+  admin_rejected: ['cancelled'],
+  payment_submitted: ['confirmed', 'payment_rejected'],
+  payment_rejected: ['payment_submitted', 'cancelled'],
   confirmed: ['in_transit', 'cancelled'],
   in_transit: ['partially_received', 'received'],
   partially_received: ['received'],
@@ -47,6 +62,8 @@ export interface IPOItem {
   orderedQty: number;
   receivedQty: number;
   unitCost: number;
+  quotedQty: number;
+  quotedUnitCost: number;
 }
 
 export interface IPurchaseOrder {
@@ -54,7 +71,10 @@ export interface IPurchaseOrder {
   supplier: ISupplier | string;
   items: IPOItem[];
   status: POStatus;
-  expectedDeliveryDate?: string | null;
+  estimatedDeliveryDate?: string | null;
+  paymentSlipUrl?: string | null;
+  paymentReviewNote?: string | null;
+  declineReason?: string | null;
   notes?: string;
   totalCost: number;
   createdAt: string;
@@ -68,20 +88,28 @@ export interface CreatePOItemInput {
   color: string;
   orderedQty: number;
   receivedQty?: number;
-  unitCost: number;
+  unitCost?: number;
+  quotedQty?: number;
+  quotedUnitCost?: number;
 }
 
 export interface CreatePOInput {
   supplier: string;
   items: CreatePOItemInput[];
-  expectedDeliveryDate?: string | null;
+  estimatedDeliveryDate?: string | null;
+  paymentSlipUrl?: string | null;
+  paymentReviewNote?: string | null;
+  declineReason?: string | null;
   notes?: string;
 }
 
 export interface UpdatePOInput {
   supplier?: string;
   items?: CreatePOItemInput[];
-  expectedDeliveryDate?: string | null;
+  estimatedDeliveryDate?: string | null;
+  paymentSlipUrl?: string | null;
+  paymentReviewNote?: string | null;
+  declineReason?: string | null;
   notes?: string;
 }
 

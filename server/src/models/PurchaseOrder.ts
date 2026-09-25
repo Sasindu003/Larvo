@@ -1,8 +1,13 @@
-﻿import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type POStatus =
-  | 'draft'
-  | 'submitted'
+  | 'requested'
+  | 'quoted'
+  | 'declined'
+  | 'admin_approved'
+  | 'admin_rejected'
+  | 'payment_submitted'
+  | 'payment_rejected'
   | 'confirmed'
   | 'in_transit'
   | 'partially_received'
@@ -10,16 +15,32 @@ export type POStatus =
   | 'cancelled';
 
 export const PO_STATUSES: POStatus[] = [
-  'draft', 'submitted', 'confirmed', 'in_transit', 'partially_received', 'received', 'cancelled',
+  'requested',
+  'quoted',
+  'declined',
+  'admin_approved',
+  'admin_rejected',
+  'payment_submitted',
+  'payment_rejected',
+  'confirmed',
+  'in_transit',
+  'partially_received',
+  'received',
+  'cancelled',
 ];
 
 export const PO_VALID_TRANSITIONS: Record<POStatus, POStatus[]> = {
-  draft: ['submitted', 'cancelled'],
-  submitted: ['confirmed', 'cancelled'],
+  requested: ['quoted', 'declined', 'cancelled'],
+  quoted: ['admin_approved', 'admin_rejected'],
+  admin_approved: ['payment_submitted', 'cancelled'],
+  admin_rejected: ['cancelled'],
+  payment_submitted: ['confirmed', 'payment_rejected'],
+  payment_rejected: ['payment_submitted', 'cancelled'],
   confirmed: ['in_transit', 'cancelled'],
   in_transit: ['partially_received', 'received'],
   partially_received: ['received'],
   received: [],
+  declined: [],
   cancelled: [],
 };
 
@@ -32,6 +53,8 @@ export interface IPOItem {
   orderedQty: number;
   receivedQty: number;
   unitCost: number;
+  quotedQty: number;
+  quotedUnitCost: number;
 }
 
 const poItemSchema = new Schema<IPOItem>(
@@ -42,7 +65,9 @@ const poItemSchema = new Schema<IPOItem>(
     color: { type: String, required: [true, 'Color is required'], trim: true },
     orderedQty: { type: Number, required: [true, 'Ordered quantity is required'], min: [1, 'Ordered quantity must be at least 1'] },
     receivedQty: { type: Number, default: 0, min: [0, 'Received quantity cannot be negative'] },
-    unitCost: { type: Number, required: [true, 'Unit cost is required'], min: [0, 'Unit cost cannot be negative'] },
+    unitCost: { type: Number, default: 0, min: [0, 'Unit cost cannot be negative'] },
+    quotedQty: { type: Number, default: 0, min: [0, 'Quoted quantity cannot be negative'] },
+    quotedUnitCost: { type: Number, default: 0, min: [0, 'Quoted unit cost cannot be negative'] },
   },
   { _id: true }
 );
@@ -51,7 +76,10 @@ export interface IPurchaseOrder extends Document {
   supplier: Types.ObjectId;
   items: IPOItem[];
   status: POStatus;
-  expectedDeliveryDate?: Date | null;
+  estimatedDeliveryDate?: Date | null;
+  paymentSlipUrl?: string | null;
+  paymentReviewNote?: string | null;
+  declineReason?: string | null;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -68,17 +96,30 @@ const purchaseOrderSchema = new Schema<IPurchaseOrder>(
     status: {
       type: String,
       enum: { values: PO_STATUSES, message: `Status must be one of: ${PO_STATUSES.join(', ')}` },
-      default: 'draft',
+      default: 'requested',
       index: true,
     },
-    expectedDeliveryDate: { type: Date, default: null },
+    estimatedDeliveryDate: { type: Date, default: null },
+    paymentSlipUrl: { type: String, default: null },
+    paymentReviewNote: { type: String, default: null },
+    declineReason: { type: String, default: null },
     notes: { type: String, trim: true, default: '' },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+const PRE_QUOTE_STATUSES: POStatus[] = ['requested', 'admin_rejected'];
+
 purchaseOrderSchema.virtual('totalCost').get(function (this: IPurchaseOrder) {
-  return (this.items || []).reduce((sum, item) => sum + item.orderedQty * item.unitCost, 0);
+  const useOriginal = PRE_QUOTE_STATUSES.includes(this.status);
+  return (this.items || []).reduce((sum, item) => {
+    return (
+      sum +
+      (useOriginal
+        ? (item.orderedQty || 0) * (item.unitCost || 0)
+        : (item.quotedQty || 0) * (item.quotedUnitCost || 0))
+    );
+  }, 0);
 });
 
 purchaseOrderSchema.index({ status: 1, createdAt: -1 });

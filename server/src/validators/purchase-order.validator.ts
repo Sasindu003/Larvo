@@ -1,8 +1,18 @@
 import { z } from 'zod';
 
 const PO_STATUS_VALUES = [
-  'draft', 'submitted', 'confirmed', 'in_transit',
-  'partially_received', 'received', 'cancelled',
+  'requested',
+  'quoted',
+  'declined',
+  'admin_approved',
+  'admin_rejected',
+  'payment_submitted',
+  'payment_rejected',
+  'confirmed',
+  'in_transit',
+  'partially_received',
+  'received',
+  'cancelled',
 ] as const;
 
 const POItemSchema = z.object({
@@ -12,7 +22,9 @@ const POItemSchema = z.object({
   color: z.string({ required_error: 'Color is required' }).trim().min(1, 'Color is required'),
   orderedQty: z.number({ required_error: 'Ordered quantity is required' }).int().min(1, 'Ordered quantity must be at least 1'),
   receivedQty: z.number().int().min(0, 'Received quantity cannot be negative').optional().default(0),
-  unitCost: z.number({ required_error: 'Unit cost is required' }).min(0, 'Unit cost cannot be negative'),
+  unitCost: z.number().min(0, 'Unit cost cannot be negative').optional().default(0),
+  quotedQty: z.number().int().min(0, 'Quoted quantity cannot be negative').optional().default(0),
+  quotedUnitCost: z.number().min(0, 'Quoted unit cost cannot be negative').optional().default(0),
 });
 
 export const CreatePurchaseOrderSchema = z.object({
@@ -20,12 +32,15 @@ export const CreatePurchaseOrderSchema = z.object({
   items: z
     .array(POItemSchema)
     .min(1, 'At least one item is required'),
-  expectedDeliveryDate: z
+  estimatedDeliveryDate: z
     .string()
     .datetime({ message: 'Invalid date format' })
     .optional()
     .nullable()
     .transform((val) => (val ? new Date(val) : null)),
+  paymentSlipUrl: z.string().optional().nullable(),
+  paymentReviewNote: z.string().trim().max(2000).optional().nullable(),
+  declineReason: z.string().trim().max(2000).optional().nullable(),
   notes: z.string().trim().max(2000).optional().default(''),
 });
 
@@ -34,12 +49,15 @@ export type CreatePurchaseOrderInput = z.infer<typeof CreatePurchaseOrderSchema>
 export const UpdatePurchaseOrderSchema = z.object({
   supplier: z.string().min(1).optional(),
   items: z.array(POItemSchema).min(1).optional(),
-  expectedDeliveryDate: z
+  estimatedDeliveryDate: z
     .string()
     .datetime({ message: 'Invalid date format' })
     .optional()
     .nullable()
     .transform((val) => (val ? new Date(val) : null)),
+  paymentSlipUrl: z.string().optional().nullable(),
+  paymentReviewNote: z.string().trim().max(2000).optional().nullable(),
+  declineReason: z.string().trim().max(2000).optional().nullable(),
   notes: z.string().trim().max(2000).optional(),
 }).refine(
   (data) => Object.keys(data).some((k) => data[k as keyof typeof data] !== undefined),

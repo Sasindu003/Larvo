@@ -70,10 +70,15 @@ export class PurchaseOrderService {
 
     const formatted = (results as any[]).map((po) => ({
       ...po,
-      totalCost: (po.items || []).reduce(
-        (sum: number, it: any) => sum + (it.orderedQty || 0) * (it.unitCost || 0),
-        0
-      ),
+      totalCost: (po.items || []).reduce((sum: number, it: any) => {
+        const useOriginal = ['requested', 'admin_rejected'].includes(po.status);
+        return (
+          sum +
+          (useOriginal
+            ? (it.orderedQty || 0) * (it.unitCost || 0)
+            : (it.quotedQty || 0) * (it.quotedUnitCost || 0))
+        );
+      }, 0),
     }));
 
     return {
@@ -115,9 +120,12 @@ export class PurchaseOrderService {
     const po = await PurchaseOrder.create({
       supplier: input.supplier,
       items: input.items,
-      expectedDeliveryDate: input.expectedDeliveryDate ?? null,
+      estimatedDeliveryDate: input.estimatedDeliveryDate ?? null,
+      paymentSlipUrl: input.paymentSlipUrl ?? null,
+      paymentReviewNote: input.paymentReviewNote ?? null,
+      declineReason: input.declineReason ?? null,
       notes: input.notes || '',
-      status: 'draft',
+      status: 'requested',
     });
 
     return po.populate([
@@ -136,10 +144,10 @@ export class PurchaseOrderService {
       throw new AppError('Purchase order not found', 404);
     }
 
-    // Only draft POs can be edited
-    if (po.status !== 'draft') {
+    // Only requested POs can be edited
+    if (po.status !== 'requested') {
       throw new AppError(
-        `Only draft purchase orders can be edited. Current status: ${po.status}`,
+        `Only requested purchase orders can be edited. Current status: ${po.status}`,
         400
       );
     }
@@ -160,8 +168,20 @@ export class PurchaseOrderService {
       po.items = input.items as any;
     }
 
-    if (input.expectedDeliveryDate !== undefined) {
-      po.expectedDeliveryDate = input.expectedDeliveryDate;
+    if (input.estimatedDeliveryDate !== undefined) {
+      po.estimatedDeliveryDate = input.estimatedDeliveryDate;
+    }
+
+    if (input.paymentSlipUrl !== undefined) {
+      po.paymentSlipUrl = input.paymentSlipUrl;
+    }
+
+    if (input.paymentReviewNote !== undefined) {
+      po.paymentReviewNote = input.paymentReviewNote;
+    }
+
+    if (input.declineReason !== undefined) {
+      po.declineReason = input.declineReason;
     }
 
     if (input.notes !== undefined) {
@@ -214,11 +234,17 @@ export class PurchaseOrderService {
       throw new AppError('Purchase order not found', 404);
     }
 
-    const cancellable: POStatus[] = ['draft', 'submitted', 'confirmed'];
+    const cancellable: POStatus[] = [
+      'requested',
+      'admin_approved',
+      'admin_rejected',
+      'payment_rejected',
+      'confirmed',
+    ];
     if (!cancellable.includes(po.status)) {
       throw new AppError(
         `Cannot cancel a purchase order with status '${po.status}'. ` +
-          `Only draft, submitted, or confirmed orders can be cancelled.`,
+          `Only requested, admin_approved, admin_rejected, payment_rejected, or confirmed orders can be cancelled.`,
         400
       );
     }
