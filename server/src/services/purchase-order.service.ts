@@ -295,6 +295,17 @@ export class PurchaseOrderService {
         );
       }
 
+      // Data integrity assertion: every item must have quotedQty > 0 in the PO v2 cycle
+      for (const item of po.items) {
+        if (!item.quotedQty || item.quotedQty <= 0) {
+          throw new AppError(
+            `Data integrity error: PO item with SKU '${item.sku}' has invalid quotedQty (${item.quotedQty ?? 0}). ` +
+              `Quoted quantity must be greater than 0 before receiving stock.`,
+            400
+          );
+        }
+      }
+
       // Build a map of SKU → item index for O(1) lookup
       const itemBySku = new Map<string, (typeof po.items)[number]>();
       for (const item of po.items) {
@@ -311,10 +322,11 @@ export class PurchaseOrderService {
           );
         }
 
-        const maxReceivable = item.orderedQty - item.receivedQty;
+        const targetQty = item.quotedQty > 0 ? item.quotedQty : item.orderedQty;
+        const maxReceivable = targetQty - item.receivedQty;
         if (maxReceivable <= 0) {
           throw new AppError(
-            `SKU '${line.sku}' has already been fully received (orderedQty: ${item.orderedQty})`,
+            `SKU '${line.sku}' has already been fully received (target: ${targetQty})`,
             400
           );
         }
@@ -332,7 +344,10 @@ export class PurchaseOrderService {
       }
 
       // Determine new PO status
-      const allReceived = po.items.every((item) => item.receivedQty >= item.orderedQty);
+      const allReceived = po.items.every((item) => {
+        const targetQty = item.quotedQty > 0 ? item.quotedQty : item.orderedQty;
+        return item.receivedQty >= targetQty;
+      });
       po.status = allReceived ? 'received' : 'partially_received';
 
       await po.save({ session });

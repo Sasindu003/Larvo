@@ -148,7 +148,23 @@ export interface ReviewPaymentInput {
   note?: string;
 }
 
+export interface SkuSearchResult {
+  productId: string;
+  name: string;
+  sku: string;
+  size: string;
+  color: string;
+  currentStock: number;
+}
+
 export const purchaseOrderService = {
+  searchSku: async (q: string): Promise<SkuSearchResult[]> => {
+    const res = await api.get<any, ApiResponse<SkuSearchResult[]>>('/admin/inventory/search-sku', {
+      params: { q },
+    });
+    return res.data || [];
+  },
+
   getPurchaseOrders: async (params?: GetPurchaseOrdersParams): Promise<GetPurchaseOrdersResponse> => {
     const res = await api.get<any, ApiResponse<GetPurchaseOrdersResponse>>('/admin/purchase-orders', { params });
     return res.data!;
