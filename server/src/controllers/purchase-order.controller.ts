@@ -12,6 +12,7 @@ import {
   SubmitQuoteSchema,
   DeclinePOSchema,
   DecideQuoteSchema,
+  ReviewPaymentSchema,
 } from '../validators/purchase-order.validator';
 import { POStatus } from '../models/PurchaseOrder';
 import { uploadToGridFS } from '../services/gridfs.service';
@@ -226,5 +227,44 @@ export const submitPaymentSlip = asyncHandler(async (req: Request, res: Response
     success: true,
     data: { purchaseOrder: po },
     message: 'Payment slip submitted successfully',
+  });
+});
+
+/**
+ * @desc    Supplier approves or rejects admin-uploaded payment slip
+ * @route   PATCH /api/supplier/purchase-orders/:id/review-payment
+ * @access  Private (supplier)
+ */
+export const reviewPayment = asyncHandler(async (req: Request, res: Response) => {
+  const supplierUserId = req.user?._id;
+  if (!supplierUserId) {
+    throw new AppError('Not authenticated', 401);
+  }
+  const parsed = parseOrThrow(ReviewPaymentSchema, req.body);
+  const po = await purchaseOrderService.reviewPayment(req.params.id, parsed, supplierUserId);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: `Payment slip ${parsed.decision === 'approve' ? 'approved' : 'rejected'} successfully`,
+  });
+});
+
+/**
+ * @desc    Supplier marks a confirmed purchase order as shipped (in_transit)
+ * @route   PATCH /api/supplier/purchase-orders/:id/ship
+ * @access  Private (supplier)
+ */
+export const markShipped = asyncHandler(async (req: Request, res: Response) => {
+  const supplierUserId = req.user?._id;
+  if (!supplierUserId) {
+    throw new AppError('Not authenticated', 401);
+  }
+  const po = await purchaseOrderService.markShipped(req.params.id, supplierUserId);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Purchase order marked as shipped',
   });
 });

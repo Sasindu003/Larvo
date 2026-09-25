@@ -140,3 +140,13 @@ export const DecideQuoteSchema = z.object({
 });
 
 export type DecideQuoteInput = z.infer<typeof DecideQuoteSchema>;
+
+export const ReviewPaymentSchema = z.object({
+  decision: z.enum(['approve', 'reject'], {
+    required_error: 'decision is required',
+    invalid_type_error: 'decision must be "approve" or "reject"',
+  }),
+  note: z.string().trim().max(2000, 'Note cannot exceed 2000 characters').optional(),
+});
+
+export type ReviewPaymentInput = z.infer<typeof ReviewPaymentSchema>;

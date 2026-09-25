@@ -12,6 +12,7 @@ import {
   SubmitQuoteInput,
   DeclinePOInput,
   DecideQuoteInput,
+  ReviewPaymentInput,
 } from '../validators/purchase-order.validator';
 
 export interface PaginatedPurchaseOrders {
@@ -574,6 +575,131 @@ export class PurchaseOrderService {
 
     // Stub notification hook: notify supplier of payment slip submission
     // TODO(P68): In future phases, notify supplier of payment slip submission
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Supplier approves or rejects an admin-uploaded payment slip.
+   * - PO must be in 'payment_submitted' status.
+   * - Ownership check via Supplier.userId.
+   * - Approve guard: paymentSlipUrl must be non-empty.
+   * - approve -> 'confirmed'; reject -> 'payment_rejected' + paymentReviewNote.
+   * - payment_rejected loops back to admin for slip resubmission (not a dead-end).
+   */
+  async reviewPayment(
+    id: string,
+    input: ReviewPaymentInput,
+    supplierUserId: string | Types.ObjectId
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    // Ownership check via Supplier.userId or direct supplier ID
+    const supplier = await Supplier.findById(po.supplier);
+    if (!supplier) {
+      throw new AppError('Supplier record not found', 404);
+    }
+    const supplierUserIdStr = supplierUserId?.toString();
+    const isOwner =
+      (supplier.userId && supplier.userId.toString() === supplierUserIdStr) ||
+      supplier._id.toString() === supplierUserIdStr;
+    if (!isOwner) {
+      throw new AppError('You do not have permission to review payment for this purchase order', 403);
+    }
+
+    // Assert status via PO_VALID_TRANSITIONS
+    const targetStatus = input.decision === 'approve' ? 'confirmed' : 'payment_rejected';
+    const allowedNext = PO_VALID_TRANSITIONS[po.status];
+    if (!allowedNext || !allowedNext.includes(targetStatus)) {
+      throw new AppError(
+        `Cannot ${input.decision} payment for a purchase order with status '${po.status}'. ` +
+          `Allowed transitions: ${allowedNext && allowedNext.length ? allowedNext.join(', ') : 'none'}`,
+        400
+      );
+    }
+
+    // Approve guard: paymentSlipUrl must be present
+    if (input.decision === 'approve') {
+      if (!po.paymentSlipUrl || !po.paymentSlipUrl.trim()) {
+        throw new AppError(
+          'Cannot approve payment: no payment slip has been uploaded. ' +
+            'Admin must upload a slip via /payment-slip before it can be reviewed.',
+          400
+        );
+      }
+    }
+
+    po.status = targetStatus;
+    if (input.note !== undefined) {
+      po.paymentReviewNote = input.note;
+    }
+    await po.save();
+
+    // Stub notification hook: notify admin of supplier payment review decision
+    // TODO(P69): In future phases, notify admin of supplier payment review decision
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Supplier marks a confirmed purchase order as shipped (in_transit).
+   * - PO must be in 'confirmed' status.
+   * - Ownership check via Supplier.userId.
+   */
+  async markShipped(
+    id: string,
+    supplierUserId: string | Types.ObjectId
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    // Ownership check via Supplier.userId or direct supplier ID
+    const supplier = await Supplier.findById(po.supplier);
+    if (!supplier) {
+      throw new AppError('Supplier record not found', 404);
+    }
+    const supplierUserIdStr = supplierUserId?.toString();
+    const isOwner =
+      (supplier.userId && supplier.userId.toString() === supplierUserIdStr) ||
+      supplier._id.toString() === supplierUserIdStr;
+    if (!isOwner) {
+      throw new AppError('You do not have permission to mark this purchase order as shipped', 403);
+    }
+
+    // Assert status via PO_VALID_TRANSITIONS
+    const allowedNext = PO_VALID_TRANSITIONS[po.status];
+    if (!allowedNext || !allowedNext.includes('in_transit')) {
+      throw new AppError(
+        `Cannot mark as shipped for a purchase order with status '${po.status}'. ` +
+          `Allowed transitions: ${allowedNext && allowedNext.length ? allowedNext.join(', ') : 'none'}`,
+        400
+      );
+    }
+
+    po.status = 'in_transit';
+    await po.save();
+
+    // Stub notification hook: notify admin that shipment has been dispatched
+    // TODO(P69): In future phases, notify admin that shipment has been dispatched
 
     return po.populate([
       { path: 'supplier', select: 'name companyName email status' },

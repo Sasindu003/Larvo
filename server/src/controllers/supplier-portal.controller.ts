@@ -9,6 +9,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import {
   SubmitQuoteSchema,
   DeclinePOSchema,
+  ReviewPaymentSchema,
 } from '../validators/purchase-order.validator';
 
 /**
@@ -187,5 +188,45 @@ export const declineSupplierPurchaseOrder = asyncHandler(async (req: Request, re
     success: true,
     data: { purchaseOrder: po },
     message: 'Purchase order declined successfully',
+  });
+});
+
+/**
+ * @desc    Supplier approves or rejects admin-uploaded payment slip
+ * @route   PATCH /api/supplier/purchase-orders/:id/review-payment
+ * @access  Private (supplier)
+ */
+export const reviewPaymentSlip = asyncHandler(async (req: Request, res: Response) => {
+  const supplierId = getSupplierIdOrThrow(req);
+  const parsed = ReviewPaymentSchema.parse(req.body);
+  const po = await purchaseOrderService.reviewPayment(
+    req.params.id,
+    parsed,
+    req.user?._id || supplierId
+  );
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: `Payment slip ${parsed.decision === 'approve' ? 'approved' : 'rejected'} successfully`,
+  });
+});
+
+/**
+ * @desc    Supplier marks a confirmed purchase order as shipped (in_transit)
+ * @route   PATCH /api/supplier/purchase-orders/:id/ship
+ * @access  Private (supplier)
+ */
+export const markPurchaseOrderShipped = asyncHandler(async (req: Request, res: Response) => {
+  const supplierId = getSupplierIdOrThrow(req);
+  const po = await purchaseOrderService.markShipped(
+    req.params.id,
+    req.user?._id || supplierId
+  );
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Purchase order marked as shipped',
   });
 });

@@ -143,6 +143,11 @@ export interface DeclinePOInput {
   declineReason: string;
 }
 
+export interface ReviewPaymentInput {
+  decision: 'approve' | 'reject';
+  note?: string;
+}
+
 export const purchaseOrderService = {
   getPurchaseOrders: async (params?: GetPurchaseOrdersParams): Promise<GetPurchaseOrdersResponse> => {
     const res = await api.get<any, ApiResponse<GetPurchaseOrdersResponse>>('/admin/purchase-orders', { params });
@@ -229,6 +234,21 @@ export const purchaseOrderService = {
     const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
       `/supplier/purchase-orders/${id}/decline`,
       data
+    );
+    return res.data!.purchaseOrder;
+  },
+
+  reviewPayment: async (id: string, data: ReviewPaymentInput): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/supplier/purchase-orders/${id}/review-payment`,
+      data
+    );
+    return res.data!.purchaseOrder;
+  },
+
+  markShipped: async (id: string): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/supplier/purchase-orders/${id}/ship`
     );
     return res.data!.purchaseOrder;
   },

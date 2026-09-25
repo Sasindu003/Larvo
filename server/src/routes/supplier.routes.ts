@@ -9,6 +9,8 @@ import {
   getSupplierPurchaseOrderById,
   submitSupplierQuote,
   declineSupplierPurchaseOrder,
+  reviewPaymentSlip,
+  markPurchaseOrderShipped,
 } from '../controllers/supplier-portal.controller';
 
 const router = Router();
@@ -29,6 +31,16 @@ router.patch(
   '/purchase-orders/:id/decline',
   requireRole('supplier', 'admin', 'owner'),
   declineSupplierPurchaseOrder
+);
+router.patch(
+  '/purchase-orders/:id/review-payment',
+  requireRole('supplier', 'admin', 'owner'),
+  reviewPaymentSlip
+);
+router.patch(
+  '/purchase-orders/:id/ship',
+  requireRole('supplier', 'admin', 'owner'),
+  markPurchaseOrderShipped
 );
 router.get('/products', getSupplierProducts);
 router.patch('/change-password', changeSupplierPassword);
