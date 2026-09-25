@@ -18,7 +18,7 @@ const isLocal =
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 const baseURL: string =
-  import.meta.env.VITE_API_URL ||
+  (import.meta as any).env?.VITE_API_URL ||
   (!isLocal
     ? 'https://larvo-server.vercel.app/api'
     : 'http://localhost:5000/api');
@@ -44,5 +44,23 @@ api.interceptors.response.use(
     return Promise.reject(normalizedError);
   }
 );
+
+export const getFileUrl = (url?: string | null): string => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  const isLocalHost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  const base = (
+    (import.meta as any).env?.VITE_API_URL ||
+    (!isLocalHost ? 'https://larvo-server.vercel.app/api' : 'http://localhost:5000/api')
+  ).replace(/\/+$/, '');
+
+  const path = url.startsWith('/api') ? url.slice(4) : url.startsWith('/') ? url : `/${url}`;
+  return `${base}${path}`;
+};
 
 export default api;

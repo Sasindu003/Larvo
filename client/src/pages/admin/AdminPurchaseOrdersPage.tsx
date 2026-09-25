@@ -29,6 +29,7 @@ import {
   POStatus,
   PO_STATUSES,
   SkuSearchResult,
+  getFileUrl,
 } from '../../services/purchase-order.service';
 import { supplierService, ISupplier } from '../../services/supplier.service';
 
@@ -988,7 +989,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                   </h4>
                   {activePO.paymentSlipUrl && (
                     <a
-                      href={activePO.paymentSlipUrl}
+                      href={getFileUrl(activePO.paymentSlipUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium"

@@ -28,6 +28,7 @@ import {
   IPurchaseOrder,
   POStatus,
   SubmitQuoteLineInput,
+  getFileUrl,
 } from '../../services/purchase-order.service';
 
 // ── Status Badge Component covering all 12 statuses ──────────────────────────
@@ -792,7 +793,7 @@ export const SupplierPurchaseOrdersPage: React.FC = () => {
                       <FileText className="w-12 h-12 text-sky-400 mx-auto mb-2" />
                       <p className="text-xs font-medium text-slate-200">PDF Payment Document Attached</p>
                       <a
-                        href={activePO.paymentSlipUrl}
+                        href={getFileUrl(activePO.paymentSlipUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 mt-3 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-medium transition"
@@ -803,12 +804,12 @@ export const SupplierPurchaseOrdersPage: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       <img
-                        src={activePO.paymentSlipUrl}
+                        src={getFileUrl(activePO.paymentSlipUrl)}
                         alt="Payment Slip"
                         className="max-h-72 mx-auto rounded-lg object-contain border border-slate-800"
                       />
                       <a
-                        href={activePO.paymentSlipUrl}
+                        href={getFileUrl(activePO.paymentSlipUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300"
@@ -972,7 +973,7 @@ export const SupplierPurchaseOrdersPage: React.FC = () => {
                 <p className="text-slate-500 font-medium">Payment Slip</p>
                 {activePO.paymentSlipUrl ? (
                   <a
-                    href={activePO.paymentSlipUrl}
+                    href={getFileUrl(activePO.paymentSlipUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 mt-0.5"

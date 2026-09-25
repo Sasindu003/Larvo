@@ -1,5 +1,7 @@
-import api, { ApiResponse } from './api';
+import api, { ApiResponse, getFileUrl } from './api';
 import { ISupplier } from './supplier.service';
+
+export { getFileUrl };
 
 export type POStatus =
   | 'requested'
