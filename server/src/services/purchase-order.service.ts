@@ -128,6 +128,9 @@ export class PurchaseOrderService {
       status: 'requested',
     });
 
+    // Stub notification hook: notify supplier of new stock request
+    // TODO(P65): In future phases, dispatch notification/email to supplier
+
     return po.populate([
       { path: 'supplier', select: 'name companyName email status' },
       { path: 'items.product', select: 'name slug images basePrice' },

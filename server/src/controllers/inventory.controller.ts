@@ -89,3 +89,19 @@ export const adjustAdminInventoryStock = asyncHandler(async (req: Request, res: 
   });
 });
 
+/**
+ * GET /api/admin/inventory/search-sku?q=
+ * Lightweight SKU/product-name search for the PO item picker.
+ * Returns up to 20 matches: { productId, name, sku, size, color, currentStock }
+ */
+export const searchSkuForPO = asyncHandler(async (req: Request, res: Response) => {
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (!q) {
+    res.status(200).json({ success: true, data: [], message: 'No query provided' });
+    return;
+  }
+  const limit = Math.min(50, Number(req.query.limit) || 20);
+  const results = await inventoryService.searchBySku(q, limit);
+  res.status(200).json({ success: true, data: results, message: 'SKU search results' });
+});
+

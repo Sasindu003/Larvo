@@ -4,7 +4,9 @@ import { requireRole } from '../middleware/rbac.middleware';
 import {
   getAdminInventory,
   adjustAdminInventoryStock,
+  searchSkuForPO,
 } from '../controllers/inventory.controller';
+import purchaseOrderRoutes from './purchase-order.routes';
 import {
   getAdminProducts,
   createProduct,
@@ -96,6 +98,18 @@ router.patch(
   requireAuth,
   requireRole('staff', 'admin', 'owner'),
   adjustAdminInventoryStock
+);
+
+/**
+ * @desc    SKU/product-name search for PO item picker
+ * @route   GET /api/admin/inventory/search-sku
+ * @access  admin, owner
+ */
+router.get(
+  '/inventory/search-sku',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  searchSkuForPO
 );
 
 // ── Products ───────────────────────────────────────────────────────────────────
@@ -518,41 +532,8 @@ router.post(
   createSupplierAccount
 );
 
-// ── Purchase Orders (Cleared awaiting fresh update) ──────────────────────────
+// ── Purchase Orders ───────────────────────────────────────────────────────────
 
-/**
- * @desc    List purchase orders (Cleared)
- * @route   GET /api/admin/purchase-orders
- * @access  admin, owner
- */
-router.get(
-  '/purchase-orders',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  (_req: Request, res: Response) => {
-    res.status(200).json({
-      success: true,
-      data: { results: [], total: 0, page: 1, pages: 1 },
-      message: 'Purchase orders cleared',
-    });
-  }
-);
-
-/**
- * @desc    Disabled single purchase order & mutations awaiting fresh update
- * @route   ALL /api/admin/purchase-orders/:id*
- * @access  admin, owner
- */
-router.all(
-  '/purchase-orders/*',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  (_req: Request, res: Response) => {
-    res.status(503).json({
-      success: false,
-      message: 'Purchase orders feature is disabled awaiting update',
-    });
-  }
-);
+router.use('/purchase-orders', purchaseOrderRoutes);
 
 export default router;

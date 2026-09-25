@@ -336,6 +336,28 @@ export const inventoryService = {
       status: this.getStockStatus(finalStock),
     };
   },
+
+  /**
+   * Search variants by partial SKU or product name for the PO item picker.
+   * Delegates to getAdminInventory — no duplicate stock-lookup logic.
+   * Returns: { productId, name, sku, size, color, currentStock }[]
+   */
+  async searchBySku(
+    q: string,
+    limit: number = 20
+  ): Promise<
+    { productId: string; name: string; sku: string; size: string; color: string; currentStock: number }[]
+  > {
+    const result = await inventoryService.getAdminInventory({ search: q, limit });
+    return (result.items as any[]).map((item) => ({
+      productId: String(item.product._id),
+      name: item.product.name as string,
+      sku: item.sku as string,
+      size: item.size as string,
+      color: item.color as string,
+      currentStock: item.stock as number,
+    }));
+  },
 };
 
 export default inventoryService;

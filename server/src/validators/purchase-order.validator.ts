@@ -32,6 +32,7 @@ export const CreatePurchaseOrderSchema = z.object({
   items: z
     .array(POItemSchema)
     .min(1, 'At least one item is required'),
+  status: z.enum(PO_STATUS_VALUES).optional().default('requested'),
   estimatedDeliveryDate: z
     .string()
     .datetime({ message: 'Invalid date format' })
