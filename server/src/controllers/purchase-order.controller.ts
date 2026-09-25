@@ -9,6 +9,8 @@ import {
   AdvancePOStatusSchema,
   GetPurchaseOrdersQuerySchema,
   ReceivePOSchema,
+  AdminDecisionPOSchema,
+  CancelPOSchema,
 } from '../validators/purchase-order.validator';
 import { POStatus } from '../models/PurchaseOrder';
 
@@ -104,17 +106,37 @@ export const advancePurchaseOrderStatus = asyncHandler(async (req: Request, res:
 });
 
 /**
- * @desc    Cancel a purchase order (draft, submitted, confirmed only)
+ * @desc    Cancel a purchase order (draft, submitted, quoted, confirmed)
  * @route   PATCH /api/admin/purchase-orders/:id/cancel
  * @access  Private (admin, owner)
  */
 export const cancelPurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
-  const po = await purchaseOrderService.cancelPurchaseOrder(req.params.id);
+  const parsed = req.body ? parseOrThrow(CancelPOSchema, req.body) : {};
+  const po = await purchaseOrderService.cancelPurchaseOrder(req.params.id, parsed.cancelReason);
 
   res.status(200).json({
     success: true,
     data: { purchaseOrder: po },
     message: 'Purchase order cancelled successfully',
+  });
+});
+
+/**
+ * @desc    Admin decides to accept or cancel order after reviewing supplier quote
+ * @route   PATCH /api/admin/purchase-orders/:id/decision
+ * @access  Private (admin, owner)
+ */
+export const decidePurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = parseOrThrow(AdminDecisionPOSchema, req.body);
+  const po = await purchaseOrderService.adminDecision(req.params.id, parsed);
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message:
+      parsed.action === 'confirm'
+        ? 'Supplier quote accepted. Purchase order confirmed.'
+        : 'Order cancelled.',
   });
 });
 

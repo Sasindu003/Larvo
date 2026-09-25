@@ -61,6 +61,7 @@ import {
   advancePurchaseOrderStatus,
   cancelPurchaseOrder,
   receivePurchaseOrder,
+  decidePurchaseOrder,
 } from '../controllers/purchase-order.controller';
 
 const router = Router();
@@ -600,6 +601,18 @@ router.patch(
   requireAuth,
   requireRole('admin', 'owner'),
   cancelPurchaseOrder
+);
+
+/**
+ * @desc    Admin decision on supplier quote (accept or cancel)
+ * @route   PATCH /api/admin/purchase-orders/:id/decision
+ * @access  admin, owner
+ */
+router.patch(
+  '/purchase-orders/:id/decision',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  decidePurchaseOrder
 );
 
 /**

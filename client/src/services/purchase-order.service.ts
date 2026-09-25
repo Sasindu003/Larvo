@@ -4,6 +4,8 @@ import { ISupplier } from './supplier.service';
 export type POStatus =
   | 'draft'
   | 'submitted'
+  | 'quoted'
+  | 'supplier_rejected'
   | 'confirmed'
   | 'in_transit'
   | 'partially_received'
@@ -13,6 +15,8 @@ export type POStatus =
 export const PO_STATUSES: POStatus[] = [
   'draft',
   'submitted',
+  'quoted',
+  'supplier_rejected',
   'confirmed',
   'in_transit',
   'partially_received',
@@ -22,7 +26,9 @@ export const PO_STATUSES: POStatus[] = [
 
 export const PO_VALID_TRANSITIONS: Record<POStatus, POStatus[]> = {
   draft: ['submitted', 'cancelled'],
-  submitted: ['confirmed', 'cancelled'],
+  submitted: ['quoted', 'confirmed', 'supplier_rejected', 'cancelled'],
+  quoted: ['confirmed', 'cancelled'],
+  supplier_rejected: [],
   confirmed: ['in_transit', 'cancelled'],
   in_transit: ['partially_received', 'received'],
   partially_received: ['received'],
@@ -45,8 +51,22 @@ export interface IPOItem {
   size: string;
   color: string;
   orderedQty: number;
+  quotedQty?: number;
   receivedQty: number;
   unitCost: number;
+}
+
+export interface ISupplierFeedback {
+  estimatedDeliveryDate?: string | null;
+  supplierNotes?: string;
+  respondedAt?: string | null;
+  rejectionReason?: string;
+}
+
+export interface ITrackingInfo {
+  carrier?: string;
+  trackingNumber?: string;
+  dispatchedAt?: string | null;
 }
 
 export interface IPurchaseOrder {
@@ -56,6 +76,9 @@ export interface IPurchaseOrder {
   status: POStatus;
   expectedDeliveryDate?: string | null;
   notes?: string;
+  supplierFeedback?: ISupplierFeedback;
+  cancelReason?: string;
+  trackingInfo?: ITrackingInfo;
   totalCost: number;
   createdAt: string;
   updatedAt: string;
@@ -126,8 +149,23 @@ export const purchaseOrderService = {
     return res.data!.purchaseOrder;
   },
 
-  cancelPurchaseOrder: async (id: string): Promise<IPurchaseOrder> => {
-    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(`/admin/purchase-orders/${id}/cancel`);
+  cancelPurchaseOrder: async (id: string, cancelReason?: string): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/admin/purchase-orders/${id}/cancel`,
+      { cancelReason }
+    );
+    return res.data!.purchaseOrder;
+  },
+
+  decidePurchaseOrder: async (
+    id: string,
+    action: 'confirm' | 'cancel',
+    cancelReason?: string
+  ): Promise<IPurchaseOrder> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(
+      `/admin/purchase-orders/${id}/decision`,
+      { action, cancelReason }
+    );
     return res.data!.purchaseOrder;
   },
 

@@ -150,6 +150,34 @@ export const supplierPortalService = {
     const res = await api.patch<any, ApiResponse<any>>('/supplier/change-password', data);
     return res;
   },
+
+  respondPurchaseOrder: async (
+    id: string,
+    data: {
+      action: 'confirm' | 'reject';
+      rejectionReason?: string;
+      estimatedDeliveryDate?: string | null;
+      supplierNotes?: string;
+      items?: { sku: string; quotedQty: number; unitCost?: number }[];
+    }
+  ): Promise<any> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: any }>>(
+      `/supplier/purchase-orders/${id}/respond`,
+      data
+    );
+    return res.data!.purchaseOrder;
+  },
+
+  dispatchPurchaseOrder: async (
+    id: string,
+    data: { carrier?: string; trackingNumber?: string }
+  ): Promise<any> => {
+    const res = await api.patch<any, ApiResponse<{ purchaseOrder: any }>>(
+      `/supplier/purchase-orders/${id}/dispatch`,
+      data
+    );
+    return res.data!.purchaseOrder;
+  },
 };
 
 export default supplierService;

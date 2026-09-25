@@ -9,6 +9,9 @@ import {
   UpdatePurchaseOrderInput,
   GetPurchaseOrdersQuery,
   ReceivePOInput,
+  SupplierRespondPOInput,
+  SupplierDispatchPOInput,
+  AdminDecisionPOInput,
 } from '../validators/purchase-order.validator';
 
 export interface PaginatedPurchaseOrders {
@@ -204,7 +207,7 @@ export class PurchaseOrderService {
     ]);
   }
 
-  async cancelPurchaseOrder(id: string): Promise<IPurchaseOrder> {
+  async cancelPurchaseOrder(id: string, cancelReason?: string): Promise<IPurchaseOrder> {
     if (!Types.ObjectId.isValid(id)) {
       throw new AppError('Invalid purchase order ID', 400);
     }
@@ -214,16 +217,186 @@ export class PurchaseOrderService {
       throw new AppError('Purchase order not found', 404);
     }
 
-    const cancellable: POStatus[] = ['draft', 'submitted', 'confirmed'];
+    const cancellable: POStatus[] = ['draft', 'submitted', 'quoted', 'confirmed'];
     if (!cancellable.includes(po.status)) {
       throw new AppError(
         `Cannot cancel a purchase order with status '${po.status}'. ` +
-          `Only draft, submitted, or confirmed orders can be cancelled.`,
+          `Only draft, submitted, quoted, or confirmed orders can be cancelled.`,
         400
       );
     }
 
     po.status = 'cancelled';
+    if (cancelReason) {
+      po.cancelReason = cancelReason;
+    }
+    await po.save();
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Admin decides whether to confirm or cancel the order after reviewing the supplier's quote.
+   */
+  async adminDecision(id: string, input: AdminDecisionPOInput): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    if (po.status !== 'quoted') {
+      throw new AppError(
+        `Admin decision can only be made on a quoted order. Current status: '${po.status}'`,
+        400
+      );
+    }
+
+    if (input.action === 'cancel') {
+      po.status = 'cancelled';
+      po.cancelReason = input.cancelReason || 'Cancelled by admin after reviewing supplier quote';
+    } else if (input.action === 'confirm') {
+      po.status = 'confirmed';
+      // Sync orderedQty with supplier's quotedQty if provided and greater than 0
+      for (const item of po.items) {
+        if (item.quotedQty && item.quotedQty > 0) {
+          item.orderedQty = item.quotedQty;
+        }
+      }
+    }
+
+    await po.save();
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Supplier responds to an order request: either confirm with quotation & feedback or reject.
+   */
+  async supplierRespond(
+    id: string,
+    supplierId: string,
+    input: SupplierRespondPOInput
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    const currentSupplierId = (po.supplier as any)?._id?.toString() || po.supplier?.toString();
+    if (currentSupplierId !== supplierId) {
+      throw new AppError('You do not have permission to respond to this purchase order', 403);
+    }
+
+    if (po.status !== 'submitted') {
+      throw new AppError(
+        `Supplier feedback can only be submitted for submitted requests. Current status: '${po.status}'`,
+        400
+      );
+    }
+
+    if (input.action === 'reject') {
+      po.status = 'supplier_rejected';
+      po.supplierFeedback = {
+        rejectionReason: input.rejectionReason || 'Supplier declined the order request',
+        respondedAt: new Date(),
+        supplierNotes: input.supplierNotes || '',
+      };
+      await po.save();
+      return po.populate([
+        { path: 'supplier', select: 'name companyName email status' },
+        { path: 'items.product', select: 'name slug images basePrice' },
+      ]);
+    }
+
+    // Action is 'confirm' -> update feedback and set status to 'quoted'
+    if (input.items && input.items.length > 0) {
+      const itemMap = new Map(input.items.map((it) => [it.sku, it]));
+      for (const poItem of po.items) {
+        const feedbackItem = itemMap.get(poItem.sku);
+        if (feedbackItem) {
+          poItem.quotedQty = feedbackItem.quotedQty;
+          if (feedbackItem.unitCost !== undefined && feedbackItem.unitCost >= 0) {
+            poItem.unitCost = feedbackItem.unitCost;
+          }
+        } else {
+          poItem.quotedQty = poItem.orderedQty;
+        }
+      }
+    } else {
+      for (const poItem of po.items) {
+        poItem.quotedQty = poItem.orderedQty;
+      }
+    }
+
+    po.status = 'quoted';
+    po.supplierFeedback = {
+      estimatedDeliveryDate: input.estimatedDeliveryDate ?? null,
+      supplierNotes: input.supplierNotes || '',
+      respondedAt: new Date(),
+    };
+
+    if (input.estimatedDeliveryDate) {
+      po.expectedDeliveryDate = input.estimatedDeliveryDate;
+    }
+
+    await po.save();
+
+    return po.populate([
+      { path: 'supplier', select: 'name companyName email status' },
+      { path: 'items.product', select: 'name slug images basePrice' },
+    ]);
+  }
+
+  /**
+   * Supplier marks order as dispatched / in transit.
+   */
+  async supplierDispatch(
+    id: string,
+    supplierId: string,
+    input: SupplierDispatchPOInput
+  ): Promise<IPurchaseOrder> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('Invalid purchase order ID', 400);
+    }
+
+    const po = await PurchaseOrder.findById(id);
+    if (!po) {
+      throw new AppError('Purchase order not found', 404);
+    }
+
+    const currentSupplierId = (po.supplier as any)?._id?.toString() || po.supplier?.toString();
+    if (currentSupplierId !== supplierId) {
+      throw new AppError('You do not have permission to dispatch this purchase order', 403);
+    }
+
+    if (po.status !== 'confirmed') {
+      throw new AppError(
+        `Order can only be marked dispatched when status is 'confirmed'. Current status: '${po.status}'`,
+        400
+      );
+    }
+
+    po.status = 'in_transit';
+    po.trackingInfo = {
+      carrier: input.carrier || '',
+      trackingNumber: input.trackingNumber || '',
+      dispatchedAt: new Date(),
+    };
+
     await po.save();
 
     return po.populate([

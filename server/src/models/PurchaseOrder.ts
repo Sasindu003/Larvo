@@ -1,8 +1,10 @@
-﻿import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type POStatus =
   | 'draft'
   | 'submitted'
+  | 'quoted'
+  | 'supplier_rejected'
   | 'confirmed'
   | 'in_transit'
   | 'partially_received'
@@ -10,12 +12,22 @@ export type POStatus =
   | 'cancelled';
 
 export const PO_STATUSES: POStatus[] = [
-  'draft', 'submitted', 'confirmed', 'in_transit', 'partially_received', 'received', 'cancelled',
+  'draft',
+  'submitted',
+  'quoted',
+  'supplier_rejected',
+  'confirmed',
+  'in_transit',
+  'partially_received',
+  'received',
+  'cancelled',
 ];
 
 export const PO_VALID_TRANSITIONS: Record<POStatus, POStatus[]> = {
   draft: ['submitted', 'cancelled'],
-  submitted: ['confirmed', 'cancelled'],
+  submitted: ['quoted', 'confirmed', 'supplier_rejected', 'cancelled'],
+  quoted: ['confirmed', 'cancelled'],
+  supplier_rejected: [],
   confirmed: ['in_transit', 'cancelled'],
   in_transit: ['partially_received', 'received'],
   partially_received: ['received'],
@@ -30,6 +42,7 @@ export interface IPOItem {
   size: string;
   color: string;
   orderedQty: number;
+  quotedQty?: number;
   receivedQty: number;
   unitCost: number;
 }
@@ -41,11 +54,25 @@ const poItemSchema = new Schema<IPOItem>(
     size: { type: String, required: [true, 'Size is required'], trim: true },
     color: { type: String, required: [true, 'Color is required'], trim: true },
     orderedQty: { type: Number, required: [true, 'Ordered quantity is required'], min: [1, 'Ordered quantity must be at least 1'] },
+    quotedQty: { type: Number, default: 0, min: [0, 'Quoted quantity cannot be negative'] },
     receivedQty: { type: Number, default: 0, min: [0, 'Received quantity cannot be negative'] },
     unitCost: { type: Number, required: [true, 'Unit cost is required'], min: [0, 'Unit cost cannot be negative'] },
   },
   { _id: true }
 );
+
+export interface ISupplierFeedback {
+  estimatedDeliveryDate?: Date | null;
+  supplierNotes?: string;
+  respondedAt?: Date | null;
+  rejectionReason?: string;
+}
+
+export interface ITrackingInfo {
+  carrier?: string;
+  trackingNumber?: string;
+  dispatchedAt?: Date | null;
+}
 
 export interface IPurchaseOrder extends Document {
   supplier: Types.ObjectId;
@@ -53,6 +80,9 @@ export interface IPurchaseOrder extends Document {
   status: POStatus;
   expectedDeliveryDate?: Date | null;
   notes?: string;
+  supplierFeedback?: ISupplierFeedback;
+  cancelReason?: string;
+  trackingInfo?: ITrackingInfo;
   createdAt: Date;
   updatedAt: Date;
   totalCost: number;
@@ -73,6 +103,18 @@ const purchaseOrderSchema = new Schema<IPurchaseOrder>(
     },
     expectedDeliveryDate: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
+    supplierFeedback: {
+      estimatedDeliveryDate: { type: Date, default: null },
+      supplierNotes: { type: String, trim: true, default: '' },
+      respondedAt: { type: Date, default: null },
+      rejectionReason: { type: String, trim: true, default: '' },
+    },
+    cancelReason: { type: String, trim: true, default: '' },
+    trackingInfo: {
+      carrier: { type: String, trim: true, default: '' },
+      trackingNumber: { type: String, trim: true, default: '' },
+      dispatchedAt: { type: Date, default: null },
+    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

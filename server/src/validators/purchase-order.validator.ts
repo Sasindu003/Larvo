@@ -1,8 +1,15 @@
 import { z } from 'zod';
 
 const PO_STATUS_VALUES = [
-  'draft', 'submitted', 'confirmed', 'in_transit',
-  'partially_received', 'received', 'cancelled',
+  'draft',
+  'submitted',
+  'quoted',
+  'supplier_rejected',
+  'confirmed',
+  'in_transit',
+  'partially_received',
+  'received',
+  'cancelled',
 ] as const;
 
 const POItemSchema = z.object({
@@ -11,6 +18,7 @@ const POItemSchema = z.object({
   size: z.string({ required_error: 'Size is required' }).trim().min(1, 'Size is required'),
   color: z.string({ required_error: 'Color is required' }).trim().min(1, 'Color is required'),
   orderedQty: z.number({ required_error: 'Ordered quantity is required' }).int().min(1, 'Ordered quantity must be at least 1'),
+  quotedQty: z.number().int().min(0).optional(),
   receivedQty: z.number().int().min(0, 'Received quantity cannot be negative').optional().default(0),
   unitCost: z.number({ required_error: 'Unit cost is required' }).min(0, 'Unit cost cannot be negative'),
 });
@@ -53,6 +61,49 @@ export const AdvancePOStatusSchema = z.object({
 });
 
 export type AdvancePOStatusInput = z.infer<typeof AdvancePOStatusSchema>;
+
+export const SupplierRespondPOSchema = z.object({
+  action: z.enum(['confirm', 'reject'], { required_error: 'Action must be confirm or reject' }),
+  rejectionReason: z.string().trim().max(1000).optional(),
+  estimatedDeliveryDate: z
+    .string()
+    .datetime({ message: 'Invalid date format' })
+    .optional()
+    .nullable()
+    .transform((val) => (val ? new Date(val) : null)),
+  supplierNotes: z.string().trim().max(2000).optional(),
+  items: z
+    .array(
+      z.object({
+        sku: z.string().trim().min(1, 'SKU is required'),
+        quotedQty: z.number().int().min(0, 'Quoted quantity cannot be negative'),
+        unitCost: z.number().min(0, 'Unit cost cannot be negative').optional(),
+      })
+    )
+    .optional(),
+});
+
+export type SupplierRespondPOInput = z.infer<typeof SupplierRespondPOSchema>;
+
+export const SupplierDispatchPOSchema = z.object({
+  carrier: z.string().trim().max(100).optional().default(''),
+  trackingNumber: z.string().trim().max(100).optional().default(''),
+});
+
+export type SupplierDispatchPOInput = z.infer<typeof SupplierDispatchPOSchema>;
+
+export const AdminDecisionPOSchema = z.object({
+  action: z.enum(['confirm', 'cancel'], { required_error: 'Action must be confirm or cancel' }),
+  cancelReason: z.string().trim().max(1000).optional(),
+});
+
+export type AdminDecisionPOInput = z.infer<typeof AdminDecisionPOSchema>;
+
+export const CancelPOSchema = z.object({
+  cancelReason: z.string().trim().max(1000).optional(),
+});
+
+export type CancelPOInput = z.infer<typeof CancelPOSchema>;
 
 export const ReceivePOSchema = z.object({
   lines: z

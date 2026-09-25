@@ -44,29 +44,39 @@ const STATUS_CONFIG: Record<
     stepIndex: 0,
   },
   submitted: {
-    label: 'Submitted',
+    label: 'Submitted to Supplier',
     badgeClass: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
     stepIndex: 1,
+  },
+  quoted: {
+    label: 'Quoted (Awaiting Decision)',
+    badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    stepIndex: 2,
+  },
+  supplier_rejected: {
+    label: 'Supplier Declined',
+    badgeClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+    stepIndex: -1,
   },
   confirmed: {
     label: 'Confirmed',
     badgeClass: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
-    stepIndex: 2,
+    stepIndex: 3,
   },
   in_transit: {
     label: 'In Transit',
-    badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    stepIndex: 3,
+    badgeClass: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+    stepIndex: 4,
   },
   partially_received: {
     label: 'Partially Received',
     badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    stepIndex: 4,
+    stepIndex: 5,
   },
   received: {
     label: 'Received',
     badgeClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    stepIndex: 4,
+    stepIndex: 5,
   },
   cancelled: {
     label: 'Cancelled',
@@ -426,7 +436,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
 
   // Open Cancel Modal
   const handleOpenCancel = (po: IPurchaseOrder) => {
-    const cancellable: POStatus[] = ['draft', 'submitted', 'confirmed'];
+    const cancellable: POStatus[] = ['draft', 'submitted', 'quoted', 'confirmed'];
     if (!cancellable.includes(po.status)) {
       toast.error(
         `Cannot cancel orders in "${STATUS_CONFIG[po.status]?.label || po.status}" state. Only pre-transit orders can be cancelled.`
@@ -435,6 +445,32 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
     }
     setSelectedOrder(po);
     setCancelModalOpen(true);
+  };
+
+  // Handle Admin Decision on Quoted Order (Confirm or Cancel)
+  const handleDecideOrder = async (po: IPurchaseOrder, action: 'confirm' | 'cancel') => {
+    let cancelReason: string | undefined;
+    if (action === 'cancel') {
+      const reason = window.prompt(
+        'Enter reason for declining / cancelling supplier quote:',
+        'Supplier proposed price/delivery timeline is not acceptable'
+      );
+      if (reason === null) return;
+      cancelReason = reason;
+    }
+    setSubmitting(true);
+    try {
+      const updated = await purchaseOrderService.decidePurchaseOrder(po._id, action, cancelReason);
+      toast.success(action === 'confirm' ? 'Supplier quote accepted! Order confirmed.' : 'Order cancelled.');
+      if (selectedOrder && selectedOrder._id === po._id) {
+        setSelectedOrder(updated);
+      }
+      fetchOrders();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to submit decision');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Confirm Cancel
@@ -769,16 +805,29 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                           </button>
                         )}
 
-                        {/* Quick Advance Status */}
-                        {canMutate && nextStatus && (
+                        {/* Quoted: Review Quote Button */}
+                        {canMutate && po.status === 'quoted' && (
                           <button
                             type="button"
-                            onClick={() => handleAdvanceStatus(po, nextStatus)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/30 transition-colors"
-                            title={`Advance to ${STATUS_CONFIG[nextStatus]?.label}`}
+                            onClick={() => handleOpenDetail(po)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 transition-colors"
+                            title="Review Supplier Quote"
                           >
-                            <span>{STATUS_CONFIG[nextStatus]?.label}</span>
-                            <ArrowRight className="w-3 h-3" />
+                            <Clock className="w-3 h-3 text-amber-400" />
+                            <span>Review Quote</span>
+                          </button>
+                        )}
+
+                        {/* Draft: Send to Supplier Button */}
+                        {canMutate && po.status === 'draft' && (
+                          <button
+                            type="button"
+                            onClick={() => handleAdvanceStatus(po, 'submitted')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 border border-blue-500/30 transition-colors"
+                            title="Send Request to Supplier"
+                          >
+                            <Send className="w-3 h-3" />
+                            <span>Send</span>
                           </button>
                         )}
 
@@ -1233,6 +1282,118 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Quoted Feedback Card */}
+              {selectedOrder.status === 'quoted' && (
+                <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      Supplier Quotation & Feedback Received
+                    </span>
+                    <span className="text-xs text-amber-200">
+                      Responded:{' '}
+                      {selectedOrder.supplierFeedback?.respondedAt
+                        ? new Date(selectedOrder.supplierFeedback.respondedAt).toLocaleDateString()
+                        : 'Pending Review'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-200">
+                    <div>
+                      <span className="text-slate-400 block font-medium">Proposed Delivery Date:</span>
+                      <span className="font-semibold text-white text-sm">
+                        {selectedOrder.supplierFeedback?.estimatedDeliveryDate
+                          ? new Date(selectedOrder.supplierFeedback.estimatedDeliveryDate).toLocaleDateString()
+                          : 'Not specified'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-medium">Supplier Notes & Terms:</span>
+                      <span className="text-slate-200">
+                        {selectedOrder.supplierFeedback?.supplierNotes || 'No additional remarks provided.'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {canMutate && (
+                    <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center justify-end gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleDecideOrder(selectedOrder, 'cancel')}
+                        disabled={submitting}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 transition-colors disabled:opacity-50"
+                      >
+                        Decline Quote & Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDecideOrder(selectedOrder, 'confirm')}
+                        disabled={submitting}
+                        className="px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-sm disabled:opacity-50"
+                      >
+                        Accept Quote & Confirm Order
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Supplier Rejection Banner */}
+              {selectedOrder.status === 'supplier_rejected' && (
+                <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 space-y-1">
+                  <div className="text-xs font-bold uppercase tracking-wider text-rose-300 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-400" />
+                    Supplier Declined Request
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    <span className="font-semibold text-rose-200">Reason: </span>
+                    {selectedOrder.supplierFeedback?.rejectionReason || 'No reason provided'}
+                  </p>
+                </div>
+              )}
+
+              {/* Cancellation Reason Banner */}
+              {selectedOrder.status === 'cancelled' && selectedOrder.cancelReason && (
+                <div className="p-4 rounded-xl border border-slate-700 bg-slate-950 space-y-1">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Cancellation Reason
+                  </div>
+                  <p className="text-xs text-slate-300">{selectedOrder.cancelReason}</p>
+                </div>
+              )}
+
+              {/* Courier Tracking Info */}
+              {selectedOrder.trackingInfo?.trackingNumber && (
+                <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 space-y-1">
+                  <div className="text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-cyan-400" />
+                    Courier & Shipment Tracking
+                  </div>
+                  <div className="text-xs text-slate-200 flex flex-wrap gap-4 pt-1">
+                    <div>
+                      <span className="text-slate-400">Carrier:</span>{' '}
+                      <span className="font-semibold text-white">
+                        {selectedOrder.trackingInfo?.carrier || 'Standard Freight'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Tracking #:</span>{' '}
+                      <span className="font-mono font-semibold text-cyan-300">
+                        {selectedOrder.trackingInfo?.trackingNumber}
+                      </span>
+                    </div>
+                    {selectedOrder.trackingInfo?.dispatchedAt && (
+                      <div>
+                        <span className="text-slate-400">Dispatched:</span>{' '}
+                        <span>
+                          {new Date(selectedOrder.trackingInfo.dispatchedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Items Table */}
               <div>
                 <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
@@ -1246,7 +1407,8 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                         <th className="px-4 py-2.5">Product Name</th>
                         <th className="px-4 py-2.5">SKU</th>
                         <th className="px-4 py-2.5">Size / Color</th>
-                        <th className="px-4 py-2.5 text-right">Ordered Qty</th>
+                        <th className="px-4 py-2.5 text-right">Requested Qty</th>
+                        <th className="px-4 py-2.5 text-right">Quoted Qty</th>
                         <th className="px-4 py-2.5 text-right">Received Qty</th>
                         <th className="px-4 py-2.5 text-right">Unit Cost</th>
                         <th className="px-4 py-2.5 text-right">Line Total</th>
@@ -1258,7 +1420,11 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                           typeof it.product === 'object'
                             ? (it.product as any).name
                             : 'Product #' + String(it.product).slice(-4);
-                        const lineTotal = (it.orderedQty || 0) * (it.unitCost || 0);
+                        const effectiveQty =
+                          it.quotedQty !== undefined && it.quotedQty > 0
+                            ? it.quotedQty
+                            : it.orderedQty || 0;
+                        const lineTotal = effectiveQty * (it.unitCost || 0);
 
                         return (
                           <tr key={idx} className="hover:bg-slate-800/30">
@@ -1269,6 +1435,9 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                             </td>
                             <td className="px-4 py-2.5 text-right font-semibold text-slate-200">
                               {it.orderedQty}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-semibold text-amber-300">
+                              {it.quotedQty !== undefined && it.quotedQty > 0 ? it.quotedQty : '-'}
                             </td>
                             <td className="px-4 py-2.5 text-right font-semibold text-emerald-400">
                               {it.receivedQty || 0}
@@ -1285,7 +1454,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                     </tbody>
                     <tfoot className="bg-slate-950/70 border-t border-slate-800 font-bold text-slate-200">
                       <tr>
-                        <td colSpan={6} className="px-4 py-2.5 text-right">
+                        <td colSpan={7} className="px-4 py-2.5 text-right">
                           Total Order Value:
                         </td>
                         <td className="px-4 py-2.5 text-right text-indigo-400 font-extrabold text-sm">

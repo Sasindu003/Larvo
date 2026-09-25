@@ -6,6 +6,10 @@ import User from '../models/User';
 import { purchaseOrderService } from '../services/purchase-order.service';
 import { supplierService } from '../services/supplier.service';
 import { asyncHandler } from '../utils/asyncHandler';
+import {
+  SupplierRespondPOSchema,
+  SupplierDispatchPOSchema,
+} from '../validators/purchase-order.validator';
 
 /**
  * Helper to ensure supplierId is attached to req.user
@@ -141,5 +145,52 @@ export const changeSupplierPassword = asyncHandler(async (req: Request, res: Res
   res.status(200).json({
     success: true,
     message: 'Password updated successfully',
+  });
+});
+
+/**
+ * @desc    Supplier responds to purchase order (confirm with quote or reject)
+ * @route   PATCH /api/supplier/purchase-orders/:id/respond
+ * @access  Private (supplier)
+ */
+export const respondToSupplierPurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
+  const supplierId = getSupplierIdOrThrow(req);
+  const validatedData = SupplierRespondPOSchema.parse(req.body);
+
+  const po = await purchaseOrderService.supplierRespond(
+    req.params.id,
+    supplierId.toString(),
+    validatedData
+  );
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message:
+      validatedData.action === 'confirm'
+        ? 'Feedback and quotation submitted successfully. Awaiting admin review.'
+        : 'Order request declined.',
+  });
+});
+
+/**
+ * @desc    Supplier marks order dispatched / in transit
+ * @route   PATCH /api/supplier/purchase-orders/:id/dispatch
+ * @access  Private (supplier)
+ */
+export const dispatchSupplierPurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
+  const supplierId = getSupplierIdOrThrow(req);
+  const validatedData = SupplierDispatchPOSchema.parse(req.body);
+
+  const po = await purchaseOrderService.supplierDispatch(
+    req.params.id,
+    supplierId.toString(),
+    validatedData
+  );
+
+  res.status(200).json({
+    success: true,
+    data: { purchaseOrder: po },
+    message: 'Order marked as in transit.',
   });
 });
