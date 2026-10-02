@@ -4,6 +4,7 @@ import { CategoryGrid } from '../components/home/CategoryGrid';
 import { NewArrivals } from '../components/home/NewArrivals';
 import { TrendingProducts } from '../components/home/TrendingProducts';
 import { SeasonalOffers } from '../components/home/SeasonalOffers';
+import { EditorialShowcase } from '../components/home/EditorialShowcase';
 
 /**
  * Home Page Component
@@ -11,8 +12,9 @@ import { SeasonalOffers } from '../components/home/SeasonalOffers';
  * 1. Hero Banner (Interactive Editorial Carousel)
  * 2. Categories Showcase (Curated Collections Grid)
  * 3. New Arrivals (Latest Drops Showcase Carousel)
- * 4. Trending Products & Best Sellers (Filterable Product Grid)
- * 5. Seasonal Offers & Promos (Active Coupons & Campaign Cards)
+ * 4. 3D Editorial Showcase (Orbit Projects Motion View)
+ * 5. Trending Products & Best Sellers (Filterable Product Grid)
+ * 6. Seasonal Offers & Promos (Active Coupons & Campaign Cards)
  */
 export const Home: React.FC = () => {
   return (
@@ -26,10 +28,13 @@ export const Home: React.FC = () => {
       {/* SECTION 3: NEW ARRIVALS */}
       <NewArrivals />
 
-      {/* SECTION 4: TRENDING PRODUCTS & BEST SELLERS */}
+      {/* SECTION 4: 3D EDITORIAL SHOWCASE */}
+      <EditorialShowcase />
+
+      {/* SECTION 5: TRENDING PRODUCTS & BEST SELLERS */}
       <TrendingProducts />
 
-      {/* SECTION 5: SEASONAL OFFERS & PROMOS */}
+      {/* SECTION 6: SEASONAL OFFERS & PROMOS */}
       <SeasonalOffers />
     </div>
   );
