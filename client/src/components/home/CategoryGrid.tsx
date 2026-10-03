@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { categoryService, Category } from '../../services/category.service';
+import { getFileUrl } from '../../services/api';
 import { Skeleton } from '../ui/Skeleton';
+import { FanCardCarousel, FanCardItem } from './FanCardCarousel';
 
 export const CategoryGrid: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -26,6 +28,88 @@ export const CategoryGrid: React.FC = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Curated fallback categories if database is empty or loading
+  const fallbackCategories: FanCardItem[] = [
+    {
+      id: 'cat-formal',
+      title: 'Formal',
+      subtitle: 'Tailored Suiting & Elegance',
+      tag: 'SIGNATURE',
+      image:
+        'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+      slug: 'formal',
+      link: '/products?category=formal',
+    },
+    {
+      id: 'cat-casual',
+      title: 'Casual',
+      subtitle: 'Effortless Modern Staples',
+      tag: 'POPULAR',
+      image:
+        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+      slug: 'casual',
+      link: '/products?category=casual',
+    },
+    {
+      id: 'cat-knitwear',
+      title: 'Knitwear',
+      subtitle: 'Pure Merino & Organic Blends',
+      tag: 'NEW ARRIVAL',
+      image:
+        'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=800&q=80',
+      slug: 'knitwear',
+      link: '/products?category=knitwear',
+    },
+    {
+      id: 'cat-outerwear',
+      title: 'Outerwear',
+      subtitle: 'Structured Coats & Layers',
+      tag: 'ESSENTIAL',
+      image:
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      slug: 'outerwear',
+      link: '/products?category=outerwear',
+    },
+    {
+      id: 'cat-footwear',
+      title: 'Footwear',
+      subtitle: 'Handcrafted Leather & Suede',
+      tag: 'CURATED',
+      image:
+        'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80',
+      slug: 'footwear',
+      link: '/products?category=footwear',
+    },
+  ];
+
+  // Map API categories to FanCardItem format
+  const fanCards: FanCardItem[] =
+    categories.length > 0
+      ? categories.map((cat, idx) => {
+          const deptName =
+            typeof cat.department === 'object' && cat.department?.name
+              ? `${cat.department.name} Collection`
+              : 'Curated Collection';
+
+          const tagLabels = ['SIGNATURE', 'POPULAR', 'NEW ARRIVAL', 'ESSENTIAL', 'FEATURED'];
+          const tag = tagLabels[idx % tagLabels.length];
+
+          const resolvedImg = cat.image
+            ? getFileUrl(cat.image)
+            : fallbackCategories[idx % fallbackCategories.length].image;
+
+          return {
+            id: cat._id,
+            title: cat.name,
+            subtitle: deptName,
+            tag,
+            image: resolvedImg,
+            slug: cat.slug,
+            link: `/products?category=${cat.slug}`,
+          };
+        })
+      : fallbackCategories;
 
   return (
     <section id="categories-section" className="space-y-6">
@@ -52,16 +136,12 @@ export const CategoryGrid: React.FC = () => {
 
       {/* Loading Skeletons State */}
       {loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
-          {Array.from({ length: 9 }).map((_, idx) => (
-            <div key={idx} className="rounded-2xl overflow-hidden shadow-card border border-ink-200 bg-white">
-              <Skeleton height="h-64 sm:h-80" width="w-full" />
-              <div className="p-4 space-y-2">
-                <Skeleton height="h-5" width="w-1/2" />
-                <Skeleton height="h-3" width="w-1/4" />
-              </div>
+        <div className="py-12 flex justify-center items-center">
+          <div className="w-full max-w-4xl h-[460px] flex items-center justify-center">
+            <div className="relative w-[340px] h-[450px]">
+              <Skeleton height="h-full" width="w-full rounded-[28px]" />
             </div>
-          ))}
+          </div>
         </div>
       )}
 
@@ -80,43 +160,21 @@ export const CategoryGrid: React.FC = () => {
         </div>
       )}
 
-      {/* Real Category Grid */}
+      {/* Interactive FanCardCarousel */}
       {!loading && !error && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
-          {categories.map((cat, idx) => (
-            <Link
-              key={cat._id || cat.slug || idx}
-              to={`/products?category=${cat.slug}`}
-              className="group relative overflow-hidden rounded-2xl bg-ink-900 shadow-card aspect-[3/4] sm:aspect-[4/5] flex flex-col justify-end p-5 sm:p-6 transition-all duration-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-ink-900 focus:ring-offset-2"
-            >
-              {/* Background Image with Zoom on Hover */}
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-                loading="lazy"
-              />
-
-              {/* Gradient Dark Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/30 to-transparent transition-opacity duration-300 group-hover:opacity-90" />
-
-              {/* Foreground Category Content */}
-              <div className="relative z-10 space-y-1 transform transition-transform duration-300 group-hover:-translate-y-1">
-                <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white backdrop-blur-sm rounded">
-                  Collection
-                </span>
-                <h3 className="font-display text-xl sm:text-2xl font-bold text-white tracking-wide">
-                  {cat.name}
-                </h3>
-                <div className="flex items-center gap-1.5 text-xs text-cream-200 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 pt-1">
-                  <span>Shop Collection</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                </div>
-              </div>
-            </Link>
-          ))}
+        <div className="rounded-3xl bg-gradient-to-b from-cream-100/60 to-cream-50/20 border border-ink-100/80 px-2 sm:px-6">
+          <FanCardCarousel
+            cards={fanCards}
+            cardWidth={340}
+            cardHeight={460}
+            fanSpread={155}
+            rotationAngle={7}
+            cardRadius={28}
+          />
         </div>
       )}
     </section>
   );
 };
+
+export default CategoryGrid;
