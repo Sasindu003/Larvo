@@ -1,31 +1,35 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck, Sparkles, Truck, Undo2 } from 'lucide-react';
+import { ArrowRight, Sparkles, Truck, ShieldCheck, Undo2 } from 'lucide-react';
 import { productService, Product } from '../../services/product.service';
+import { getFileUrl } from '../../services/api';
 import { Skeleton } from '../ui/Skeleton';
+import { ShowcaseSlideshow, ShowcaseSlide } from './ShowcaseSlideshow';
 
-interface HeroSlide {
+interface HeroEditorialSlide {
   id: string;
   tag: string;
-  title: string;
+  titlePrefix: string;
+  titleHighlight: string;
   subtitle: string;
   ctaText: string;
   ctaLink: string;
   secondaryCtaText?: string;
   secondaryCtaLink?: string;
   image: string;
+  label: string;
   badgeText?: string;
   price?: number;
 }
 
 export const HeroBanner: React.FC = () => {
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState<HeroEditorialSlide[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+
     const loadHeroContent = async () => {
       try {
         setLoading(true);
@@ -33,51 +37,111 @@ export const HeroBanner: React.FC = () => {
         const items = res?.items || [];
 
         if (items.length > 0 && isMounted) {
-          const mappedSlides: HeroSlide[] = items.map((product: Product, idx: number) => {
-            const editorialTitles = [
-              'The Tailored Silhouette',
-              'Effortless Contemporary Cuts',
-              'Architectural Knitwear & Layers',
-              'Refined Everyday Luxury',
-            ];
-            const editorialSubtitles = [
-              'Impeccable wool-blends and precision tailoring crafted for timeless distinction.',
-              'Clean lines meet unstructured modern silhouettes, designed to elevate your routine.',
-              'Sumptuous merino yarns, dense organic weaves, and nuanced tonal hues.',
-              'Versatile wardrobe staples cut with modern precision and sustainable fibers.',
-            ];
+          const editorialHeadlines = [
+            { prefix: 'Build Wardrobe,', highlight: 'Remarkable.' },
+            { prefix: 'Tailored Form,', highlight: 'Modern Precision.' },
+            { prefix: 'Effortless Cuts,', highlight: 'Quiet Luxury.' },
+            { prefix: 'Seasonal Texture,', highlight: 'Timeless Appeal.' },
+          ];
+
+          const editorialSubtitles = [
+            'A premium starting point for your seasonal wardrobe. Precision tailoring, sustainable natural fibers, and silhouettes that stand apart in minutes.',
+            'Clean lines meet unstructured modern silhouettes, meticulously designed to elevate your everyday routine.',
+            'Sumptuous organic merino yarns, dense weaves, and nuanced tonal hues crafted for distinction.',
+            'Versatile wardrobe foundations cut with architectural precision and ethically sourced textiles.',
+          ];
+
+          const mapped: HeroEditorialSlide[] = items.map((product: Product, idx: number) => {
+            const headline = editorialHeadlines[idx % editorialHeadlines.length];
+            const rawImg = product.images?.[0];
+            const resolvedImg = rawImg
+              ? getFileUrl(rawImg)
+              : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=85';
 
             return {
               id: product._id,
               tag: `Autumn/Winter Editorial 0${idx + 1}`,
-              title: editorialTitles[idx % editorialTitles.length],
+              titlePrefix: headline.prefix,
+              titleHighlight: headline.highlight,
               subtitle: product.description || editorialSubtitles[idx % editorialSubtitles.length],
               ctaText: `Explore ${product.name}`,
               ctaLink: `/products/${product.slug}`,
-              secondaryCtaText: 'View All Products',
+              secondaryCtaText: 'View Lookbook',
               secondaryCtaLink: '/products',
-              image:
-                product.images?.[0] ||
-                'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1600&q=85',
+              image: resolvedImg,
+              label: product.name,
               badgeText: product.discountPrice ? 'Special Curation' : 'Signature Piece',
               price: product.discountPrice || product.basePrice,
             };
           });
-          setSlides(mappedSlides);
+
+          setSlides(mapped);
         } else if (isMounted) {
-          // Fallback if no products yet
+          // Fallback if catalog is initially empty
           setSlides([
             {
               id: 'fallback-1',
               tag: 'New Season Lookbook',
-              title: 'The Contemporary Standard',
-              subtitle: 'Tailored silhouettes, organic textiles, and thoughtful wardrobe foundations.',
+              titlePrefix: 'Build Wardrobe,',
+              titleHighlight: 'Remarkable.',
+              subtitle:
+                'A premium starting point for your seasonal wardrobe. Swap the copy, drop in your images, and launch something that stands out in minutes.',
               ctaText: 'Explore Collections',
               ctaLink: '/products',
-              secondaryCtaText: 'Shop New In',
+              secondaryCtaText: 'View Lookbook',
               secondaryCtaLink: '/products?sort=newest',
-              image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=85',
+              image:
+                'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=85',
+              label: 'Textured Wool Overcoat',
               badgeText: 'New Season',
+            },
+            {
+              id: 'fallback-2',
+              tag: 'Studio Edition',
+              titlePrefix: 'Tailored Form,',
+              titleHighlight: 'Modern Precision.',
+              subtitle:
+                'Clean lines meet unstructured modern silhouettes, meticulously designed to elevate your everyday routine.',
+              ctaText: 'Shop New Arrivals',
+              ctaLink: '/products?sort=newest',
+              secondaryCtaText: 'Browse Catalog',
+              secondaryCtaLink: '/products',
+              image:
+                'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1400&q=85',
+              label: 'Double-Breasted Blazer',
+              badgeText: 'Signature',
+            },
+            {
+              id: 'fallback-3',
+              tag: 'Capsule Curation',
+              titlePrefix: 'Effortless Cuts,',
+              titleHighlight: 'Quiet Luxury.',
+              subtitle:
+                'Sumptuous organic merino yarns, dense weaves, and nuanced tonal hues crafted for timeless distinction.',
+              ctaText: 'Discover Knitwear',
+              ctaLink: '/products',
+              secondaryCtaText: 'Explore Lookbook',
+              secondaryCtaLink: '/products',
+              image:
+                'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85',
+              label: 'Merino Ribbed Knit',
+              badgeText: 'Limited Run',
+            },
+            {
+              id: 'fallback-4',
+              tag: 'Architectural Layers',
+              titlePrefix: 'Seasonal Texture,',
+              titleHighlight: 'Timeless Appeal.',
+              subtitle:
+                'Versatile wardrobe foundations cut with modern precision, sustainably crafted from certified natural fibers.',
+              ctaText: 'Explore Foundations',
+              ctaLink: '/products',
+              secondaryCtaText: 'All Products',
+              secondaryCtaLink: '/products',
+              image:
+                'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=85',
+              label: 'Structured Trench',
+              badgeText: 'Restocked',
             },
           ]);
         }
@@ -94,38 +158,21 @@ export const HeroBanner: React.FC = () => {
     };
   }, []);
 
-  const nextSlide = useCallback(() => {
-    setSlides((prev) => {
-      if (prev.length === 0) return prev;
-      setCurrentSlide((curr) => (curr + 1) % prev.length);
-      return prev;
-    });
-  }, []);
-
-  const prevSlide = useCallback(() => {
-    setSlides((prev) => {
-      if (prev.length === 0) return prev;
-      setCurrentSlide((curr) => (curr - 1 + prev.length) % prev.length);
-      return prev;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (slides.length <= 1 || isPaused) return;
-    const interval = setInterval(nextSlide, 5500);
-    return () => clearInterval(interval);
-  }, [slides.length, isPaused, nextSlide]);
-
   if (loading) {
     return (
-      <section className="relative overflow-hidden rounded-2xl bg-ink-100 min-h-[460px] sm:min-h-[520px] flex items-center p-8 sm:p-14">
-        <div className="max-w-xl space-y-4">
-          <Skeleton height="h-6" width="w-32" />
-          <Skeleton height="h-14" width="w-3/4" />
-          <Skeleton height="h-10" width="w-full" />
-          <div className="flex gap-4 pt-4">
-            <Skeleton height="h-12" width="w-36" />
-            <Skeleton height="h-12" width="w-36" />
+      <section className="relative overflow-hidden rounded-[24px] bg-ink-950 p-6 sm:p-10 lg:p-12 min-h-[540px] flex items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 space-y-5">
+            <Skeleton height="h-7" width="w-40" />
+            <Skeleton height="h-16" width="w-4/5" />
+            <Skeleton height="h-12" width="w-full" />
+            <div className="flex gap-4 pt-3">
+              <Skeleton height="h-12" width="w-40" />
+              <Skeleton height="h-12" width="w-36" />
+            </div>
+          </div>
+          <div className="lg:col-span-5">
+            <Skeleton height="h-[360px] sm:h-[420px]" width="w-full rounded-[22px]" />
           </div>
         </div>
       </section>
@@ -134,105 +181,141 @@ export const HeroBanner: React.FC = () => {
 
   if (slides.length === 0) return null;
 
-  const slide = slides[currentSlide];
+  const currentSlide = slides[activeIndex] || slides[0];
+
+  // Map to ShowcaseSlideshow format
+  const showcaseSlides: ShowcaseSlide[] = slides.map((s) => ({
+    image: s.image,
+    label: s.label,
+    title: `${s.titlePrefix} ${s.titleHighlight}`,
+    link: s.ctaLink,
+    tag: s.tag,
+  }));
 
   return (
     <section
       id="hero-section"
-      aria-label="Featured Fashion Collections"
-      className="relative overflow-hidden rounded-2xl bg-ink-950 text-white shadow-card transition-all"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      aria-label="Hero Fashion Showcase"
+      className="relative overflow-hidden rounded-[24px] bg-gradient-to-b from-ink-900 to-ink-950 text-white border border-white/10 shadow-2xl transition-all"
     >
-      {/* Background Image Container with Soft Dark Overlay */}
-      <div className="relative min-h-[480px] sm:min-h-[540px] lg:min-h-[580px] flex items-center">
-        <div className="absolute inset-0 z-0">
-          <img
-            key={slide.id}
-            src={slide.image}
-            alt={slide.title}
-            className="w-full h-full object-cover object-center filter brightness-[0.62] contrast-[1.05] transition-all duration-700 ease-out scale-100"
-            loading="eager"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-black/20" />
-        </div>
+      {/* Background ambient radial glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 bg-cream-500/10 rounded-full blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 bg-sand-400/10 rounded-full blur-3xl"
+      />
 
-        {/* Content Column */}
-        <div className="relative z-10 max-w-2xl px-6 sm:px-12 lg:px-16 py-12 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold tracking-wider uppercase text-sand-200">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>{slide.tag}</span>
-            {slide.badgeText && (
-              <span className="ml-1 pl-2 border-l border-white/20 text-cream-300 font-bold">
-                {slide.badgeText}
-              </span>
-            )}
-          </div>
-
-          <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1]">
-            {slide.title}
-          </h1>
-
-          <p className="text-sm sm:text-base text-ink-200 font-light max-w-lg leading-relaxed line-clamp-3">
-            {slide.subtitle}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3.5 pt-2">
-            <Link
-              to={slide.ctaLink}
-              className="inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-6 rounded-md bg-white text-ink-950 font-semibold text-xs sm:text-sm tracking-wide shadow-md hover:bg-cream-100 active:scale-[0.99] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              <span>{slide.ctaText}</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            {slide.secondaryCtaLink && (
-              <Link
-                to={slide.secondaryCtaLink}
-                className="inline-flex items-center justify-center h-11 sm:h-12 px-6 rounded-md bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-xs sm:text-sm tracking-wide hover:bg-white/20 active:scale-[0.99] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                {slide.secondaryCtaText || 'Explore Catalog'}
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Slide Controls (Previous / Next Buttons) */}
-        {slides.length > 1 && (
-          <div className="absolute bottom-6 right-6 z-20 hidden sm:flex items-center gap-2">
-            <button
-              onClick={prevSlide}
-              aria-label="Previous slide"
-              className="p-2.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/30 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-1.5 px-3">
-              {slides.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  aria-label={`Go to slide ${idx + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    idx === currentSlide ? 'w-6 bg-white' : 'w-2 bg-white/40 hover:bg-white/60'
-                  }`}
+      {/* Main Split Grid Layout */}
+      <div className="relative z-10 p-6 sm:p-10 lg:p-14">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          {/* Left Column: Editorial Content & Actions */}
+          <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center space-y-7">
+            {/* Social Proof & Curator Badges */}
+            <div className="flex items-center gap-3.5 flex-wrap">
+              <div className="flex items-center -space-x-2">
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"
+                  alt="Curator avatar"
+                  className="w-8 h-8 rounded-full border-2 border-ink-900 object-cover"
                 />
-              ))}
+                <img
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&h=80&q=80"
+                  alt="Curator avatar"
+                  className="w-8 h-8 rounded-full border-2 border-ink-900 object-cover"
+                />
+                <img
+                  src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&h=80&q=80"
+                  alt="Curator avatar"
+                  className="w-8 h-8 rounded-full border-2 border-ink-900 object-cover"
+                />
+                <div className="w-8 h-8 rounded-full bg-ink-800 border-2 border-ink-900 flex items-center justify-center text-[10px] font-bold text-white/90">
+                  +32
+                </div>
+              </div>
+
+              <div className="inline-flex items-center gap-2 text-xs font-medium text-white/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Trusted by designers worldwide</span>
+              </div>
             </div>
-            <button
-              onClick={nextSlide}
-              aria-label="Next slide"
-              className="p-2.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/30 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+
+            {/* Editorial Tag Pill */}
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold tracking-wider uppercase text-sand-200">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{currentSlide.tag}</span>
+                {currentSlide.badgeText && (
+                  <span className="ml-1 pl-2 border-l border-white/20 text-cream-300 font-bold">
+                    {currentSlide.badgeText}
+                  </span>
+                )}
+              </span>
+            </div>
+
+            {/* Headline with Framer Metallic Gradient */}
+            <div className="space-y-1">
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.08]">
+                <div>{currentSlide.titlePrefix}</div>
+                <span className="inline-block bg-gradient-to-r from-white via-white/95 to-white/60 bg-clip-text text-transparent">
+                  {currentSlide.titleHighlight}
+                </span>
+              </h1>
+            </div>
+
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-ink-300 font-light max-w-xl leading-relaxed">
+              {currentSlide.subtitle}
+            </p>
+
+            {/* Call To Action Buttons */}
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <Link
+                to={currentSlide.ctaLink}
+                className="group inline-flex items-center justify-center gap-2 h-12 px-7 rounded-lg bg-white text-ink-950 font-semibold text-xs sm:text-sm tracking-wide shadow-lg hover:bg-cream-100 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <span>{currentSlide.ctaText}</span>
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
+
+              {currentSlide.secondaryCtaLink && (
+                <Link
+                  to={currentSlide.secondaryCtaLink}
+                  className="inline-flex items-center justify-center h-12 px-7 rounded-lg bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/25 hover:border-white/40 text-white font-semibold text-xs sm:text-sm tracking-wide active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  {currentSlide.secondaryCtaText || 'Book a demo'}
+                </Link>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* Right Column: ShowcaseSlideshow Component */}
+          <div className="lg:col-span-6 xl:col-span-5 flex justify-center">
+            <div className="w-full max-w-[560px] aspect-[4/3] sm:aspect-[16/11] lg:aspect-[1/1] max-h-[520px]">
+              <ShowcaseSlideshow
+                slides={showcaseSlides}
+                intervalSec={5}
+                radius={22}
+                overlay={true}
+                showLabel={true}
+                showCounter={true}
+                ringColor="rgba(255, 255, 255, 0.9)"
+                ringTrackColor="rgba(255, 255, 255, 0.15)"
+                ringThickness={1.5}
+                textColor="rgba(255, 255, 255, 0.95)"
+                placeholderColor="#141414"
+                className="w-full h-full border border-white/10"
+                onSlideChange={(newIdx) => setActiveIndex(newIdx)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Brand Value Propositions Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10 border-t border-white/10 bg-ink-950/90 text-ink-300 py-3.5 px-6 sm:px-12 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10 border-t border-white/10 bg-ink-950/80 backdrop-blur-sm text-ink-300 py-3.5 px-6 sm:px-12 text-xs">
         <div className="flex items-center gap-3 py-2 sm:py-0 justify-start sm:justify-center">
           <Truck className="w-4 h-4 text-sand-300 shrink-0" />
           <span className="font-medium text-ink-200">Express Delivery on Orders Rs. 1,500+</span>
