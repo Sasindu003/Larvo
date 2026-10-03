@@ -213,35 +213,6 @@ export const HeroBanner: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Editorial Content & Actions */}
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center space-y-7">
-            {/* Social Proof & Curator Badges */}
-            <div className="flex items-center gap-3.5 flex-wrap">
-              <div className="flex items-center -space-x-2">
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"
-                  alt="Curator avatar"
-                  className="w-8 h-8 rounded-full border-2 border-ink-900 object-cover"
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&h=80&q=80"
-                  alt="Curator avatar"
-                  className="w-8 h-8 rounded-full border-2 border-ink-900 object-cover"
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&h=80&q=80"
-                  alt="Curator avatar"
-                  className="w-8 h-8 rounded-full border-2 border-ink-900 object-cover"
-                />
-                <div className="w-8 h-8 rounded-full bg-ink-800 border-2 border-ink-900 flex items-center justify-center text-[10px] font-bold text-white/90">
-                  +32
-                </div>
-              </div>
-
-              <div className="inline-flex items-center gap-2 text-xs font-medium text-white/80">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Trusted by designers worldwide</span>
-              </div>
-            </div>
-
             {/* Editorial Tag Pill */}
             <div>
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold tracking-wider uppercase text-sand-200">
