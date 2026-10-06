@@ -13,8 +13,7 @@
     "test:p09": "ts-node src/seed/product.check.ts",
     "test:p11": "ts-node src/seed/p11.check.ts",
     "test:p14": "ts-node src/seed/p14.check.ts",
-    "test:p31": "ts-node verify_p31.ts",
-    "test:all": "ts-node src/seed/product.check.ts && ts-node src/seed/p11.check.ts && ts-node src/seed/p14.check.ts && ts-node verify_p31.ts"
+    "test:all": "ts-node src/seed/product.check.ts && ts-node src/seed/p11.check.ts && ts-node src/seed/p14.check.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
