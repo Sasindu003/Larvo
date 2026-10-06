@@ -8,6 +8,7 @@ import {
   X,
   Shield,
   Home,
+  ClipboardList,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -21,9 +22,9 @@ export const SupplierLayout: React.FC = () => {
     return <Navigate to="/login?redirect=/supplier" replace />;
   }
 
-  // Redirect root /supplier to /supplier/products
+  // Redirect root /supplier to /supplier/purchase-orders
   if (location.pathname === '/supplier' || location.pathname === '/supplier/') {
-    return <Navigate to="/supplier/products" replace />;
+    return <Navigate to="/supplier/purchase-orders" replace />;
   }
 
   const handleLogout = async () => {
@@ -36,6 +37,12 @@ export const SupplierLayout: React.FC = () => {
   };
 
   const navLinks = [
+    {
+      label: 'Purchase Orders',
+      href: '/supplier/purchase-orders',
+      icon: ClipboardList,
+      description: 'Incoming requests & orders',
+    },
     {
       label: 'My Products',
       href: '/supplier/products',

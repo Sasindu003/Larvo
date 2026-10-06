@@ -13,14 +13,45 @@ import {
 } from '../validators/purchase-order.validator';
 
 /**
- * Helper to ensure supplierId is attached to req.user
+ * Helper to ensure supplierId is resolved for req.user.
+ * Checks req.user.supplierId, with fallback to Supplier.userId and Supplier.email.
+ * Self-heals the User record if desynced.
  */
-function getSupplierIdOrThrow(req: Request): Types.ObjectId {
+async function getSupplierIdOrThrow(req: Request): Promise<Types.ObjectId> {
   const supplierId = req.user?.supplierId;
-  if (!supplierId || !Types.ObjectId.isValid(supplierId.toString())) {
-    throw new AppError('No supplier profile is associated with this account', 403);
+  if (supplierId && Types.ObjectId.isValid(supplierId.toString())) {
+    return new Types.ObjectId(supplierId.toString());
   }
-  return new Types.ObjectId(supplierId.toString());
+
+  // Fallback 1: Look up supplier by userId
+  if (req.user?._id) {
+    const byUserId = await Supplier.findOne({ userId: req.user._id });
+    if (byUserId) {
+      if (!req.user.supplierId) {
+        req.user.supplierId = byUserId._id as Types.ObjectId;
+        await User.findByIdAndUpdate(req.user._id, { supplierId: byUserId._id });
+      }
+      return byUserId._id as Types.ObjectId;
+    }
+  }
+
+  // Fallback 2: Look up supplier by user email
+  if (req.user?.email) {
+    const byEmail = await Supplier.findOne({ email: req.user.email.toLowerCase().trim() });
+    if (byEmail) {
+      if (!byEmail.userId && req.user._id) {
+        byEmail.userId = req.user._id as Types.ObjectId;
+        await byEmail.save();
+      }
+      if (!req.user.supplierId) {
+        req.user.supplierId = byEmail._id as Types.ObjectId;
+        await User.findByIdAndUpdate(req.user._id, { supplierId: byEmail._id });
+      }
+      return byEmail._id as Types.ObjectId;
+    }
+  }
+
+  throw new AppError('No supplier profile is associated with this account', 403);
 }
 
 /**
@@ -29,7 +60,7 @@ function getSupplierIdOrThrow(req: Request): Types.ObjectId {
  * @access  Private (supplier)
  */
 export const getSupplierMe = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const supplier = await Supplier.findById(supplierId);
 
   if (!supplier) {
@@ -57,7 +88,7 @@ export const getSupplierMe = asyncHandler(async (req: Request, res: Response) =>
  * @access  Private (supplier)
  */
 export const getSupplierPurchaseOrders = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
 
   const page = parseInt(req.query.page as string, 10) || 1;
   const limit = parseInt(req.query.limit as string, 10) || 10;
@@ -83,7 +114,7 @@ export const getSupplierPurchaseOrders = asyncHandler(async (req: Request, res: 
  * @access  Private (supplier)
  */
 export const getSupplierPurchaseOrderById = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const po = await purchaseOrderService.getPurchaseOrderById(req.params.id);
 
   const poSupplierId = (po.supplier as any)?._id?.toString() || po.supplier?.toString();
@@ -104,7 +135,7 @@ export const getSupplierPurchaseOrderById = asyncHandler(async (req: Request, re
  * @access  Private (supplier)
  */
 export const getSupplierProducts = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const data = await supplierService.getSupplierProducts(supplierId.toString());
 
   res.status(200).json({
@@ -155,7 +186,7 @@ export const changeSupplierPassword = asyncHandler(async (req: Request, res: Res
  * @access  Private (supplier)
  */
 export const submitSupplierQuote = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const parsed = SubmitQuoteSchema.parse(req.body);
   const po = await purchaseOrderService.submitQuote(
     req.params.id,
@@ -176,7 +207,7 @@ export const submitSupplierQuote = asyncHandler(async (req: Request, res: Respon
  * @access  Private (supplier)
  */
 export const declineSupplierPurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const parsed = DeclinePOSchema.parse(req.body);
   const po = await purchaseOrderService.declinePurchaseOrder(
     req.params.id,
@@ -197,7 +228,7 @@ export const declineSupplierPurchaseOrder = asyncHandler(async (req: Request, re
  * @access  Private (supplier)
  */
 export const reviewPaymentSlip = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const parsed = ReviewPaymentSchema.parse(req.body);
   const po = await purchaseOrderService.reviewPayment(
     req.params.id,
@@ -218,7 +249,7 @@ export const reviewPaymentSlip = asyncHandler(async (req: Request, res: Response
  * @access  Private (supplier)
  */
 export const markPurchaseOrderShipped = asyncHandler(async (req: Request, res: Response) => {
-  const supplierId = getSupplierIdOrThrow(req);
+  const supplierId = await getSupplierIdOrThrow(req);
   const po = await purchaseOrderService.markShipped(
     req.params.id,
     req.user?._id || supplierId

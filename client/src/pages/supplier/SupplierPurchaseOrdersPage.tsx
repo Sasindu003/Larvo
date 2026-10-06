@@ -163,7 +163,7 @@ export const SupplierPurchaseOrdersPage: React.FC = () => {
       setLoading(true);
       const data = await purchaseOrderService.getSupplierPurchaseOrders({
         page,
-        limit: 15,
+        limit: 50,
         search: searchQuery.trim() || undefined,
       });
       setOrders(data.results);
