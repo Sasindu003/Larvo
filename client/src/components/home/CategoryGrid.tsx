@@ -114,20 +114,20 @@ export const CategoryGrid: React.FC = () => {
   return (
     <section id="categories-section" className="space-y-6">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-ink-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5DED4] pb-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ink-500 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#B3792B] mb-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#B3792B]" />
             <span>Curated Collections</span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink-950 tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1F1B16] tracking-tight">
             Shop by Category
           </h2>
         </div>
 
         <Link
           to="/products"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-800 hover:text-ink-950 group"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1F1B16] hover:text-[#786E64] group"
         >
           <span>Explore All Collections</span>
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -162,7 +162,10 @@ export const CategoryGrid: React.FC = () => {
 
       {/* Interactive FanCardCarousel */}
       {!loading && !error && (
-        <div className="rounded-3xl bg-gradient-to-b from-cream-100/60 to-cream-50/20 border border-ink-100/80 px-1 sm:px-3 md:px-4">
+        <div
+          className="rounded-[28px] bg-white border-[5px] border-[#FAF7F2] px-1 sm:px-3 md:px-4"
+          style={{ boxShadow: '0 16px 40px -12px rgba(45, 35, 25, 0.08)' }}
+        >
           <FanCardCarousel
             cards={fanCards}
             cardWidth={330}

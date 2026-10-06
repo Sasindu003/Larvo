@@ -43,16 +43,16 @@ export const NewArrivals: React.FC = () => {
   return (
     <section id="new-arrivals-section" aria-label="New Season Arrivals" className="space-y-6">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-ink-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5DED4] pb-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ink-500 mb-1">
-            <Flame className="w-3.5 h-3.5 text-amber-600" />
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#B3792B] mb-1">
+            <Flame className="w-3.5 h-3.5 text-[#B3792B]" />
             <span>Freshly Curated</span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink-950 tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1F1B16] tracking-tight">
             New Season Arrivals
           </h2>
-          <p className="text-xs sm:text-sm text-ink-500 mt-1">
+          <p className="text-xs sm:text-sm text-[#786E64] mt-1">
             Discover the latest additions to our contemporary wardrobe collection.
           </p>
         </div>
@@ -63,14 +63,14 @@ export const NewArrivals: React.FC = () => {
             <button
               onClick={() => scroll('left')}
               aria-label="Scroll new arrivals left"
-              className="p-2 rounded-md border border-ink-300 text-ink-700 hover:bg-ink-100 active:bg-ink-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400"
+              className="p-2 rounded-full border border-[#E5DED4] bg-white text-[#1F1B16] hover:bg-[#F5EFEB] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F1B16]"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => scroll('right')}
               aria-label="Scroll new arrivals right"
-              className="p-2 rounded-md border border-ink-300 text-ink-700 hover:bg-ink-100 active:bg-ink-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400"
+              className="p-2 rounded-full border border-[#E5DED4] bg-white text-[#1F1B16] hover:bg-[#F5EFEB] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F1B16]"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -78,7 +78,7 @@ export const NewArrivals: React.FC = () => {
 
           <Link
             to="/products?sort=newest"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-800 hover:text-ink-950 group"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1F1B16] hover:text-[#786E64] group"
           >
             <span>View All New In</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

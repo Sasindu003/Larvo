@@ -14,7 +14,7 @@ export const RootLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 text-ink-900 flex flex-col font-sans selection:bg-sand-300 selection:text-ink-950">
+    <div className="min-h-screen bg-[#F6F0E8] text-[#1F1B16] flex flex-col font-sans selection:bg-sand-300 selection:text-ink-950">
       <Header />
       <CartDrawer />
       <main className="flex-grow max-w-screen-2xl mx-auto w-full px-4 sm:px-6 py-8">

@@ -293,7 +293,7 @@ export const FanCardCarousel: React.FC<FanCardCarouselProps> = ({
                     ? '0 24px 48px -12px rgba(0, 0, 0, 0.45), 0 12px 24px -8px rgba(0, 0, 0, 0.3)'
                     : '0 12px 28px -8px rgba(0, 0, 0, 0.35)',
                 }}
-                className={`relative w-full h-full overflow-hidden bg-ink-900 border transition-all duration-300 ${
+                className={`relative w-full h-full overflow-hidden bg-[#1A1715] border transition-all duration-300 ${
                   isActive
                     ? 'border-white/30 ring-1 ring-white/20'
                     : 'border-white/10 hover:border-white/20'
@@ -369,7 +369,7 @@ export const FanCardCarousel: React.FC<FanCardCarouselProps> = ({
           type="button"
           onClick={prevCard}
           aria-label="Previous category"
-          className="p-2 rounded-full bg-ink-100 hover:bg-ink-200 text-ink-900 border border-ink-300 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+          className="p-2 rounded-full bg-white hover:bg-[#F5EFEB] text-[#1F1B16] border border-[#E5DED4] transition-all hover:scale-105 active:scale-95 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F1B16]"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -384,8 +384,8 @@ export const FanCardCarousel: React.FC<FanCardCarouselProps> = ({
               aria-label={`Go to category ${i + 1}`}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === activeIndex
-                  ? 'w-7 bg-ink-950'
-                  : 'w-2 bg-ink-300 hover:bg-ink-400'
+                  ? 'w-7 bg-[#1F1B16]'
+                  : 'w-2 bg-[#DDD3C4] hover:bg-[#B3A898]'
               }`}
             />
           ))}
@@ -395,7 +395,7 @@ export const FanCardCarousel: React.FC<FanCardCarouselProps> = ({
           type="button"
           onClick={nextCard}
           aria-label="Next category"
-          className="p-2 rounded-full bg-ink-100 hover:bg-ink-200 text-ink-900 border border-ink-300 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+          className="p-2 rounded-full bg-white hover:bg-[#F5EFEB] text-[#1F1B16] border border-[#E5DED4] transition-all hover:scale-105 active:scale-95 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F1B16]"
         >
           <ChevronRight className="w-4 h-4" />
         </button>

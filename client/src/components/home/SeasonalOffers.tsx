@@ -79,23 +79,23 @@ export const SeasonalOffers: React.FC = () => {
   return (
     <section id="seasonal-offers-section" aria-label="Seasonal Offers & Editorial Promos" className="space-y-6">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-ink-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5DED4] pb-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ink-500 mb-1">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#B3792B] mb-1">
             <Percent className="w-3.5 h-3.5 text-danger" />
             <span>Limited Time Curation</span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink-950 tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1F1B16] tracking-tight">
             Seasonal Offers & Editorial Promos
           </h2>
-          <p className="text-xs sm:text-sm text-ink-500 mt-1">
+          <p className="text-xs sm:text-sm text-[#786E64] mt-1">
             Claim verified promo codes and shop seasonal promotions before expiration.
           </p>
         </div>
 
         <Link
           to="/products"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-800 hover:text-ink-950 group"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1F1B16] hover:text-[#786E64] group"
         >
           <span>Shop All Promos</span>
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -158,18 +158,18 @@ export const SeasonalOffers: React.FC = () => {
                 return (
                   <div
                     key={coupon._id}
-                    className="p-4 sm:p-5 rounded-xl border border-ink-200 bg-white shadow-sm hover:border-ink-300 hover:shadow-card transition-all flex items-center justify-between gap-4"
+                    className="p-4 sm:p-5 rounded-2xl border border-[#E5DED4] bg-white shadow-sm hover:border-[#786E64] hover:shadow-card transition-all flex items-center justify-between gap-4"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-amber-600" />
-                        <span className="font-display font-bold text-base text-ink-950">
+                        <Tag className="w-4 h-4 text-[#B3792B]" />
+                        <span className="font-display font-bold text-base text-[#1F1B16]">
                           {formatDiscount(coupon)}
                         </span>
                       </div>
-                      <p className="text-xs text-ink-500 font-medium">{formatConditions(coupon)}</p>
+                      <p className="text-xs text-[#786E64] font-medium">{formatConditions(coupon)}</p>
                       {coupon.validUntil && (
-                        <div className="flex items-center gap-1 text-[11px] text-ink-400">
+                        <div className="flex items-center gap-1 text-[11px] text-[#8A8175]">
                           <Clock className="w-3 h-3" />
                           <span>Expires {new Date(coupon.validUntil).toLocaleDateString()}</span>
                         </div>
