@@ -49,6 +49,7 @@ const config: Config = {
         lg:      '10px',
         xl:      '14px',
         '2xl':   '20px',
+        '3xl':   '28px',
       },
       boxShadow: {
         card:  '0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)',
@@ -63,10 +64,15 @@ const config: Config = {
           from: { opacity: '0', transform: 'scale(0.97)' },
           to:   { opacity: '1', transform: 'scale(1)' },
         },
+        'pulse-dot': {
+          '0%, 100%': { opacity: '1' },
+          '50%':      { opacity: '0.3' },
+        },
       },
       animation: {
-        shimmer:  'shimmer 1.5s infinite linear',
-        'fade-in':'fade-in 0.15s ease-out',
+        shimmer:   'shimmer 1.5s infinite linear',
+        'fade-in': 'fade-in 0.15s ease-out',
+        'pulse-dot': 'pulse-dot 1.8s ease-in-out infinite',
       },
     },
   },
