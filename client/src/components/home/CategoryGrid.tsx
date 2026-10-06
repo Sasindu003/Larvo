@@ -162,14 +162,14 @@ export const CategoryGrid: React.FC = () => {
 
       {/* Interactive FanCardCarousel */}
       {!loading && !error && (
-        <div className="rounded-3xl bg-gradient-to-b from-cream-100/60 to-cream-50/20 border border-ink-100/80 px-2 sm:px-6">
+        <div className="rounded-3xl bg-gradient-to-b from-cream-100/60 to-cream-50/20 border border-ink-100/80 px-1 sm:px-3 md:px-4">
           <FanCardCarousel
             cards={fanCards}
-            cardWidth={340}
-            cardHeight={460}
-            fanSpread={155}
-            rotationAngle={7}
-            cardRadius={28}
+            cardWidth={330}
+            cardHeight={450}
+            fanSpread={145}
+            rotationAngle={6}
+            cardRadius={26}
           />
         </div>
       )}

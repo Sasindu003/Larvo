@@ -462,7 +462,7 @@ export const Header: React.FC = () => {
 
       {/* Floating Pill Header Wrapper */}
       <header className="sticky top-2 sm:top-3 z-40 w-full px-3 sm:px-6 pointer-events-none transition-all duration-200">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           {/* Main Floating Pill Bar */}
           <div className="pointer-events-auto relative bg-white/90 backdrop-blur-xl border border-ink-200/80 rounded-full shadow-lg shadow-ink-950/5 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 transition-all duration-200">
             {/* Left: Brand Logo */}

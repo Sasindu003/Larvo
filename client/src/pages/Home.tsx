@@ -16,7 +16,7 @@ import { SeasonalOffers } from '../components/home/SeasonalOffers';
  */
 export const Home: React.FC = () => {
   return (
-    <div className="space-y-16 py-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-16 py-4 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* SECTION 1: HERO BANNER */}
       <HeroBanner />
 

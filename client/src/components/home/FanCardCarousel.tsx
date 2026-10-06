@@ -175,17 +175,55 @@ export const FanCardCarousel: React.FC<FanCardCarouselProps> = ({
     }
   };
 
-  // Card transform math matching Framer's FanCardCarousel algorithm
+  // Card transform math: progressive fanning deck with dynamic container fitting
   const getCardTransform = (index: number) => {
-    const distance = index - activeIndex;
+    let distance = index - activeIndex;
+    if (total > 2) {
+      if (distance > total / 2) distance -= total;
+      if (distance < -total / 2) distance += total;
+    }
+
     const absDistance = Math.abs(distance);
-    const xOffset = distance * responsiveFanSpread;
-    const yOffset = absDistance * (isMobile ? 22 : isTablet ? 34 : 44);
-    const rotation = distance * responsiveRotation;
+    const sign = Math.sign(distance);
+
+    // Progressive tapered spread:
+    // Immediate neighbors have generous spacing (~130-150px);
+    // outer cards compress smoothly so all cards remain previewed within container.
+    const decay = isMobile ? 0.72 : isTablet ? 0.78 : 0.83;
+    let rawOffset = 0;
+    if (absDistance > 0) {
+      rawOffset = (responsiveFanSpread * (1 - Math.pow(decay, absDistance))) / (1 - decay);
+    }
+
+    // Maximum allowable offset from center so the outermost card edge doesn't clip
+    const maxAllowedOffset = Math.max(
+      80,
+      (containerWidth - responsiveCardWidth) / 2 - (isMobile ? 12 : 24)
+    );
+
+    // Maximum theoretical raw offset for the farthest card in this deck
+    const maxDeckDistance = Math.ceil((total - 1) / 2);
+    const maxRawOffset =
+      maxDeckDistance > 0
+        ? (responsiveFanSpread * (1 - Math.pow(decay, maxDeckDistance))) / (1 - decay)
+        : 1;
+
+    // Scale down offset if the spread would exceed container bounds
+    const fitScale = maxRawOffset > maxAllowedOffset ? maxAllowedOffset / maxRawOffset : 1;
+    const xOffset = sign * rawOffset * fitScale;
+
+    // Gentle natural arch
+    const yOffset = Math.pow(absDistance, 1.1) * (isMobile ? 12 : isTablet ? 18 : 22);
+
+    // Natural fanned rotation with progressive dampening
+    const rotation = sign * Math.pow(absDistance, 0.78) * responsiveRotation;
+
+    // Gradual scale down for outer depth layering
     const scale =
       index === activeIndex
         ? responsiveActiveScale
-        : Math.max(0.4, responsiveInactiveScale - absDistance * 0.05);
+        : Math.max(0.68, responsiveInactiveScale - absDistance * 0.035);
+
     const zIndex = total - absDistance;
 
     return { xOffset, yOffset, rotation, scale, zIndex };
@@ -209,7 +247,7 @@ export const FanCardCarousel: React.FC<FanCardCarouselProps> = ({
       <div
         className="relative w-full flex items-center justify-center"
         style={{
-          height: responsiveCardHeight * (isMobile ? 1.25 : 1.2),
+          height: responsiveCardHeight * (isMobile ? 1.25 : 1.18) + 30,
           minHeight: responsiveCardHeight + 50,
         }}
       >
