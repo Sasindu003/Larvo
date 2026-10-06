@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../middleware/error.middleware';
 import { returnService } from '../services/return.service';
+import { uploadToGridFS } from '../services/gridfs.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
   AdvanceReturnStatusSchema,
@@ -36,7 +37,24 @@ export const createReturn = asyncHandler(async (req: Request, res: Response) => 
     throw err;
   }
 
-  const returnRequest = await returnService.createReturnRequest(req.user._id, parsed);
+  const files = (req.files as Express.Multer.File[]) || [];
+  const uploadedImages = await Promise.all(
+    files.map((file) =>
+      uploadToGridFS(file.buffer, file.originalname, file.mimetype, {
+        type: 'return_image',
+        userId: req.user!._id,
+        orderId: parsed.orderId,
+      })
+    )
+  );
+
+  const images = uploadedImages.map((img) => ({
+    fileId: img.fileId,
+    url: img.url,
+    filename: img.filename,
+  }));
+
+  const returnRequest = await returnService.createReturnRequest(req.user._id, parsed, images);
 
   res.status(201).json({
     success: true,

@@ -20,6 +20,8 @@ import {
   ShoppingBag,
   FileText,
   RotateCcw,
+  ImagePlus,
+  X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { orderService, Order, OrderStatus } from '../services/order.service';
@@ -200,6 +202,8 @@ export const OrdersPage: React.FC = () => {
     [itemIndex: number]: { selected: boolean; qty: number; reason: string };
   }>({});
   const [submittingReturn, setSubmittingReturn] = useState<boolean>(false);
+  const [returnImages, setReturnImages] = useState<File[]>([]);
+  const [returnImagePreviews, setReturnImagePreviews] = useState<string[]>([]);
 
   // Fetch paginated list
   const fetchOrders = async (targetPage = 1) => {
@@ -282,7 +286,55 @@ export const OrdersPage: React.FC = () => {
       };
     });
     setSelectedReturnItems(initialItems);
+    setReturnImages([]);
+    setReturnImagePreviews([]);
     setShowReturnModal(true);
+  };
+
+  const handleReturnImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxFiles = 3;
+    const remainingSlots = maxFiles - returnImages.length;
+
+    if (remainingSlots <= 0) {
+      toast.error('You can upload a maximum of 3 images');
+      e.target.value = '';
+      return;
+    }
+
+    const selected = files.slice(0, remainingSlots);
+    const validFiles: File[] = [];
+
+    for (const file of selected) {
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name}: only JPEG, PNG, WebP, and GIF images are allowed`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name}: file size exceeds 5MB limit`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length > 0) {
+      const newImages = [...returnImages, ...validFiles];
+      setReturnImages(newImages);
+      const newPreviews = validFiles.map((f) => URL.createObjectURL(f));
+      setReturnImagePreviews((prev) => [...prev, ...newPreviews]);
+    }
+
+    e.target.value = '';
+  };
+
+  const handleRemoveReturnImage = (index: number) => {
+    if (returnImagePreviews[index]) {
+      URL.revokeObjectURL(returnImagePreviews[index]);
+    }
+    setReturnImages((prev) => prev.filter((_, i) => i !== index));
+    setReturnImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmitReturn = async () => {
@@ -307,17 +359,24 @@ export const OrdersPage: React.FC = () => {
       }
     }
 
+    const fd = new FormData();
+    fd.append('orderId', selectedOrder._id);
+    fd.append('items', JSON.stringify(chosen));
+    returnImages.forEach((img) => {
+      fd.append('images', img);
+    });
+
     setSubmittingReturn(true);
     try {
-      const created = await returnService.createReturn({
-        orderId: selectedOrder._id,
-        items: chosen,
-      });
+      const created = await returnService.createReturn(fd);
       setOrderReturn(created);
       setShowReturnModal(false);
+      returnImagePreviews.forEach((url) => URL.revokeObjectURL(url));
+      setReturnImages([]);
+      setReturnImagePreviews([]);
       toast.success('Return request submitted successfully');
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to submit return request');
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to submit return request');
     } finally {
       setSubmittingReturn(false);
     }
@@ -1014,6 +1073,60 @@ export const OrdersPage: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Attach Photos Section */}
+              <div className="mt-4 pt-4 border-t border-sand-200">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-ink-800 flex items-center gap-1.5">
+                    <ImagePlus className="w-4 h-4 text-amber-700" />
+                    Attach Photos
+                    <span className="text-ink-400 font-normal text-[11px]">(optional, max 3)</span>
+                  </label>
+                  <span className="text-[11px] text-ink-500 font-medium">
+                    {returnImages.length} / 3 images
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2.5 items-center">
+                  {returnImagePreviews.map((previewUrl, idx) => (
+                    <div
+                      key={idx}
+                      className="relative w-16 h-16 rounded-xl border border-sand-300 overflow-hidden bg-sand-50 shadow-xs group"
+                    >
+                      <img
+                        src={previewUrl}
+                        alt={`Attachment preview ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveReturnImage(idx)}
+                        className="absolute top-1 right-1 p-0.5 rounded-full bg-ink-900/70 text-white hover:bg-rose-600 transition-colors cursor-pointer"
+                        title="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {returnImages.length < 3 && (
+                    <label className="w-16 h-16 rounded-xl border-2 border-dashed border-sand-300 hover:border-amber-500 bg-sand-50/50 hover:bg-amber-50/30 flex flex-col items-center justify-center cursor-pointer transition-colors text-ink-400 hover:text-amber-700">
+                      <ImagePlus className="w-5 h-5" />
+                      <span className="text-[10px] font-medium mt-0.5">Add</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        multiple
+                        onChange={handleReturnImagePick}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="text-[10px] text-ink-400 mt-1.5">
+                  Supported formats: JPEG, PNG, WebP (up to 5MB each). Helpful for showing item defects or damage.
+                </p>
               </div>
 
               <div className="mt-6 pt-4 border-t border-sand-200 flex items-center justify-end gap-3">

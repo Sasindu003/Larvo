@@ -18,7 +18,8 @@ export class ReturnService {
    */
   async createReturnRequest(
     userId: string | Types.ObjectId,
-    input: CreateReturnRequestInput
+    input: CreateReturnRequestInput,
+    images: { fileId: string; url: string; filename: string }[] = []
   ): Promise<IReturnRequest> {
     const order = await Order.findById(input.orderId);
     if (!order) {
@@ -86,6 +87,7 @@ export class ReturnService {
       order: order._id,
       user: userId,
       items: preparedItems,
+      images,
       status: 'requested',
       rejectionReason: null,
       refundPoints: null,

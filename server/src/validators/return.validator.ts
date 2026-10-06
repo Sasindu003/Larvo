@@ -25,9 +25,21 @@ export const CreateReturnRequestSchema = z
     orderId: z
       .string({ required_error: 'Order ID is required' })
       .regex(objectIdRegex, 'Invalid order ID format'),
-    items: z
-      .array(ReturnItemInputSchema, { required_error: 'Items are required' })
-      .min(1, 'At least one item must be selected for return'),
+    items: z.preprocess(
+      (val) => {
+        if (typeof val === 'string') {
+          try {
+            return JSON.parse(val);
+          } catch {
+            return val;
+          }
+        }
+        return val;
+      },
+      z
+        .array(ReturnItemInputSchema, { required_error: 'Items are required' })
+        .min(1, 'At least one item must be selected for return')
+    ),
   })
   .strip();
 

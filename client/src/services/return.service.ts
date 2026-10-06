@@ -17,11 +17,18 @@ export interface IReturnItem {
   reason: string;
 }
 
+export interface IReturnImage {
+  fileId: string;
+  url: string;
+  filename: string;
+}
+
 export interface IReturnRequest {
   _id: string;
   order: string | any;
   user: string | any;
   items: IReturnItem[];
+  images?: IReturnImage[];
   status: ReturnStatus;
   rejectionReason: string | null;
   estimatedRefundPoints?: number | null;
@@ -70,8 +77,16 @@ export interface ProcessDecisionInput {
 }
 
 export const returnService = {
-  createReturn: async (data: CreateReturnRequestInput): Promise<IReturnRequest> => {
-    const res = await api.post<any, ApiResponse<{ returnRequest: IReturnRequest }>>('/returns', data);
+  createReturn: async (data: CreateReturnRequestInput | FormData): Promise<IReturnRequest> => {
+    const config =
+      data instanceof FormData
+        ? {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        : undefined;
+    const res = await api.post<any, ApiResponse<{ returnRequest: IReturnRequest }>>('/returns', data, config);
     return res.data!.returnRequest;
   },
 

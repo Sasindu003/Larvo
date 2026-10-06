@@ -17,10 +17,17 @@ export interface IReturnItem {
   reason: string;
 }
 
+export interface IReturnImage {
+  fileId: string;
+  url: string;
+  filename: string;
+}
+
 export interface IReturnRequest extends Document {
   order: Types.ObjectId;
   user: Types.ObjectId;
   items: IReturnItem[];
+  images: IReturnImage[];
   status: ReturnStatus;
   rejectionReason: string | null;
   estimatedRefundPoints?: number | null;
@@ -52,6 +59,16 @@ const returnRequestSchema = new Schema<IReturnRequest>(
         validator: (items: IReturnItem[]) => Array.isArray(items) && items.length > 0,
         message: 'Return request must contain at least one item',
       },
+    },
+    images: {
+      type: [
+        {
+          fileId: { type: String, required: true },
+          url: { type: String, required: true },
+          filename: { type: String, required: true },
+        },
+      ],
+      default: [],
     },
     status: {
       type: String,

@@ -18,6 +18,7 @@ import {
   Clock,
   X,
   ShieldAlert,
+  ExternalLink,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -127,6 +128,24 @@ export const AdminReturnsPage: React.FC = () => {
   const [submittingAction, setSubmittingAction] = useState(false);
   const [submittingRefund, setSubmittingRefund] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
+
+  const resolveImageUrl = (url?: string | null): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    const isLocal =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const apiBase =
+      (import.meta as any).env?.VITE_API_URL ||
+      (!isLocal
+        ? 'https://larvo-server.vercel.app/api'
+        : 'http://localhost:5000/api');
+    const hostBase = apiBase.replace(/\/api\/?$/, '');
+    return `${hostBase}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   const fetchReturns = useCallback(async () => {
     setLoading(true);
@@ -714,6 +733,60 @@ export const AdminReturnsPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Customer Attached Photos (Evidence) */}
+              {selectedReturn.images && selectedReturn.images.length > 0 && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
+                      Attached Photos ({selectedReturn.images.length})
+                    </h4>
+                    <span className="text-[11px] text-slate-400">
+                      Click to inspect full size
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedReturn.images.map((img, idx) => {
+                      const fullUrl = resolveImageUrl(img.url);
+                      return (
+                        <div
+                          key={idx}
+                          className="group relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 cursor-pointer hover:border-slate-400 transition-all shadow-2xs"
+                          onClick={() => setLightboxImageUrl(fullUrl)}
+                        >
+                          <img
+                            src={fullUrl}
+                            alt={img.filename || `Evidence photo ${idx + 1}`}
+                            className="w-full h-24 sm:h-28 object-cover group-hover:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+                            <Eye className="w-4 h-4" />
+                            <span>Enlarge</span>
+                          </div>
+                          <div className="p-1.5 bg-white/95 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                            <span className="truncate max-w-[110px] font-mono text-[10px]">
+                              {img.filename}
+                            </span>
+                            <a
+                              href={fullUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-slate-400 hover:text-slate-800 p-0.5"
+                              title="Open original in new tab"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
@@ -972,6 +1045,39 @@ export const AdminReturnsPage: React.FC = () => {
                 {submittingRefund && <RefreshCw className="w-4 h-4 animate-spin" />}
                 Confirm & Issue Refund
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Return Photo Lightbox Modal ────────────────────────────────────── */}
+      {lightboxImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setLightboxImageUrl(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-3 bg-slate-900 text-white flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Return Evidence Photo Inspection
+              </span>
+              <button
+                onClick={() => setLightboxImageUrl(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 bg-slate-950 flex items-center justify-center overflow-auto max-h-[calc(90vh-60px)]">
+              <img
+                src={lightboxImageUrl}
+                alt="Return Evidence Full Resolution"
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow"
+              />
             </div>
           </div>
         </div>
