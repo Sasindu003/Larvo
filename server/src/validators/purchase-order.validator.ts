@@ -41,6 +41,8 @@ export const CreatePurchaseOrderSchema = z.object({
   paymentReviewNote: z.string().trim().max(2000).optional().nullable(),
   declineReason: z.string().trim().max(2000).optional().nullable(),
   notes: z.string().trim().max(2000).optional().default(''),
+  quotationNotes: z.string().trim().max(2000).optional().nullable(),
+  quotationImages: z.array(z.string().trim()).max(10).optional().default([]),
 });
 
 export type CreatePurchaseOrderInput = z.infer<typeof CreatePurchaseOrderSchema>;
@@ -58,6 +60,8 @@ export const UpdatePurchaseOrderSchema = z.object({
   paymentReviewNote: z.string().trim().max(2000).optional().nullable(),
   declineReason: z.string().trim().max(2000).optional().nullable(),
   notes: z.string().trim().max(2000).optional(),
+  quotationNotes: z.string().trim().max(2000).optional().nullable(),
+  quotationImages: z.array(z.string().trim()).max(10).optional(),
 }).refine(
   (data) => Object.keys(data).some((k) => data[k as keyof typeof data] !== undefined),
   { message: 'At least one field must be provided for update' }
@@ -118,6 +122,17 @@ export const SubmitQuoteSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val ? new Date(val) : null)),
+  quotationNotes: z
+    .string()
+    .trim()
+    .max(2000, 'Quotation note cannot exceed 2000 characters')
+    .optional()
+    .nullable(),
+  quotationImages: z
+    .array(z.string().trim())
+    .max(10, 'Cannot exceed 10 quotation images')
+    .optional()
+    .default([]),
 });
 
 export type SubmitQuoteInput = z.infer<typeof SubmitQuoteSchema>;

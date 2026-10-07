@@ -20,6 +20,8 @@ import {
   Check,
   ChevronRight,
   ExternalLink,
+  Image as ImageIcon,
+  ZoomIn,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -175,6 +177,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
   const [submittingAction, setSubmittingAction] = useState(false);
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [receiveDeltas, setReceiveDeltas] = useState<Record<string, number>>({});
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   // ── Fetch Purchase Orders ───────────────────────────────────────────────────
   const fetchOrders = useCallback(async () => {
@@ -884,6 +887,47 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
               </div>
             )}
 
+            {/* Persistent Quotation Info (when status is NOT 'quoted', e.g. approved/transit/received) */}
+            {activePO.status !== 'quoted' && (activePO.quotationNotes || (activePO.quotationImages && activePO.quotationImages.length > 0)) && (
+              <div className="p-4 bg-purple-950/20 border border-purple-500/20 rounded-xl space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                  <DollarSign className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Supplier Quotation Information</span>
+                </div>
+                {activePO.quotationNotes && (
+                  <div className="text-xs text-purple-200">
+                    <span className="font-semibold text-purple-300">Supplier Note: </span>
+                    {activePO.quotationNotes}
+                  </div>
+                )}
+                {activePO.quotationImages && activePO.quotationImages.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] text-slate-400">Attached Product Photos ({activePO.quotationImages.length}):</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {activePO.quotationImages.map((imgUrl, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setLightboxImage(getFileUrl(imgUrl))}
+                          className="relative group w-16 h-16 rounded-lg overflow-hidden border border-purple-500/30 hover:border-purple-400 bg-slate-900 transition cursor-zoom-in shrink-0"
+                          title="Click to enlarge"
+                        >
+                          <img
+                            src={getFileUrl(imgUrl)}
+                            alt={`Quotation product photo ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                            <ZoomIn className="w-4 h-4" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── STATUS-GATED ACTION PANELS ───────────────────────────────── */}
 
             {/* 1. Quote Review Panel (ONLY when status === 'quoted') */}
@@ -905,6 +949,44 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                   The supplier has submitted their pricing and available quantities. Please review the quotation
                   breakdown above before approving or rejecting.
                 </p>
+
+                {/* Supplier Note if submitted */}
+                {activePO.quotationNotes && (
+                  <div className="p-3 bg-purple-900/30 border border-purple-500/20 rounded-lg text-xs text-purple-200">
+                    <span className="font-semibold text-purple-300">Supplier Note: </span>
+                    {activePO.quotationNotes}
+                  </div>
+                )}
+
+                {/* Attached Product Photos */}
+                {activePO.quotationImages && activePO.quotationImages.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Attached Product Photos ({activePO.quotationImages.length})</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                      {activePO.quotationImages.map((imgUrl, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setLightboxImage(getFileUrl(imgUrl))}
+                          className="relative group w-16 h-16 rounded-lg overflow-hidden border border-purple-500/30 hover:border-purple-400 bg-slate-900 transition cursor-zoom-in shrink-0"
+                          title="Click to enlarge"
+                        >
+                          <img
+                            src={getFileUrl(imgUrl)}
+                            alt={`Quotation product photo ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                            <ZoomIn className="w-4 h-4" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {canMutate && (
                   <div className="flex items-center justify-end gap-3 pt-2">
@@ -1144,6 +1226,46 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── IMAGE LIGHTBOX MODAL ────────────────────────────────────────────── */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden p-2 flex flex-col items-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full flex items-center justify-between p-2 border-b border-slate-800 mb-2">
+              <span className="text-xs text-slate-400 font-medium">Product Photo Preview</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={lightboxImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                  title="Open original in new tab"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setLightboxImage(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <img
+              src={lightboxImage}
+              alt="Enlarged product photo"
+              className="max-h-[75vh] w-auto max-w-full rounded-lg object-contain"
+            />
           </div>
         </div>
       )}

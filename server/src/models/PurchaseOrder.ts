@@ -81,6 +81,8 @@ export interface IPurchaseOrder extends Document {
   paymentReviewNote?: string | null;
   declineReason?: string | null;
   notes?: string;
+  quotationNotes?: string | null;
+  quotationImages: string[];
   createdAt: Date;
   updatedAt: Date;
   totalCost: number;
@@ -104,6 +106,8 @@ const purchaseOrderSchema = new Schema<IPurchaseOrder>(
     paymentReviewNote: { type: String, default: null },
     declineReason: { type: String, default: null },
     notes: { type: String, trim: true, default: '' },
+    quotationNotes: { type: String, trim: true, default: null },
+    quotationImages: { type: [String], default: [] },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

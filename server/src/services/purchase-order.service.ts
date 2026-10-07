@@ -129,6 +129,8 @@ export class PurchaseOrderService {
       paymentReviewNote: input.paymentReviewNote ?? null,
       declineReason: input.declineReason ?? null,
       notes: input.notes || '',
+      quotationNotes: input.quotationNotes ?? null,
+      quotationImages: input.quotationImages ?? [],
       status: 'requested',
     });
 
@@ -193,6 +195,14 @@ export class PurchaseOrderService {
 
     if (input.notes !== undefined) {
       po.notes = input.notes;
+    }
+
+    if (input.quotationNotes !== undefined) {
+      po.quotationNotes = input.quotationNotes ? input.quotationNotes.trim() : null;
+    }
+
+    if (input.quotationImages !== undefined) {
+      po.quotationImages = input.quotationImages;
     }
 
     await po.save();
@@ -429,6 +439,12 @@ export class PurchaseOrderService {
     po.status = 'quoted';
     if (input.estimatedDeliveryDate !== undefined) {
       po.estimatedDeliveryDate = input.estimatedDeliveryDate;
+    }
+    if (input.quotationNotes !== undefined) {
+      po.quotationNotes = input.quotationNotes ? input.quotationNotes.trim() : null;
+    }
+    if (input.quotationImages !== undefined) {
+      po.quotationImages = input.quotationImages;
     }
 
     await po.save();

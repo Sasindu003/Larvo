@@ -78,6 +78,8 @@ export interface IPurchaseOrder {
   paymentReviewNote?: string | null;
   declineReason?: string | null;
   notes?: string;
+  quotationNotes?: string | null;
+  quotationImages?: string[];
   totalCost: number;
   createdAt: string;
   updatedAt: string;
@@ -103,6 +105,8 @@ export interface CreatePOInput {
   paymentReviewNote?: string | null;
   declineReason?: string | null;
   notes?: string;
+  quotationNotes?: string | null;
+  quotationImages?: string[];
 }
 
 export interface UpdatePOInput {
@@ -113,6 +117,8 @@ export interface UpdatePOInput {
   paymentReviewNote?: string | null;
   declineReason?: string | null;
   notes?: string;
+  quotationNotes?: string | null;
+  quotationImages?: string[];
 }
 
 export interface GetPurchaseOrdersParams {
@@ -139,6 +145,8 @@ export interface SubmitQuoteLineInput {
 export interface SubmitQuoteInput {
   lines: SubmitQuoteLineInput[];
   estimatedDeliveryDate?: string | null;
+  quotationNotes?: string | null;
+  quotationImages?: string[];
 }
 
 export interface DeclinePOInput {
@@ -217,6 +225,22 @@ export const purchaseOrderService = {
   getSupplierPurchaseOrderById: async (id: string): Promise<IPurchaseOrder> => {
     const res = await api.get<any, ApiResponse<{ purchaseOrder: IPurchaseOrder }>>(`/supplier/purchase-orders/${id}`);
     return res.data!.purchaseOrder;
+  },
+
+  uploadQuotationImages: async (files: File[]): Promise<string[]> => {
+    if (!files || files.length === 0) return [];
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+    const res = await api.post<any, ApiResponse<{ urls: string[] }>>(
+      '/files/upload',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return res.data?.urls || [];
   },
 
   submitQuote: async (id: string, data: SubmitQuoteInput): Promise<IPurchaseOrder> => {
