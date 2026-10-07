@@ -29,15 +29,6 @@ import reviewRoutes from './routes/review.routes';
 
 const app = express();
 
-// Stream files (payment slips, images) directly from MongoDB GridFS
-app.use(['/uploads', '/api/uploads'], fileRoutes);
-app.use('/api/files', fileRoutes);
-
-// Body parsers & cookies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
 // CORS configuration: supports comma-separated origins & dynamic *.vercel.app preview URLs
 const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
   .split(',')
@@ -57,6 +48,15 @@ app.use(
     credentials: true,
   })
 );
+
+// Body parsers & cookies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Stream files (payment slips, images) directly from MongoDB GridFS & upload files
+app.use(['/uploads', '/api/uploads'], fileRoutes);
+app.use('/api/files', fileRoutes);
 
 // Root & health endpoints
 app.get(['/', '/api'], (_req: Request, res: Response) => {

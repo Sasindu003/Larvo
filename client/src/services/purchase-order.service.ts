@@ -240,7 +240,8 @@ export const purchaseOrderService = {
         headers: { 'Content-Type': 'multipart/form-data' },
       }
     );
-    return res.data?.urls || [];
+    const payload = (res as any)?.data || res;
+    return payload?.urls || [];
   },
 
   submitQuote: async (id: string, data: SubmitQuoteInput): Promise<IPurchaseOrder> => {
