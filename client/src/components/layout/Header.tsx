@@ -455,11 +455,6 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      {/* Top Announcement Bar */}
-      <div className="bg-ink-950 text-cream-100 text-[11px] font-medium py-1.5 px-4 text-center tracking-wider uppercase">
-        <span>Complimentary domestic express shipping on orders over Rs. 1,500</span>
-      </div>
-
       {/* Floating Pill Header Wrapper */}
       <header className="sticky top-2 sm:top-3 z-40 w-full px-3 sm:px-6 pointer-events-none transition-all duration-200">
         <div className="max-w-screen-2xl mx-auto">

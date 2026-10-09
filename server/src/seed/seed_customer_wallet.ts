@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { User } from './models/User';
-import { Wallet } from './models/Wallet';
-import { walletService } from './services/wallet.service';
+import { User } from '../models/User';
+import { Wallet } from '../models/Wallet';
+import { walletService } from '../services/wallet.service';
 
 dotenv.config();
 

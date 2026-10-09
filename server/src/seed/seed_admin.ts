@@ -7,13 +7,14 @@ dotenv.config();
 async function seedAdmin() {
   const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
   await mongoose.connect(mongoUri);
-  const hash = await bcrypt.hash('password123', 10);
+  const hash = await bcrypt.hash('Password123!', 10);
   await mongoose.connection.collection('users').updateOne(
     { email: 'admin@larvo.com' },
     {
       $set: {
         name: 'Larvo Admin',
         email: 'admin@larvo.com',
+        passwordHash: hash,
         password: hash,
         role: 'admin',
         active: true,
@@ -22,7 +23,7 @@ async function seedAdmin() {
     },
     { upsert: true }
   );
-  console.log('Seeded admin: admin@larvo.com / password123');
+  console.log('Seeded admin: admin@larvo.com / Password123!');
   await mongoose.disconnect();
 }
 

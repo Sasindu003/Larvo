@@ -7,6 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/seed/index.ts",
+    "seed:users": "ts-node -e \"import('./src/seed/user.seed').then(m => import('mongoose').then(async mg => { await mg.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shop'); await m.seedUsers(); await mg.disconnect(); }))\"",
     "seed:categories": "ts-node-dev src/seed/category.seed.ts",
     "seed:products": "ts-node src/seed/product.seed.ts",
     "test": "ts-node src/seed/p11.check.ts",
