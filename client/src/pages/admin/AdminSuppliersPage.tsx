@@ -55,6 +55,7 @@ export const AdminSuppliersPage: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [credentialsModal, setCredentialsModal] = useState<{ email: string; tempPassword: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
@@ -147,6 +148,12 @@ export const AdminSuppliersPage: React.FC = () => {
   const handleOpenDeactivate = (sup: ISupplier) => {
     setSelectedSupplier(sup);
     setDeactivateModalOpen(true);
+  };
+
+  // Open Activate Modal
+  const handleOpenActivate = (sup: ISupplier) => {
+    setSelectedSupplier(sup);
+    setActivateModalOpen(true);
   };
 
   // Open Delete Modal
@@ -249,6 +256,24 @@ export const AdminSuppliersPage: React.FC = () => {
       fetchSuppliers();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to deactivate supplier');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Confirm Activate
+  const handleConfirmActivate = async () => {
+    if (!selectedSupplier) return;
+
+    setSubmitting(true);
+    try {
+      const updated = await supplierService.activateSupplier(selectedSupplier._id);
+      toast.success(`Supplier "${updated.companyName}" activated successfully`);
+      setActivateModalOpen(false);
+      setSelectedSupplier(null);
+      fetchSuppliers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to activate supplier');
     } finally {
       setSubmitting(false);
     }
@@ -497,7 +522,16 @@ export const AdminSuppliersPage: React.FC = () => {
                               <Edit3 className="w-4 h-4" />
                             </button>
 
-                            {sup.status === 'active' && (
+                            {sup.status === 'inactive' ? (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenActivate(sup)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                                title="Activate Supplier"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                            ) : (
                               <button
                                 type="button"
                                 onClick={() => handleOpenDeactivate(sup)}
@@ -1003,7 +1037,19 @@ export const AdminSuppliersPage: React.FC = () => {
                     <Edit3 className="w-3.5 h-3.5" />
                     Edit
                   </button>
-                  {selectedSupplier.status === 'active' && (
+                  {selectedSupplier.status === 'inactive' ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailModalOpen(false);
+                        handleOpenActivate(selectedSupplier);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors border border-emerald-500/30"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Activate
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => {
@@ -1086,6 +1132,56 @@ export const AdminSuppliersPage: React.FC = () => {
               >
                 {submitting && <RefreshCw className="w-4 h-4 animate-spin" />}
                 Confirm Deactivate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Activate Modal ──────────────────────────────────────────────────── */}
+      {activateModalOpen && selectedSupplier && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-emerald-400">
+                <CheckCircle2 className="w-5 h-5" />
+                <h3 className="text-base font-bold text-white">Activate Supplier</h3>
+              </div>
+              <button
+                onClick={() => setActivateModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3">
+              <p className="text-sm text-slate-300">
+                Are you sure you want to activate{' '}
+                <strong className="text-white font-semibold">{selectedSupplier.companyName}</strong>?
+              </p>
+              <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-xs text-emerald-300 leading-relaxed">
+                The supplier will be marked as active and can be chosen for new purchase orders and restocks. Their supplier portal login access (if linked) will also be restored.
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setActivateModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleConfirmActivate}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs disabled:opacity-50"
+              >
+                {submitting && <RefreshCw className="w-4 h-4 animate-spin" />}
+                Confirm Activate
               </button>
             </div>
           </div>

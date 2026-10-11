@@ -155,6 +155,22 @@ export const deactivateSupplier = asyncHandler(async (req: Request, res: Respons
 });
 
 /**
+ * @desc    Activate a supplier
+ * @route   PATCH /api/admin/suppliers/:id/activate
+ * @access  Private (admin, owner)
+ */
+export const activateSupplier = asyncHandler(async (req: Request, res: Response) => {
+  const supplier = await supplierService.reactivateSupplier(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    data: { supplier },
+    message: 'Supplier activated successfully',
+  });
+});
+
+
+/**
  * @desc    Get products and variants supplied by a supplier
  * @route   GET /api/admin/suppliers/:id/products
  * @access  Private (staff, admin, owner)

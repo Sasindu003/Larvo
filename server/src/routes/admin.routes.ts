@@ -51,6 +51,7 @@ import {
   createSupplier,
   updateSupplier,
   deactivateSupplier,
+  activateSupplier,
   getSupplierProducts,
   deleteSupplier,
   createSupplierAccount,
@@ -500,6 +501,19 @@ router.patch(
   requireRole('admin', 'owner'),
   deactivateSupplier
 );
+
+/**
+ * @desc    Activate (reactivate) supplier
+ * @route   PATCH /api/admin/suppliers/:id/activate
+ * @access  admin, owner
+ */
+router.patch(
+  '/suppliers/:id/activate',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  activateSupplier
+);
+
 
 /**
  * @desc    Get products and variants supplied by a supplier

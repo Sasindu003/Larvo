@@ -110,6 +110,11 @@ export const supplierService = {
     return res.data!.supplier;
   },
 
+  activateSupplier: async (id: string): Promise<ISupplier> => {
+    const res = await api.patch<any, ApiResponse<{ supplier: ISupplier }>>(`/admin/suppliers/${id}/activate`);
+    return res.data!.supplier;
+  },
+
   createSupplierAccount: async (id: string): Promise<SupplierAccountResult> => {
     const res = await api.post<any, ApiResponse<SupplierAccountResult>>(`/admin/suppliers/${id}/create-account`);
     return res.data!;
