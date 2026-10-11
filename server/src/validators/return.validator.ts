@@ -51,21 +51,24 @@ export const GetMyReturnsQuerySchema = z.object({
   orderId: z.string().regex(objectIdRegex, 'Invalid order ID format').optional(),
 });
 
+export const ReturnStatusSchema = z.enum([
+  'requested',
+  'under_review',
+  'approved',
+  'rejected',
+  'pickup_scheduled',
+  'picked_up',
+  'received',
+  'refund_processing',
+  'refunded',
+  'inspection_failed',
+  'cancelled',
+]);
+
 export const GetAdminReturnsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
-  status: z
-    .enum([
-      'requested',
-      'under_review',
-      'approved',
-      'rejected',
-      'pickup_scheduled',
-      'picked_up',
-      'received',
-      'refunded',
-    ])
-    .optional(),
+  status: ReturnStatusSchema.optional(),
   userId: z.string().regex(objectIdRegex, 'Invalid user ID format').optional(),
 });
 

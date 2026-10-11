@@ -26,6 +26,10 @@ import {
 import toast from 'react-hot-toast';
 import { orderService, Order, OrderStatus as ServiceOrderStatus } from '../services/order.service';
 import { returnService, IReturnRequest, ReturnStatus } from '../services/return.service';
+import { ReturnRefundTimeline } from './orders/detail/ReturnRefundTimeline';
+import { ReturnRequestDTO } from './orders/detail/orderDetail.types';
+import { deriveReturnTimeline } from './orders/detail/deriveReturnTimeline';
+import { RETURN_STAGES } from './orders/detail/returnTimeline.config';
 
 const LIFECYCLE_STEPS: { status: ServiceOrderStatus; label: string; description: string }[] = [
   { status: 'pending_payment', label: 'Order Placed', description: 'Awaiting payment confirmation' },
@@ -247,6 +251,7 @@ export interface OrderDTO {
   shippingAddress: ShippingAddressDTO;
   payment: PaymentDetailsDTO;
   delivery?: DeliveryDetailsDTO;
+  returnRequest?: ReturnRequestDTO | null;
 }
 
 export interface TimelineStageDefinition {
@@ -487,6 +492,32 @@ export const OrderSummaryBar: React.FC<{ order: OrderDTO; onOpenInvoice: () => v
 
   const statusLabel = order.status.replace(/_/g, ' ');
 
+  const returnReq = order.returnRequest;
+  const isFullyRefunded = returnReq?.status === 'refunded';
+  const isReturnOpen =
+    returnReq &&
+    !['refunded', 'rejected', 'inspection_failed', 'cancelled'].includes(returnReq.status);
+
+  const returnStatusLabels: Record<string, string> = {
+    requested: 'Return Requested',
+    under_review: 'Under Review',
+    approved: 'Return Approved',
+    pickup_scheduled: 'Pickup Scheduled',
+    picked_up: 'Picked Up',
+    received: 'Return Inspecting',
+    refund_processing: 'Refund Processing',
+    refunded: 'Refunded',
+    rejected: 'Return Rejected',
+    inspection_failed: 'Inspection Failed',
+    cancelled: 'Return Cancelled',
+  };
+
+  const returnLabel = returnReq
+    ? returnReq.status === 'refunded'
+      ? 'Refunded'
+      : `Return: ${returnStatusLabels[returnReq.status] || returnReq.status.replace(/_/g, ' ')}`
+    : '';
+
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all">
       <div className="space-y-1.5">
@@ -510,6 +541,27 @@ export const OrderSummaryBar: React.FC<{ order: OrderDTO; onOpenInvoice: () => v
             )}
             <span className="capitalize">{statusLabel.toLowerCase()}</span>
           </span>
+
+          {/* Return & Refund Header Badge when return is open */}
+          {isReturnOpen && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-amber-50 text-amber-900 border-amber-200">
+              <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+              <span>Return & Refund</span>
+            </span>
+          )}
+
+          {returnReq && returnLabel && (
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                isFullyRefunded
+                  ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]'
+                  : 'bg-[#FAF7F2] text-[#524D46] border-[#DDD6CA]'
+              }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>{returnLabel}</span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 text-xs text-[#7A756D]">
@@ -528,6 +580,11 @@ export const OrderSummaryBar: React.FC<{ order: OrderDTO; onOpenInvoice: () => v
           <div className="text-2xl sm:text-3xl font-serif font-bold text-[#141414] leading-tight">
             {formatLKR(order.total)}
           </div>
+          {isFullyRefunded && (
+            <span className="text-xs font-semibold text-emerald-700 block mt-0.5">
+              Refunded {formatLKR(returnReq?.refundAmount ?? order.total)}
+            </span>
+          )}
         </div>
 
         <button
@@ -551,6 +608,279 @@ export const MilestoneCard: React.FC<{
   copiedTracking?: boolean;
   onCopyTracking?: (tracking: string) => void;
 }> = ({ order, timeline, copiedTracking, onCopyTracking }) => {
+  const returnReq = order.returnRequest;
+
+  // ── Return Mode ─────────────────────────────────────────────────────────────
+  if (returnReq) {
+    const isRefunded = returnReq.status === 'refunded';
+    const isRejectedOrFailed =
+      returnReq.status === 'rejected' || returnReq.status === 'inspection_failed';
+    const isCancelled = returnReq.status === 'cancelled';
+
+    // Terminal branch: REJECTED or INSPECTION_FAILED
+    if (isRejectedOrFailed) {
+      const isFailed = returnReq.status === 'inspection_failed';
+      const title = isFailed ? 'Return Inspection Failed' : 'Return Not Approved';
+      const reason =
+        returnReq.rejectionReason ||
+        (isFailed
+          ? 'The returned item did not meet condition guidelines during warehouse inspection.'
+          : 'Staff reviewed and rejected this return request.');
+      const lastEntry = returnReq.statusHistory?.slice(-1)[0];
+
+      return (
+        <div className="bg-[#FAF7F2] text-[#141414] rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EAE4D9]">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-[#7A756D] bg-[#EFEAE2] border border-[#DDD6CA] px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-[#8C867D]" />
+              {title}
+            </span>
+            {lastEntry?.at && (
+              <span className="text-xs font-mono text-[#8C867D]">
+                {formatDateTime(lastEntry.at)}
+              </span>
+            )}
+          </div>
+          <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#141414] tracking-tight">
+            {title}
+          </h3>
+          <p className="text-xs sm:text-sm text-[#524D46] leading-relaxed mt-2">
+            {reason}
+          </p>
+          {isFailed && (
+            <div className="mt-4 pt-3 border-t border-[#EAE4D9] flex items-center justify-between">
+              <span className="text-xs text-[#7A756D]">
+                Have questions regarding this inspection result?
+              </span>
+              <a
+                href="#concierge"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast('Our concierge team has been notified and will assist you shortly.', { icon: '💬' });
+                }}
+                className="text-xs font-semibold text-[#141414] hover:text-[#524D46] underline transition-colors cursor-pointer"
+              >
+                Contact Concierge
+              </a>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Terminal branch: CANCELLED
+    if (isCancelled) {
+      const lastEntry = returnReq.statusHistory?.slice(-1)[0];
+
+      return (
+        <div className="bg-[#FAF7F2] text-[#141414] rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EAE4D9]">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-[#7A756D] bg-[#EFEAE2] border border-[#DDD6CA] px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+              <Ban className="w-3.5 h-3.5 text-[#8C867D]" />
+              Return Cancelled
+            </span>
+            {lastEntry?.at && (
+              <span className="text-xs font-mono text-[#8C867D]">
+                {formatDateTime(lastEntry.at)}
+              </span>
+            )}
+          </div>
+          <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#141414] tracking-tight">
+            Return Cancelled
+          </h3>
+          <p className="text-xs sm:text-sm text-[#524D46] leading-relaxed mt-2">
+            {returnReq.rejectionReason || 'Return request was cancelled by the customer.'}
+          </p>
+        </div>
+      );
+    }
+
+    // Completed state: REFUNDED
+    if (isRefunded) {
+      const refundAmount = returnReq.refundAmount ?? order.total;
+
+      return (
+        <div className="bg-gradient-to-br from-[#064E3B] to-[#022C22] text-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_-4px_rgba(20,20,20,0.05)] relative overflow-hidden border border-emerald-800">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              Refund Completed
+            </span>
+            <span className="text-xs font-mono text-emerald-200">
+              100% Completed
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+              Refund Completed
+            </h3>
+            <p className="text-xs sm:text-sm text-emerald-200/90 leading-relaxed">
+              Refund of {formatLKR(refundAmount)} has been credited to your Store Wallet.
+            </p>
+          </div>
+
+          <div className="mt-6 pt-5 border-t border-emerald-800/80 grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-300/80 block">
+                Refunded On
+              </span>
+              <span className="text-xs sm:text-sm font-semibold text-white mt-0.5 block">
+                {formatDateTime(returnReq.refundedAt ?? undefined)}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-300/80 block">
+                Refund Amount
+              </span>
+              <span className="text-xs sm:text-sm font-semibold text-white mt-0.5 block">
+                {formatLKR(refundAmount)}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-5" aria-label="Progress: 100%" role="progressbar" aria-valuenow={100} aria-valuemin={0} aria-valuemax={100}>
+            <div className="w-full bg-emerald-950 h-2 rounded-full overflow-hidden">
+              <div className="bg-emerald-400 h-full rounded-full w-full" />
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-emerald-900/60 flex items-center justify-between text-[11px] text-emerald-200">
+            <span className="inline-flex items-center gap-1.5">
+              <Coins className="w-3.5 h-3.5 text-emerald-400" />
+              Credited to Store Wallet
+            </span>
+            <Link to="/wallet" className="text-emerald-300 hover:text-white underline font-semibold transition-colors">
+              View Wallet
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    // Active Return in Progress Mode
+    const returnTimeline = deriveReturnTimeline(returnReq);
+    const totalStages = RETURN_STAGES.length;
+    const currentStepNum = returnTimeline.activeIndex + 1;
+    const pickupData = returnReq.pickup;
+    const courierName = pickupData?.courier?.trim() || 'Courier to be assigned';
+    const waybill = pickupData?.waybill?.trim();
+    const pickupAddress = pickupData?.address || `${order.shippingAddress.line1}, ${order.shippingAddress.city}`;
+
+    const isPickupScheduled = returnReq.status === 'pickup_scheduled';
+    const isPickedUpOrLater = ['picked_up', 'received', 'refund_processing'].includes(returnReq.status);
+
+    let leftGridLabel = 'Pickup';
+    let leftGridValue = 'Scheduling pickup';
+
+    if (isPickupScheduled) {
+      leftGridLabel = 'Pickup';
+      leftGridValue = pickupData?.scheduledDate
+        ? `${formatDateTime(pickupData.scheduledDate)}${pickupData.timeWindow ? ` (${pickupData.timeWindow})` : ''}`
+        : 'Pickup scheduled';
+    } else if (returnReq.status === 'picked_up') {
+      leftGridLabel = 'Picked Up On';
+      const pickedUpHist = returnReq.statusHistory?.find((h) => h.status === 'picked_up');
+      leftGridValue = formatDateTime(pickedUpHist?.at);
+    } else if (returnReq.status === 'received' || returnReq.status === 'refund_processing') {
+      leftGridLabel = 'Refund Expected';
+      leftGridValue =
+        returnReq.status === 'received'
+          ? 'Pending inspection approval'
+          : 'Finance processing';
+    }
+
+    const rightGridLabel = isPickedUpOrLater ? 'Refund Amount' : 'Pickup Address';
+    const rightGridValue = isPickedUpOrLater
+      ? (returnReq.refundAmount != null ? formatLKR(returnReq.refundAmount) : 'Pending')
+      : pickupAddress;
+
+    return (
+      <div className="bg-gradient-to-br from-[#1C1B19] to-[#2C2925] text-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_-4px_rgba(20,20,20,0.05)] relative overflow-hidden">
+        {/* Soft amber glow background */}
+        <div
+          className="absolute -right-10 -bottom-10 w-44 h-44 bg-amber-500/15 rounded-full blur-2xl pointer-events-none"
+          aria-hidden="true"
+        />
+
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <span className="text-[11px] uppercase tracking-wider font-semibold text-amber-400 bg-amber-950/70 border border-amber-500/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 motion-safe:animate-ping" aria-hidden="true" />
+            Return in Progress
+          </span>
+          <span className="text-xs font-mono text-neutral-300">
+            {returnTimeline.percent}% Completed ({currentStepNum}/{totalStages})
+          </span>
+        </div>
+
+        <div className="space-y-1">
+          <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+            {returnTimeline.currentTitle}
+          </h3>
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+            {returnTimeline.currentDescription}
+          </p>
+        </div>
+
+        {/* 2-col Return Details grid */}
+        <div className="mt-6 pt-5 border-t border-neutral-700/60 grid grid-cols-2 gap-4">
+          <div>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block">
+              {leftGridLabel}
+            </span>
+            <span className="text-xs sm:text-sm font-semibold text-white mt-0.5 block truncate" title={leftGridValue}>
+              {leftGridValue}
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block">
+              {rightGridLabel}
+            </span>
+            <span className="text-xs sm:text-sm font-semibold text-white mt-0.5 block truncate" title={rightGridValue}>
+              {rightGridValue}
+            </span>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-5" aria-label={`Return Progress: ${returnTimeline.percent}%`} role="progressbar" aria-valuenow={returnTimeline.percent} aria-valuemin={0} aria-valuemax={100}>
+          <div className="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
+            <div
+              className="bg-amber-400 h-full rounded-full transition-all duration-500"
+              style={{ width: `${returnTimeline.percent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Courier & Waybill footer row */}
+        <div className="mt-4 pt-3 border-t border-neutral-800/80 flex items-center justify-between text-[11px] text-neutral-400">
+          <span className="inline-flex items-center gap-1.5">
+            <Truck className="w-3.5 h-3.5 text-amber-400" />
+            {courierName}
+          </span>
+          {waybill && (
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-neutral-300">
+                Waybill #{waybill}
+              </span>
+              {onCopyTracking && (
+                <button
+                  type="button"
+                  onClick={() => onCopyTracking(waybill)}
+                  className="px-2 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[10px] text-neutral-300 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Copy Waybill"
+                >
+                  {copiedTracking ? 'Copied' : 'Copy'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── No Return: Standard Fulfillment Milestone Card ──────────────────────────
   const isTerminal = timeline.isTerminal;
 
   if (isTerminal) {
@@ -865,7 +1195,12 @@ export const PaymentCard: React.FC<{ payment: PaymentDetailsDTO }> = ({ payment 
   );
 };
 
-export const FulfillmentTimeline: React.FC<{ timeline: DerivedTimeline }> = ({ timeline }) => {
+export const FulfillmentTimeline: React.FC<{ timeline: DerivedTimeline; hasReturn?: boolean }> = ({
+  timeline,
+  hasReturn = false,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (timeline.isTerminal) {
     return (
       <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-4">
@@ -889,7 +1224,8 @@ export const FulfillmentTimeline: React.FC<{ timeline: DerivedTimeline }> = ({ t
     );
   }
 
-  const stages = timeline.stages;
+  const allStages = timeline.stages;
+  const stages = hasReturn && !isExpanded ? allStages.slice(-3) : allStages;
 
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-6">
@@ -1006,6 +1342,69 @@ export const FulfillmentTimeline: React.FC<{ timeline: DerivedTimeline }> = ({ t
           );
         })}
       </ol>
+
+      {hasReturn && allStages.length > 3 && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+          className="w-full mt-4 py-2.5 px-3.5 text-xs font-semibold text-[#524D46] hover:text-[#141414] bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#EAE4D9] rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+        >
+          <span>{isExpanded ? 'Collapse timeline' : `Show full timeline (${allStages.length} steps)`}</span>
+          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? '-rotate-90' : 'rotate-90'}`} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+export const ReturnDetailsCard: React.FC<{ returnRequest: ReturnRequestDTO }> = ({ returnRequest }) => {
+  return (
+    <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-[#F0EBE2]">
+        <div className="flex items-center gap-2">
+          <RotateCcw className="w-4 h-4 text-[#6B655D]" />
+          <h2 className="text-sm font-bold text-[#141414]">
+            Return Details ({returnRequest.items.length})
+          </h2>
+        </div>
+        <span className="text-[11px] font-mono text-[#8C867D]">
+          Requested {formatDateTime(returnRequest.statusHistory?.[0]?.at)}
+        </span>
+      </div>
+
+      <div className="divide-y divide-[#F0EBE2]">
+        {returnRequest.items.map((item, idx) => (
+          <div key={`${item.sku}-${idx}`} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-xs font-bold text-[#141414]">
+                {item.productName}
+              </h3>
+              <div className="flex items-center gap-2 text-[11px] font-mono text-[#8C867D]">
+                <span>SKU: {item.sku}</span>
+                <span>•</span>
+                <span>Size: {item.size}</span>
+                <span>•</span>
+                <span>Qty: {item.qty}</span>
+              </div>
+            </div>
+            <span className="text-xs font-serif font-bold text-[#141414]">
+              {formatLKR(item.unitPrice * item.qty)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {returnRequest.reason && (
+        <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE4D9] text-xs text-[#524D46] space-y-1">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-[#8C867D] block">
+            Return Reason
+          </span>
+          <p className="leading-relaxed text-[#2B2927]">
+            {returnRequest.reason}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -1255,9 +1654,6 @@ const mapBackendStatusToEnum = (status: string): OrderStatus => {
 
 const convertOrderToDTO = (order: Order, returnDoc?: IReturnRequest | null): OrderDTO => {
   let mappedStatus = mapBackendStatusToEnum(order.status);
-  if (returnDoc && (returnDoc.status === 'received' || returnDoc.status === 'refunded')) {
-    mappedStatus = OrderStatus.RETURNED;
-  }
 
   const allStagesList = TIMELINE_STAGES.map((s) => s.status);
   const targetIndex = allStagesList.indexOf(mappedStatus);
@@ -1306,6 +1702,36 @@ const convertOrderToDTO = (order: Order, returnDoc?: IReturnRequest | null): Ord
     estimatedTo: estTo,
   };
 
+  let effectiveReturnRequest: ReturnRequestDTO | null = null;
+  if (order.returnRequest) {
+    effectiveReturnRequest = order.returnRequest;
+  } else if (returnDoc) {
+    effectiveReturnRequest = {
+      id: returnDoc._id,
+      status: returnDoc.status,
+      statusHistory: (returnDoc as any).statusHistory?.length
+        ? (returnDoc as any).statusHistory
+        : [{ status: returnDoc.status, at: returnDoc.createdAt, note: 'Return requested' }],
+      reason: (returnDoc as any).reason || returnDoc.items?.[0]?.reason || null,
+      items: returnDoc.items.map((it) => {
+        const matching = (order.items || []).find((oi) => oi.variantSku === it.sku) || order.items?.[it.orderItemRef];
+        return {
+          productName: matching?.name || 'Product Item',
+          sku: it.sku,
+          size: matching?.size || 'Standard',
+          color: matching?.color || 'Standard',
+          qty: it.qty,
+          unitPrice: matching?.unitPrice || 0,
+        };
+      }),
+      refundAmount: (returnDoc as any).refundAmount ?? (returnDoc.refundPoints != null ? returnDoc.refundPoints : null),
+      refundMethod: returnDoc.refundMethod || null,
+      refundedAt: returnDoc.refundedAt || null,
+      pickup: (returnDoc as any).pickup || null,
+      rejectionReason: returnDoc.rejectionReason || null,
+    };
+  }
+
   return {
     id: order._id,
     status: mappedStatus,
@@ -1338,6 +1764,7 @@ const convertOrderToDTO = (order: Order, returnDoc?: IReturnRequest | null): Ord
       amount: order.payment?.amount ?? order.total,
     },
     delivery,
+    returnRequest: effectiveReturnRequest,
   };
 };
 
@@ -1387,8 +1814,8 @@ export const OrdersPage: React.FC = () => {
   };
 
   // Fetch single order detail
-  const fetchOrderDetail = async (id: string) => {
-    setDetailLoading(true);
+  const fetchOrderDetail = async (id: string, silent = false) => {
+    if (!silent) setDetailLoading(true);
     try {
       const res = await orderService.getOrderById(id);
       setSelectedOrder(res.order);
@@ -1399,10 +1826,12 @@ export const OrdersPage: React.FC = () => {
         setOrderReturn(null);
       }
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to load order details');
-      navigate('/orders', { replace: true });
+      if (!silent) {
+        toast.error(err?.message || 'Failed to load order details');
+        navigate('/orders', { replace: true });
+      }
     } finally {
-      setDetailLoading(false);
+      if (!silent) setDetailLoading(false);
     }
   };
 
@@ -1415,6 +1844,24 @@ export const OrdersPage: React.FC = () => {
       fetchOrders(page);
     }
   }, [orderId, page]);
+
+  // 30s background poll when tab visible and return is active
+  useEffect(() => {
+    if (!orderId || !selectedOrder) return;
+    const currentReturn = selectedOrder.returnRequest || orderReturn;
+    if (!currentReturn) return;
+
+    const terminalReturnStatuses = ['refunded', 'rejected', 'inspection_failed', 'cancelled'];
+    if (terminalReturnStatuses.includes(currentReturn.status)) return;
+
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchOrderDetail(orderId, true);
+      }
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [orderId, selectedOrder?.returnRequest?.status, orderReturn?.status]);
 
   const handleCopyTracking = (tracking: string) => {
     navigator.clipboard.writeText(tracking);
@@ -1540,6 +1987,7 @@ export const OrdersPage: React.FC = () => {
       setReturnImages([]);
       setReturnImagePreviews([]);
       toast.success('Return request submitted successfully');
+      fetchOrderDetail(selectedOrder._id, true);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to submit return request');
     } finally {
@@ -1582,7 +2030,11 @@ export const OrdersPage: React.FC = () => {
     const isWithinReturnWindow = selectedOrder.deliveredAt
       ? Date.now() - new Date(selectedOrder.deliveredAt).getTime() <= SEVEN_DAYS_MS
       : false;
-    const hasActiveReturn = Boolean(orderReturn && orderReturn.status !== 'rejected');
+    const currentReturn = selectedOrder.returnRequest || orderReturn;
+    const hasActiveReturn = Boolean(
+      currentReturn &&
+      !['rejected', 'cancelled', 'inspection_failed'].includes(currentReturn.status)
+    );
     const canRequestReturn = isDelivered && isWithinReturnWindow && !hasActiveReturn;
     const returnCfg = orderReturn ? RETURN_STATUS_CONFIG[orderReturn.status] : null;
 
@@ -1641,25 +2093,6 @@ export const OrdersPage: React.FC = () => {
           </div>
         )}
 
-        {/* Return Status Banner */}
-        {returnCfg && orderReturn && (
-          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-                <RotateCcw className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-bold text-amber-950">{returnCfg.label}</p>
-                <p className="text-[11px] text-amber-800">
-                  Return reference #{orderReturn._id?.slice(-8).toUpperCase()} • {orderReturn.items.length} item(s)
-                </p>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border bg-white border-amber-300 text-amber-900">
-              {orderReturn.status.replace(/_/g, ' ')}
-            </span>
-          </div>
-        )}
 
         {/* Payment Verification Feedback Alert */}
         {selectedOrder.payment?.status === 'rejected' && selectedOrder.payment?.reviewNote && (
@@ -1699,7 +2132,24 @@ export const OrdersPage: React.FC = () => {
               onCopyTracking={handleCopyTracking}
             />
 
+            {/* Mobile: Return & Refund Timeline placed directly below Milestone */}
+            {dto.returnRequest && (
+              <div className="block lg:hidden">
+                <ReturnRefundTimeline
+                  returnRequest={dto.returnRequest}
+                  onContactConcierge={() =>
+                    toast('Our concierge team has been notified and will assist you shortly.', { icon: '💬' })
+                  }
+                />
+              </div>
+            )}
+
             <OrderItemsCard items={dto.items} />
+
+            {/* Read-only Return Details Card under Order Items */}
+            {dto.returnRequest && (
+              <ReturnDetailsCard returnRequest={dto.returnRequest} />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <ShippingCard address={dto.shippingAddress} />
@@ -1713,9 +2163,23 @@ export const OrdersPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Sticky Fulfillment Timeline */}
-          <div className="lg:col-span-5 2xl:col-span-4 lg:sticky lg:top-6">
-            <FulfillmentTimeline timeline={timeline} />
+          {/* Right Column: Sticky Fulfillment and Return Timelines */}
+          <div className="lg:col-span-5 2xl:col-span-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] overflow-y-auto space-y-6 pr-1">
+            <FulfillmentTimeline
+              timeline={timeline}
+              hasReturn={Boolean(dto.returnRequest)}
+            />
+
+            {dto.returnRequest && (
+              <div className="hidden lg:block">
+                <ReturnRefundTimeline
+                  returnRequest={dto.returnRequest}
+                  onContactConcierge={() =>
+                    toast('Our concierge team has been notified and will assist you shortly.', { icon: '💬' })
+                  }
+                />
+              </div>
+            )}
           </div>
         </div>
 

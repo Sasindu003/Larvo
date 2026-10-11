@@ -8,7 +8,24 @@ export type ReturnStatus =
   | 'pickup_scheduled'
   | 'picked_up'
   | 'received'
-  | 'refunded';
+  | 'refund_processing'
+  | 'refunded'
+  | 'inspection_failed'
+  | 'cancelled';
+
+export interface IReturnStatusHistory {
+  status: ReturnStatus;
+  at: Date;
+  note?: string;
+}
+
+export interface IReturnPickup {
+  courier?: string | null;
+  waybill?: string | null;
+  scheduledDate?: Date | null;
+  timeWindow?: string | null;
+  address?: string | null;
+}
 
 export interface IReturnItem {
   orderItemRef: number;
@@ -29,6 +46,10 @@ export interface IReturnRequest extends Document {
   items: IReturnItem[];
   images: IReturnImage[];
   status: ReturnStatus;
+  statusHistory: IReturnStatusHistory[];
+  pickup?: IReturnPickup | null;
+  reason?: string | null;
+  refundAmount?: number | null;
   rejectionReason: string | null;
   estimatedRefundPoints?: number | null;
   refundPoints: number | null;
@@ -44,6 +65,26 @@ const returnItemSchema = new Schema<IReturnItem>(
     sku: { type: String, required: true },
     qty: { type: Number, required: true, min: 1 },
     reason: { type: String, required: true, trim: true },
+  },
+  { _id: false }
+);
+
+const returnStatusHistorySchema = new Schema<IReturnStatusHistory>(
+  {
+    status: { type: String, required: true },
+    at: { type: Date, required: true, default: Date.now },
+    note: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const returnPickupSchema = new Schema<IReturnPickup>(
+  {
+    courier: { type: String, default: null, trim: true },
+    waybill: { type: String, default: null, trim: true },
+    scheduledDate: { type: Date, default: null },
+    timeWindow: { type: String, default: null, trim: true },
+    address: { type: String, default: null, trim: true },
   },
   { _id: false }
 );
@@ -80,11 +121,24 @@ const returnRequestSchema = new Schema<IReturnRequest>(
         'pickup_scheduled',
         'picked_up',
         'received',
+        'refund_processing',
         'refunded',
+        'inspection_failed',
+        'cancelled',
       ],
       default: 'requested',
       required: true,
     },
+    statusHistory: {
+      type: [returnStatusHistorySchema],
+      default: [],
+    },
+    pickup: {
+      type: returnPickupSchema,
+      default: null,
+    },
+    reason: { type: String, default: null, trim: true },
+    refundAmount: { type: Number, default: null, min: 0 },
     rejectionReason: { type: String, default: null },
     estimatedRefundPoints: { type: Number, default: null },
     refundPoints: { type: Number, default: null },

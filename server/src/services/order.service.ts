@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { Order, IOrder, IOrderItem, IAddressSnapshot, OrderStatus } from '../models/Order';
 import { Payment, IPayment } from '../models/Payment';
 import { Product } from '../models/Product';
+import { ReturnRequest } from '../models/ReturnRequest';
 import User, { IUser } from '../models/User';
 import { inventoryService } from './inventory.service';
 import { couponService } from './coupon.service';
@@ -684,6 +685,58 @@ export const orderService = {
       throw new AppError('You do not have access to this order', 403);
     }
 
+    // Fetch latest return request associated with the order
+    const latestReturn = await ReturnRequest.findOne({ order: order._id }).sort({ createdAt: -1 });
+
+    let returnRequestDTO: any = null;
+    if (latestReturn) {
+      // Ownership check: customer can only receive return request belonging to their own user account
+      const returnUserId = (latestReturn.user as any)?._id?.toString() || latestReturn.user.toString();
+      if (user.role !== 'customer' || returnUserId === user._id.toString()) {
+        const defaultPickupAddress = order.shippingAddress
+          ? `${order.shippingAddress.line1}, ${order.shippingAddress.city}`
+          : undefined;
+
+        const formattedItems = latestReturn.items.map((item) => {
+          const orderItem =
+            order.items[item.orderItemRef] ||
+            order.items.find((oi: any) => oi.variantSku === item.sku);
+
+          return {
+            productName: orderItem ? orderItem.name : 'Product Item',
+            sku: item.sku,
+            size: orderItem ? orderItem.size : 'Standard',
+            color: orderItem ? orderItem.color : 'Standard',
+            qty: item.qty,
+            unitPrice: orderItem ? orderItem.unitPrice : 0,
+          };
+        });
+
+        returnRequestDTO = {
+          id: latestReturn._id.toString(),
+          status: latestReturn.status,
+          statusHistory: (latestReturn.statusHistory || []).map((h) => ({
+            status: h.status,
+            at: h.at,
+            note: h.note,
+          })),
+          reason: latestReturn.reason || latestReturn.items?.[0]?.reason || null,
+          items: formattedItems,
+          refundAmount: latestReturn.refundAmount ?? null,
+          refundMethod: latestReturn.refundMethod ?? null,
+          refundedAt: latestReturn.refundedAt ?? null,
+          pickup: {
+            courier: latestReturn.pickup?.courier || null,
+            waybill: latestReturn.pickup?.waybill || null,
+            scheduledDate: latestReturn.pickup?.scheduledDate || null,
+            timeWindow: latestReturn.pickup?.timeWindow || null,
+            address: latestReturn.pickup?.address || defaultPickupAddress || null,
+          },
+          rejectionReason: latestReturn.rejectionReason || null,
+        };
+      }
+    }
+
     // delivery_manager sees only fields needed for fulfillment:
     // shipping address, items, status, tracking number, deliveredAt, user name
     if (user.role === 'delivery_manager') {
@@ -703,6 +756,7 @@ export const orderService = {
         status: order.status,
         trackingNumber: order.trackingNumber,
         deliveredAt: order.deliveredAt,
+        returnRequest: returnRequestDTO,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
       };
@@ -711,6 +765,7 @@ export const orderService = {
     const payment = await Payment.findOne({ order: order._id });
     const orderObj = order.toObject();
     (orderObj as any).payment = payment || null;
+    (orderObj as any).returnRequest = returnRequestDTO;
     return orderObj;
   },
 

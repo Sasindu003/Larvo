@@ -69,6 +69,7 @@ export interface Order {
     discountAmount: number;
   };
   payment?: Payment | null;
+  returnRequest?: import('../pages/orders/detail/orderDetail.types').ReturnRequestDTO | null;
   createdAt: string;
   updatedAt: string;
 }

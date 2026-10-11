@@ -1,7 +1,9 @@
 import mongoose, { Types } from 'mongoose';
 import { AppError } from '../middleware/error.middleware';
 import { Order } from '../models/Order';
-import ReturnRequest, { IReturnRequest } from '../models/ReturnRequest';
+import ReturnRequest, { IReturnRequest, ReturnStatus } from '../models/ReturnRequest';
+import { UserRole } from '../models/User';
+import { assertReturnTransition } from '../config/return-transitions';
 import {
   CreateReturnRequestInput,
   DecisionInput,
@@ -49,7 +51,7 @@ export class ReturnService {
     // Duplicate guard: allow resubmission only if previous returns for this order were rejected
     const activeReturn = await ReturnRequest.findOne({
       order: order._id,
-      status: { $ne: 'rejected' },
+      status: { $nin: ['rejected', 'cancelled', 'inspection_failed'] },
     });
     if (activeReturn) {
       throw new AppError('A return request has already been submitted for this order', 400);
@@ -83,12 +85,27 @@ export class ReturnService {
       };
     });
 
+    const defaultAddress = order.shippingAddress
+      ? `${order.shippingAddress.line1}, ${order.shippingAddress.city}`
+      : null;
+    const primaryReason = preparedItems[0]?.reason || null;
+
     const returnRequest = await ReturnRequest.create({
       order: order._id,
       user: userId,
       items: preparedItems,
       images,
       status: 'requested',
+      statusHistory: [
+        {
+          status: 'requested',
+          at: new Date(),
+          note: primaryReason ? `Return requested: ${primaryReason}` : 'Return requested by customer',
+        },
+      ],
+      pickup: defaultAddress ? { address: defaultAddress } : null,
+      reason: primaryReason,
+      refundAmount: null,
       rejectionReason: null,
       refundPoints: null,
       refundMethod: null,
@@ -267,7 +284,7 @@ export class ReturnService {
   /**
    * Approve or reject a return request.
    * Rejection strictly requires a reason (minimum 5 characters).
-   * Approval computes and persists estimatedRefundPoints.
+   * Approval computes and persists estimatedRefundPoints and refundAmount.
    */
   async processReturnDecision(
     returnId: string,
@@ -286,10 +303,21 @@ export class ReturnService {
       if (reason.length < 5) {
         throw new AppError('Rejection reason must be at least 5 characters', 400);
       }
+
+      assertReturnTransition(returnRequest.status, 'rejected', 'staff');
+
       returnRequest.status = 'rejected';
       returnRequest.rejectionReason = reason;
       returnRequest.estimatedRefundPoints = null;
+      returnRequest.refundAmount = null;
+      returnRequest.statusHistory.push({
+        status: 'rejected',
+        at: new Date(),
+        note: reason,
+      });
     } else if (input.decision === 'approved') {
+      assertReturnTransition(returnRequest.status, 'pickup_scheduled', 'staff');
+
       let order = returnRequest.order as any;
       if (!order || !Array.isArray(order.items)) {
         order = await Order.findById(returnRequest.order);
@@ -318,9 +346,34 @@ export class ReturnService {
         pointsPerRupee
       );
 
+      const returnedGross = returnItems.reduce(
+        (acc, item) => acc + item.unitPrice * item.quantity,
+        0
+      );
+      const proportionalDiscount =
+        order.subtotal > 0
+          ? (returnedGross * (order.discountAmount || 0)) / order.subtotal
+          : 0;
+      const refundAmount = Math.max(
+        0,
+        Math.floor(returnedGross - proportionalDiscount)
+      );
+
       returnRequest.status = 'pickup_scheduled';
       returnRequest.rejectionReason = null;
       returnRequest.estimatedRefundPoints = estimatedPoints;
+      returnRequest.refundAmount = refundAmount;
+
+      returnRequest.statusHistory.push({
+        status: 'approved',
+        at: new Date(),
+        note: 'Return approved. Pickup is being scheduled.',
+      });
+      returnRequest.statusHistory.push({
+        status: 'pickup_scheduled',
+        at: new Date(),
+        note: 'Courier assigned for pickup on the scheduled date.',
+      });
     }
 
     await returnRequest.save();
@@ -382,16 +435,17 @@ export class ReturnService {
       throw new AppError('Return request not found', 404);
     }
 
-    if (returnRequest.status === 'pickup_scheduled' && newStatus === 'picked_up') {
-      returnRequest.status = 'picked_up';
-    } else if (returnRequest.status === 'picked_up' && newStatus === 'received') {
-      returnRequest.status = 'received';
-    } else {
-      throw new AppError(
-        `Invalid status transition from '${returnRequest.status}' to '${newStatus}'`,
-        400
-      );
-    }
+    assertReturnTransition(returnRequest.status, newStatus, 'delivery_manager');
+
+    returnRequest.status = newStatus;
+    returnRequest.statusHistory.push({
+      status: newStatus,
+      at: new Date(),
+      note:
+        newStatus === 'picked_up'
+          ? 'Courier collected the item from your address.'
+          : 'Item arrived at the warehouse and is being inspected.',
+    });
 
     await returnRequest.save();
     return returnRequest;
@@ -400,7 +454,7 @@ export class ReturnService {
   /**
    * Process refund to customer wallet in points for a received return request.
    * Strictly requires admin or owner role (enforced in router).
-   * Strictly requires returnRequest.status === 'received'.
+   * Strictly requires returnRequest.status === 'received' or 'refund_processing'.
    * Uses MongoDB transaction session and idempotency key 'return_refund:<returnRequestId>'.
    */
   async processRefund(
@@ -420,12 +474,7 @@ export class ReturnService {
       return populated!;
     }
 
-    if (existing.status !== 'received') {
-      throw new AppError(
-        `Return request must be in 'received' status before refund can be processed. Current status is '${existing.status}'`,
-        400
-      );
-    }
+    assertReturnTransition(existing.status, 'refunded', 'admin');
 
     // Fetch order to compute or confirm refund points
     let order: any = await Order.findById(existing.order);
@@ -456,6 +505,18 @@ export class ReturnService {
             pointsPerRupee
           );
 
+    const returnedGross = returnItems.reduce(
+      (acc, item) => acc + item.unitPrice * item.quantity,
+      0
+    );
+    const proportionalDiscount =
+      order.subtotal > 0
+        ? (returnedGross * (order.discountAmount || 0)) / order.subtotal
+        : 0;
+    const refundAmount =
+      existing.refundAmount ??
+      Math.max(0, Math.floor(returnedGross - proportionalDiscount));
+
     const idempotencyKey = `return_refund:${existing._id.toString()}`;
 
     const session = await mongoose.startSession();
@@ -475,12 +536,7 @@ export class ReturnService {
         return populated!;
       }
 
-      if (returnDoc.status !== 'received') {
-        throw new AppError(
-          `Return request must be in 'received' status before refund can be processed. Current status is '${returnDoc.status}'`,
-          400
-        );
-      }
+      assertReturnTransition(returnDoc.status, 'refunded', 'admin');
 
       // Credit wallet points with session & idempotencyKey
       await walletService.credit({
@@ -497,8 +553,14 @@ export class ReturnService {
 
       returnDoc.status = 'refunded';
       returnDoc.refundPoints = refundPoints;
+      returnDoc.refundAmount = refundAmount;
       returnDoc.refundMethod = 'wallet_points';
       returnDoc.refundedAt = new Date();
+      returnDoc.statusHistory.push({
+        status: 'refunded',
+        at: new Date(),
+        note: 'Refund credited to your destination.',
+      });
 
       await returnDoc.save({ session });
       await session.commitTransaction();
@@ -513,6 +575,44 @@ export class ReturnService {
     } finally {
       await session.endSession();
     }
+  }
+
+  /**
+   * Generic transition handler supporting all stages, terminal branches, and RBAC.
+   */
+  async transitionReturnStatus(
+    returnId: string,
+    newStatus: ReturnStatus,
+    actor: { userId: string | Types.ObjectId; role: UserRole },
+    options?: { note?: string; rejectionReason?: string; pickup?: any }
+  ): Promise<IReturnRequest> {
+    const returnRequest = await ReturnRequest.findById(returnId);
+    if (!returnRequest) {
+      throw new AppError('Return request not found', 404);
+    }
+
+    const isOwner = returnRequest.user.toString() === actor.userId.toString();
+    assertReturnTransition(returnRequest.status, newStatus, actor.role, isOwner);
+
+    returnRequest.status = newStatus;
+    if (options?.rejectionReason) {
+      returnRequest.rejectionReason = options.rejectionReason;
+    }
+    if (options?.pickup) {
+      returnRequest.pickup = {
+        ...(returnRequest.pickup || {}),
+        ...options.pickup,
+      };
+    }
+
+    returnRequest.statusHistory.push({
+      status: newStatus,
+      at: new Date(),
+      note: options?.note || `Status transitioned to ${newStatus.replace(/_/g, ' ')}`,
+    });
+
+    await returnRequest.save();
+    return returnRequest;
   }
 }
 
