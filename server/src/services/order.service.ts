@@ -528,11 +528,19 @@ export const orderService = {
       throw new AppError('Order not found', 404);
     }
 
-    const isOwner = order.user.toString() === user._id.toString();
+    const orderUserId = (order.user as any)?._id
+      ? (order.user as any)._id.toString()
+      : order.user.toString();
+    const isOwner = orderUserId === user._id.toString();
 
-    // Customers can only cancel pending orders via this endpoint
-    if (user.role === 'customer' && targetStatus !== 'cancelled') {
-      throw new AppError('Customers can only cancel pending orders', 403);
+    // Limit customers to cancel transition only, and only for their own orders
+    if (user.role === 'customer') {
+      if (!isOwner) {
+        throw new AppError('You do not have access to this order', 403);
+      }
+      if (targetStatus !== 'cancelled') {
+        throw new AppError('Customers are only permitted to cancel orders', 403);
+      }
     }
 
     // Assert transition validity and permissions (throws 400 on illegal pair, 403 on role unauthorized)
@@ -593,8 +601,12 @@ export const orderService = {
         order.deliveredAt = new Date();
       }
 
-      // 5. If tracking number provided, record it
-      if (extra?.trackingNumber !== undefined && extra.trackingNumber !== null) {
+      // 5. If tracking number provided, record it (customers cannot set tracking)
+      if (
+        user.role !== 'customer' &&
+        extra?.trackingNumber !== undefined &&
+        extra.trackingNumber !== null
+      ) {
         order.trackingNumber = extra.trackingNumber;
       }
 

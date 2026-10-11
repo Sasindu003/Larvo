@@ -178,11 +178,20 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   }
 
   const { orderId } = req.params;
+
+  if (req.user.role === 'customer' && parsed.status !== 'cancelled') {
+    throw new AppError('Customers are only permitted to cancel orders', 403);
+  }
+
+  const extra = req.user.role === 'customer'
+    ? undefined
+    : { trackingNumber: parsed.trackingNumber };
+
   const updatedOrder = await orderService.transitionStatus(
     req.user,
     orderId,
     parsed.status,
-    { trackingNumber: parsed.trackingNumber }
+    extra
   );
 
   res.status(200).json({

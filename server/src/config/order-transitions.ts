@@ -129,11 +129,11 @@ export function canTransition(
   role?: UserRole,
   isOwner?: boolean
 ): boolean {
+  if (role === 'customer' && !isOwner) return false;
   const rule = getTransitionRule(from, to);
   if (!rule) return false;
   if (!role) return true;
   if (!rule.roles.includes(role)) return false;
-  if (role === 'customer' && rule.ownerOnly && !isOwner) return false;
   return true;
 }
 
@@ -148,6 +148,10 @@ export function assertTransition(
   role: UserRole,
   isOwner: boolean = false
 ): TransitionRule {
+  if (role === 'customer' && !isOwner) {
+    throw new AppError('You do not have access to this order', 403);
+  }
+
   const rule = getTransitionRule(from, to);
   if (!rule) {
     throw new AppError(`Cannot transition order status from '${from}' to '${to}'`, 400);
@@ -158,10 +162,6 @@ export function assertTransition(
       `Role '${role}' is not authorized to transition order from '${from}' to '${to}'`,
       403
     );
-  }
-
-  if (role === 'customer' && rule.ownerOnly && !isOwner) {
-    throw new AppError('You do not have access to this order', 403);
   }
 
   return rule;
