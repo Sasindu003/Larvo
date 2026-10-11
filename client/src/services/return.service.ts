@@ -114,6 +114,13 @@ export const returnService = {
     return res.data!;
   },
 
+  markUnderReview: async (id: string): Promise<IReturnRequest> => {
+    const res = await api.patch<any, ApiResponse<{ returnRequest: IReturnRequest }>>(
+      `/admin/returns/${id}/review`
+    );
+    return res.data!.returnRequest;
+  },
+
   processDecision: async (id: string, data: ProcessDecisionInput): Promise<IReturnRequest> => {
     const res = await api.patch<any, ApiResponse<{ returnRequest: IReturnRequest }>>(`/admin/returns/${id}/decision`, data);
     return res.data!.returnRequest;

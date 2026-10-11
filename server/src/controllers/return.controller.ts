@@ -209,6 +209,28 @@ export const processDecision = asyncHandler(async (req: Request, res: Response) 
 });
 
 /**
+ * @desc    Mark return request as under review
+ * @route   PATCH /api/admin/returns/:id/review
+ * @access  Private (staff, admin, owner)
+ */
+export const markUnderReview = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?._id) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  const returnRequest = await returnService.markUnderReview(req.params.id, {
+    userId: req.user._id.toString(),
+    role: req.user.role,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: { returnRequest },
+    message: 'Return request marked as under review',
+  });
+});
+
+/**
  * @desc    Get return pickup queue for delivery manager
  * @route   GET /api/delivery/returns
  * @access  Private (delivery_manager, admin, owner)

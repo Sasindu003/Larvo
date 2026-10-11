@@ -44,6 +44,7 @@ import {
   getAdminReturns,
   processDecision,
   processRefund,
+  markUnderReview,
 } from '../controllers/return.controller';
 import {
   getSuppliers,
@@ -414,6 +415,18 @@ router.get(
   requireAuth,
   requireRole('staff', 'admin', 'owner'),
   getAdminReturns
+);
+
+/**
+ * @desc    Mark return request as under review
+ * @route   PATCH /api/admin/returns/:id/review
+ * @access  staff, admin, owner
+ */
+router.patch(
+  '/returns/:id/review',
+  requireAuth,
+  requireRole('staff', 'admin', 'owner'),
+  markUnderReview
 );
 
 /**

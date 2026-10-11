@@ -169,6 +169,22 @@ export const AdminReturnsPage: React.FC = () => {
     fetchReturns();
   }, [fetchReturns]);
 
+  const handleOpenDetail = async (ret: IReturnRequest) => {
+    setSelectedReturn(ret);
+    setDetailModalOpen(true);
+    if (ret.status === 'requested') {
+      try {
+        const updated = await returnService.markUnderReview(ret._id);
+        setSelectedReturn((prev) => (prev?._id === updated._id ? { ...prev, ...updated } : prev));
+        setReturns((prev) =>
+          prev.map((r) => (r._id === updated._id ? { ...r, ...updated } : r))
+        );
+      } catch {
+        // Silently preserve current view if transition fails or already under review
+      }
+    }
+  };
+
   const handleOpenApprove = (ret: IReturnRequest) => {
     setActiveActionReturn(ret);
     setActionError(null);
@@ -451,10 +467,7 @@ export const AdminReturnsPage: React.FC = () => {
                     <tr
                       key={ret._id}
                       className="hover:bg-slate-50/60 transition-colors cursor-pointer group"
-                      onClick={() => {
-                        setSelectedReturn(ret);
-                        setDetailModalOpen(true);
-                      }}
+                      onClick={() => handleOpenDetail(ret)}
                     >
                       <td className="py-4 px-4 font-mono font-medium text-slate-800">
                         <span className="text-slate-400">#</span>
@@ -550,10 +563,7 @@ export const AdminReturnsPage: React.FC = () => {
                               )}
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setSelectedReturn(ret);
-                                  setDetailModalOpen(true);
-                                }}
+                                onClick={() => handleOpenDetail(ret)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
                               >
                                 <Eye className="w-3.5 h-3.5" />

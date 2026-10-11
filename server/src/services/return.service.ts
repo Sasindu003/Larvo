@@ -381,6 +381,36 @@ export class ReturnService {
   }
 
   /**
+   * Mark return request as under review by staff/admin.
+   * Idempotent: if already under_review, returns existing document.
+   */
+  async markUnderReview(
+    returnId: string,
+    requester: { userId: string; role: string }
+  ): Promise<IReturnRequest> {
+    const returnRequest = await ReturnRequest.findById(returnId).populate('order');
+    if (!returnRequest) {
+      throw new AppError('Return request not found', 404);
+    }
+
+    if (returnRequest.status === 'under_review') {
+      return returnRequest;
+    }
+
+    assertReturnTransition(returnRequest.status, 'under_review', requester.role as any);
+
+    returnRequest.status = 'under_review';
+    returnRequest.statusHistory.push({
+      status: 'under_review',
+      at: new Date(),
+      note: 'Staff started review of your return request.',
+    });
+
+    await returnRequest.save();
+    return returnRequest;
+  }
+
+  /**
    * Get return requests for delivery manager pickup queue.
    * Restricts by default to active pickups: pickup_scheduled, picked_up.
    */
