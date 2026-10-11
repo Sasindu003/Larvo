@@ -101,7 +101,8 @@ export const searchSkuForPO = asyncHandler(async (req: Request, res: Response) =
     return;
   }
   const limit = Math.min(50, Number(req.query.limit) || 20);
-  const results = await inventoryService.searchBySku(q, limit);
+  const supplierId = typeof req.query.supplier === 'string' ? req.query.supplier.trim() : undefined;
+  const results = await inventoryService.searchBySku(q, limit, supplierId);
   res.status(200).json({ success: true, data: results, message: 'SKU search results' });
 });
 

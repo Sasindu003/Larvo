@@ -168,9 +168,9 @@ export interface SkuSearchResult {
 }
 
 export const purchaseOrderService = {
-  searchSku: async (q: string): Promise<SkuSearchResult[]> => {
+  searchSku: async (q: string, supplierId?: string): Promise<SkuSearchResult[]> => {
     const res = await api.get<any, ApiResponse<SkuSearchResult[]>>('/admin/inventory/search-sku', {
-      params: { q },
+      params: { q, ...(supplierId ? { supplier: supplierId } : {}) },
     });
     return res.data || [];
   },

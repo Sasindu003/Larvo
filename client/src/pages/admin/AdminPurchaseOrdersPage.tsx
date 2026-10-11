@@ -214,7 +214,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
   }, [createModalOpen]);
 
   // Handle SKU Search with debounce
-  const handleSkuSearchChange = (query: string) => {
+  const handleSkuSearchChange = (query: string, supplierId?: string) => {
     setSkuSearchQuery(query);
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 
@@ -227,7 +227,7 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
     setSkuSearching(true);
     searchDebounceRef.current = setTimeout(async () => {
       try {
-        const results = await purchaseOrderService.searchSku(query);
+        const results = await purchaseOrderService.searchSku(query, supplierId);
         setSkuSearchResults(results);
         setShowSkuDropdown(true);
       } catch (err) {
@@ -610,7 +610,17 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                 </label>
                 <select
                   value={selectedSupplier}
-                  onChange={(e) => setSelectedSupplier(e.target.value)}
+                  onChange={(e) => {
+                    const newSupplier = e.target.value;
+                    setSelectedSupplier(newSupplier);
+                    if (createItems.length > 0) {
+                      setCreateItems([]);
+                      toast('Line items cleared — supplier changed', { icon: 'ℹ️' });
+                    }
+                    setSkuSearchQuery('');
+                    setSkuSearchResults([]);
+                    setShowSkuDropdown(false);
+                  }}
                   className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
                   required
                 >
@@ -632,10 +642,15 @@ export const AdminPurchaseOrdersPage: React.FC = () => {
                   <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Type SKU or product name (e.g. SLM, Cotton, Jeans)..."
+                    placeholder={
+                      selectedSupplier
+                        ? 'Type SKU or product name (e.g. SLM, Cotton, Jeans)...'
+                        : 'Select a supplier first to search assigned products...'
+                    }
                     value={skuSearchQuery}
-                    onChange={(e) => handleSkuSearchChange(e.target.value)}
-                    className="w-full bg-slate-800/80 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                    onChange={(e) => handleSkuSearchChange(e.target.value, selectedSupplier || undefined)}
+                    disabled={!selectedSupplier}
+                    className="w-full bg-slate-800/80 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                   {skuSearching && (
                     <RefreshCw className="w-4 h-4 text-indigo-400 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />

@@ -24,9 +24,13 @@ export interface PaginatedPurchaseOrders {
 
 export class PurchaseOrderService {
   /**
-   * Validate that every item references an existing product and a variant with the matching SKU.
+   * Validate that every item references an existing product, a variant with the matching SKU,
+   * and that the variant is assigned to the selected supplier.
    */
-  private async validateItems(items: CreatePurchaseOrderInput['items']): Promise<void> {
+  private async validateItems(
+    items: CreatePurchaseOrderInput['items'],
+    supplierId?: string
+  ): Promise<void> {
     for (const item of items) {
       if (!Types.ObjectId.isValid(item.product)) {
         throw new AppError(`Invalid product ID: ${item.product}`, 400);
@@ -43,6 +47,16 @@ export class PurchaseOrderService {
           `SKU '${item.sku}' does not exist on product '${product.name}'`,
           400
         );
+      }
+
+      if (supplierId) {
+        const assignedSupplierId = variant.supplier?.toString();
+        if (!assignedSupplierId || assignedSupplierId !== supplierId) {
+          throw new AppError(
+            `SKU '${item.sku}' (${product.name}) is not assigned to the selected supplier. Only variants assigned to this supplier can be requested.`,
+            400
+          );
+        }
       }
     }
   }
@@ -119,7 +133,7 @@ export class PurchaseOrderService {
       throw new AppError('Supplier not found', 400);
     }
 
-    await this.validateItems(input.items);
+    await this.validateItems(input.items, input.supplier);
 
     const po = await PurchaseOrder.create({
       supplier: input.supplier,
@@ -172,9 +186,12 @@ export class PurchaseOrderService {
       po.supplier = new Types.ObjectId(input.supplier);
     }
 
+    const effectiveSupplierId = po.supplier.toString();
     if (input.items !== undefined) {
-      await this.validateItems(input.items);
+      await this.validateItems(input.items, effectiveSupplierId);
       po.items = input.items as any;
+    } else if (input.supplier !== undefined) {
+      await this.validateItems(po.items as any, effectiveSupplierId);
     }
 
     if (input.estimatedDeliveryDate !== undefined) {

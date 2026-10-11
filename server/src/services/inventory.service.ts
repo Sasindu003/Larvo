@@ -344,11 +344,16 @@ export const inventoryService = {
    */
   async searchBySku(
     q: string,
-    limit: number = 20
+    limit: number = 20,
+    supplierId?: string
   ): Promise<
     { productId: string; name: string; sku: string; size: string; color: string; currentStock: number }[]
   > {
-    const result = await inventoryService.getAdminInventory({ search: q, limit });
+    const result = await inventoryService.getAdminInventory({
+      search: q,
+      limit,
+      supplier: supplierId,
+    });
     return (result.items as any[]).map((item) => ({
       productId: String(item.product._id),
       name: item.product.name as string,
