@@ -36,16 +36,31 @@ export const LoginPage: React.FC = () => {
       toast.success('Welcome back!');
 
       const redirect = searchParams.get('redirect');
-      if (redirect) {
-        navigate(redirect);
+
+      let defaultDashboard = '/';
+      if (loggedUser.role === 'supplier') {
+        defaultDashboard = '/supplier/purchase-orders';
       } else if (loggedUser.role === 'delivery_manager') {
-        navigate('/delivery/orders');
-      } else if (loggedUser.role === 'supplier') {
-        navigate('/supplier/purchase-orders');
-      } else if (['staff', 'admin', 'owner'].includes(loggedUser.role)) {
-        navigate('/admin');
+        defaultDashboard = '/delivery/orders';
+      } else if (loggedUser.role === 'owner' || loggedUser.role === 'admin') {
+        defaultDashboard = '/admin/analytics';
+      } else if (loggedUser.role === 'staff') {
+        defaultDashboard = '/admin/orders';
+      }
+
+      if (['supplier', 'delivery_manager', 'owner', 'admin', 'staff'].includes(loggedUser.role)) {
+        if (
+          redirect &&
+          ((loggedUser.role === 'supplier' && redirect.startsWith('/supplier')) ||
+            (loggedUser.role === 'delivery_manager' && redirect.startsWith('/delivery')) ||
+            (['owner', 'admin', 'staff'].includes(loggedUser.role) && redirect.startsWith('/admin')))
+        ) {
+          navigate(redirect);
+        } else {
+          navigate(defaultDashboard);
+        }
       } else {
-        navigate('/');
+        navigate(redirect || '/');
       }
     } catch (error: any) {
       toast.error(error.message || 'Login failed');

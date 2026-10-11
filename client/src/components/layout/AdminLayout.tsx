@@ -21,6 +21,8 @@ import {
   Sparkles,
   Wallet,
   MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -46,7 +48,24 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('admin_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const location = useLocation();
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('admin_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   if (!user) {
     return <Navigate to="/login?redirect=/admin" replace />;
@@ -57,8 +76,14 @@ export const AdminLayout: React.FC = () => {
     item.allowedRoles.includes(user.role as UserRole)
   );
 
-  // If at exact `/admin` or `/admin/`, redirect to the first visible item
+  // If at exact `/admin` or `/admin/`, redirect to the appropriate dashboard
   if (location.pathname === '/admin' || location.pathname === '/admin/') {
+    if (user.role === 'admin' || user.role === 'owner') {
+      return <Navigate to="/admin/analytics" replace />;
+    }
+    if (user.role === 'staff') {
+      return <Navigate to="/admin/orders" replace />;
+    }
     const firstItem = visibleNavItems[0];
     if (firstItem) {
       return <Navigate to={firstItem.href} replace />;
@@ -174,11 +199,33 @@ export const AdminLayout: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex w-64 flex-col bg-slate-900 border-r border-slate-800 flex-shrink-0">
+        <aside
+          className={`hidden lg:flex flex-col bg-slate-900 border-r border-slate-800 flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 ${
+            collapsed ? 'w-16' : 'w-64'
+          }`}
+        >
           <div className="p-3">
-            <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Management Modules
+            <div
+              className={`flex items-center ${
+                collapsed ? 'justify-center' : 'justify-between'
+              } px-2 py-1 mb-2`}
+            >
+              {!collapsed && (
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Management Modules
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
             </div>
+
             <nav className="space-y-1 mt-1">
               {visibleNavItems.map((item) => {
                 const IconComponent = ICON_MAP[item.iconName] || Layers;
@@ -186,8 +233,11 @@ export const AdminLayout: React.FC = () => {
                   <NavLink
                     key={item.href}
                     to={item.href}
+                    title={collapsed ? undefined : item.title}
                     className={({ isActive }) =>
-                      `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 group ${
+                      `relative group flex items-center ${
+                        collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
+                      } rounded-lg text-xs font-semibold transition-all duration-150 ${
                         isActive
                           ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
                           : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
@@ -196,15 +246,25 @@ export const AdminLayout: React.FC = () => {
                   >
                     {({ isActive }) => (
                       <>
-                        <div className="flex items-center gap-2.5">
+                        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
                           <IconComponent
-                            className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+                            className={`${collapsed ? 'w-5 h-5' : 'w-4 h-4'} transition-transform group-hover:scale-110 ${
                               isActive ? 'text-slate-950' : 'text-slate-400 group-hover:text-amber-400'
                             }`}
                           />
-                          <span>{item.title}</span>
+                          {!collapsed && <span>{item.title}</span>}
                         </div>
-                        {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-950" />}
+                        {!collapsed && isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-950" />}
+
+                        {/* Collapsed Hover Flyout Popup with Icon and Label */}
+                        {collapsed && (
+                          <div className="absolute left-full ml-3 hidden group-hover:flex items-center gap-2.5 px-3 py-2 bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl text-xs font-semibold text-white whitespace-nowrap z-50 pointer-events-none animate-in fade-in slide-in-from-left-1 duration-150">
+                            <IconComponent
+                              className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-slate-400'}`}
+                            />
+                            <span>{item.title}</span>
+                          </div>
+                        )}
                       </>
                     )}
                   </NavLink>
@@ -213,14 +273,27 @@ export const AdminLayout: React.FC = () => {
             </nav>
           </div>
 
-          <div className="mt-auto p-4 border-t border-slate-800 bg-slate-900/50 text-[11px] text-slate-400">
-            <div className="flex items-center gap-2 font-medium text-slate-300 mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>RBAC Enforced</span>
-            </div>
-            <p className="text-[10px] text-slate-400 leading-relaxed">
-              Showing {visibleNavItems.length} modules available for <span className="text-amber-300 font-semibold">{user.role}</span>.
-            </p>
+          <div className="mt-auto p-3 border-t border-slate-800 bg-slate-900/50 text-[11px] text-slate-400">
+            {collapsed ? (
+              <div className="relative group flex justify-center py-1">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <div className="absolute left-full ml-3 hidden group-hover:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl text-xs text-white whitespace-nowrap z-50 pointer-events-none">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>RBAC Enforced ({user.role})</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 font-medium text-slate-300 mb-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>RBAC Enforced</span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Showing {visibleNavItems.length} modules available for{' '}
+                  <span className="text-amber-300 font-semibold">{user.role}</span>.
+                </p>
+              </>
+            )}
           </div>
         </aside>
 

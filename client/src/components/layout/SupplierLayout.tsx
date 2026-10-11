@@ -9,6 +9,9 @@ import {
   Shield,
   Home,
   ClipboardList,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -16,7 +19,24 @@ import { useAuth } from '../../context/AuthContext';
 export const SupplierLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('supplier_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const location = useLocation();
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('supplier_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   if (!user) {
     return <Navigate to="/login?redirect=/supplier" replace />;
@@ -124,50 +144,100 @@ export const SupplierLayout: React.FC = () => {
       {/* Main Layout Container */}
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 border-r border-slate-800 bg-slate-900/60 p-4 shrink-0">
-          <div className="mb-3 px-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Supplier Operations
-            </span>
+        <aside
+          className={`hidden md:flex flex-col bg-slate-900 border-r border-slate-800 flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 ${
+            collapsed ? 'w-16' : 'w-64'
+          }`}
+        >
+          <div className="p-3">
+            <div
+              className={`flex items-center ${
+                collapsed ? 'justify-center' : 'justify-between'
+              } px-2 py-1 mb-2`}
+            >
+              {!collapsed && (
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Supplier Operations
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
+            </div>
+
+            <nav className="space-y-1 mt-1">
+              {navLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.href}
+                    to={item.href}
+                    title={collapsed ? undefined : item.label}
+                    className={({ isActive }) =>
+                      `relative group flex items-center ${
+                        collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
+                      } rounded-lg text-xs font-semibold transition-all duration-150 ${
+                        isActive
+                          ? 'bg-indigo-600 text-white shadow-md font-bold'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
+                          <Icon
+                            className={`${collapsed ? 'w-5 h-5' : 'w-4 h-4'} transition-transform group-hover:scale-110 ${
+                              isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'
+                            }`}
+                          />
+                          {!collapsed && <span>{item.label}</span>}
+                        </div>
+                        {!collapsed && isActive && <ChevronRight className="w-3.5 h-3.5 text-white" />}
+
+                        {/* Collapsed Hover Flyout Popup with Icon and Label */}
+                        {collapsed && (
+                          <div className="absolute left-full ml-3 hidden group-hover:flex items-center gap-2.5 px-3 py-2 bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl text-xs font-semibold text-white whitespace-nowrap z-50 pointer-events-none animate-in fade-in slide-in-from-left-1 duration-150">
+                            <Icon
+                              className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`}
+                            />
+                            <span>{item.label}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
           </div>
 
-          <nav className="space-y-1">
-            {navLinks.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  className={({ isActive }) =>
-                    `flex items-start gap-3 p-3 rounded-xl text-xs transition-all ${
-                      isActive
-                        ? 'bg-indigo-600/15 text-indigo-300 border border-indigo-500/30 font-semibold shadow-xs'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`
-                  }
-                >
-                  <Icon className="w-4 h-4 shrink-0 mt-0.5" />
-                  <div className="min-w-0">
-                    <p className="leading-none text-xs">{item.label}</p>
-                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">
-                      {item.description}
-                    </p>
-                  </div>
-                </NavLink>
-              );
-            })}
-          </nav>
-
-          <div className="mt-auto pt-4 border-t border-slate-800">
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-[11px] font-bold text-slate-300">Verified Vendor</span>
+          <div className="mt-auto p-3 border-t border-slate-800 bg-slate-900/50 text-[11px] text-slate-400">
+            {collapsed ? (
+              <div className="relative group flex justify-center py-1">
+                <Shield className="w-4 h-4 text-indigo-400" />
+                <div className="absolute left-full ml-3 hidden group-hover:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl text-xs text-white whitespace-nowrap z-50 pointer-events-none">
+                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Verified Vendor</span>
+                </div>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                Service access granted on par with store staff for purchase fulfillment.
-              </p>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 font-medium text-slate-300 mb-1">
+                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="font-bold">Verified Vendor</span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Service access granted on par with store staff for purchase fulfillment.
+                </p>
+              </>
+            )}
           </div>
         </aside>
 
