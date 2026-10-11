@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId, useRef, useCallback, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   Package,
@@ -24,10 +24,10 @@ import {
   X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { orderService, Order, OrderStatus } from '../services/order.service';
+import { orderService, Order, OrderStatus as ServiceOrderStatus } from '../services/order.service';
 import { returnService, IReturnRequest, ReturnStatus } from '../services/return.service';
 
-const LIFECYCLE_STEPS: { status: OrderStatus; label: string; description: string }[] = [
+const LIFECYCLE_STEPS: { status: ServiceOrderStatus; label: string; description: string }[] = [
   { status: 'pending_payment', label: 'Order Placed', description: 'Awaiting payment confirmation' },
   { status: 'payment_review', label: 'Payment Review', description: 'Manual slip under review' },
   { status: 'confirmed', label: 'Confirmed', description: 'Payment verified & approved' },
@@ -40,7 +40,7 @@ const LIFECYCLE_STEPS: { status: OrderStatus; label: string; description: string
 ];
 
 const STATUS_CONFIG: Record<
-  OrderStatus,
+  ServiceOrderStatus,
   { label: string; bg: string; text: string; border: string; icon: React.ReactNode }
 > = {
   pending_payment: {
@@ -177,6 +177,1170 @@ const RETURN_STATUS_CONFIG: Record<
   },
 };
 
+/**
+ * OrderStatus enum representing all lifecycle states of an order in the system.
+ */
+export enum OrderStatus {
+  ORDER_PLACED = 'ORDER_PLACED',
+  PAYMENT_REVIEW = 'PAYMENT_REVIEW',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  READY_FOR_DISPATCH = 'READY_FOR_DISPATCH',
+  PICKED_UP = 'PICKED_UP',
+  IN_TRANSIT = 'IN_TRANSIT',
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REJECTED = 'REJECTED',
+  RETURNED = 'RETURNED',
+}
+
+export interface StatusHistoryEntry {
+  status: OrderStatus;
+  at: string;
+  note?: string;
+  location?: string;
+}
+
+export interface OrderItemDTO {
+  productName: string;
+  sku: string;
+  size: string;
+  color: string;
+  qty: number;
+  unitPrice: number;
+  imageUrl?: string;
+}
+
+export interface ShippingAddressDTO {
+  label: string;
+  line1: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface PaymentDetailsDTO {
+  method: string;
+  status: string;
+  amount: number;
+}
+
+export interface DeliveryDetailsDTO {
+  courier?: string;
+  waybill?: string;
+  estimatedFrom?: string;
+  estimatedTo?: string;
+}
+
+export interface OrderDTO {
+  id: string;
+  status: OrderStatus;
+  statusHistory: StatusHistoryEntry[];
+  createdAt: string;
+  items: OrderItemDTO[];
+  subtotal: number;
+  shippingFee: number;
+  discount?: number;
+  total: number;
+  shippingAddress: ShippingAddressDTO;
+  payment: PaymentDetailsDTO;
+  delivery?: DeliveryDetailsDTO;
+}
+
+export interface TimelineStageDefinition {
+  status: OrderStatus;
+  title: string;
+  defaultDescription: string;
+  defaultLocation: string;
+}
+
+export const TIMELINE_STAGES: TimelineStageDefinition[] = [
+  {
+    status: OrderStatus.ORDER_PLACED,
+    title: 'Order Placed',
+    defaultDescription: 'Order received and encrypted transaction initiated in the LARVO ordering system.',
+    defaultLocation: 'Web Checkout, Colombo',
+  },
+  {
+    status: OrderStatus.PAYMENT_REVIEW,
+    title: 'Payment Review',
+    defaultDescription: 'Transaction cleared 3D-Secure fraud evaluation and payment verified successfully.',
+    defaultLocation: 'Payment Gateway Central',
+  },
+  {
+    status: OrderStatus.CONFIRMED,
+    title: 'Confirmed',
+    defaultDescription: 'Merchant accepted your order. Item allocation ticket generated for warehouse picking.',
+    defaultLocation: 'Colombo Central Fulfillment Depot',
+  },
+  {
+    status: OrderStatus.PROCESSING,
+    title: 'Processing',
+    defaultDescription: 'Garment retrieved from climate-controlled inventory, quality inspected and steamed.',
+    defaultLocation: 'Depot Warehouse Bay 4',
+  },
+  {
+    status: OrderStatus.READY_FOR_DISPATCH,
+    title: 'Ready for Dispatch',
+    defaultDescription: 'Dress packaged in LARVO signature garment box with tamper-evident seal and express waybill.',
+    defaultLocation: 'Packaging Terminal 2',
+  },
+  {
+    status: OrderStatus.PICKED_UP,
+    title: 'Picked Up',
+    defaultDescription: 'Express Courier logistics driver scanned parcel barcode and boarded outbound courier vehicle.',
+    defaultLocation: 'Dock 3, Colombo Hub',
+  },
+  {
+    status: OrderStatus.IN_TRANSIT,
+    title: 'In Transit',
+    defaultDescription: 'Shipment moving through regional distribution center for sorting.',
+    defaultLocation: 'Regional Sorting Facility (Western)',
+  },
+  {
+    status: OrderStatus.OUT_FOR_DELIVERY,
+    title: 'Out for Delivery',
+    defaultDescription: 'Courier driver is en route to deliver to recipient address.',
+    defaultLocation: 'Local Courier Route',
+  },
+  {
+    status: OrderStatus.DELIVERED,
+    title: 'Delivered',
+    defaultDescription: 'Package delivered safely to destination address and handed over.',
+    defaultLocation: 'Destination Address',
+  },
+];
+
+export const TERMINAL_STATUSES = new Set<OrderStatus>([
+  OrderStatus.CANCELLED,
+  OrderStatus.REJECTED,
+  OrderStatus.RETURNED,
+]);
+
+export const formatLKR = (amount: number): string => {
+  return new Intl.NumberFormat('en-LK', {
+    style: 'currency',
+    currency: 'LKR',
+    currencyDisplay: 'symbol',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+    .format(amount)
+    .replace('LKR', 'Rs.')
+    .trim();
+};
+
+export const formatDateTime = (isoString?: string): string => {
+  if (!isoString) return 'Pending';
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return 'Pending';
+    return new Intl.DateTimeFormat('en-LK', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date);
+  } catch {
+    return 'Pending';
+  }
+};
+
+export const formatDateRange = (from?: string, to?: string): string => {
+  if (!from && !to) return 'Not available';
+  try {
+    const fDate = from ? new Date(from) : null;
+    const tDate = to ? new Date(to) : null;
+    const formatter = new Intl.DateTimeFormat('en-LK', {
+      month: 'short',
+      day: 'numeric',
+    });
+    if (fDate && tDate) {
+      return `${formatter.format(fDate)} – ${formatter.format(tDate)}`;
+    }
+    return formatter.format((fDate || tDate)!);
+  } catch {
+    return 'Not available';
+  }
+};
+
+export const deriveInvoiceNumber = (orderId: string, createdAt: string): string => {
+  const shortId = orderId.slice(-8).toUpperCase();
+  const year = new Date(createdAt).getFullYear() || 2026;
+  return `INV-${shortId}-${year}`;
+};
+
+export interface DerivedStage {
+  id: number;
+  status: OrderStatus;
+  title: string;
+  description: string;
+  location: string;
+  timestamp: string;
+  isCompleted: boolean;
+  isActive: boolean;
+  isPending: boolean;
+}
+
+export interface DerivedTimeline {
+  isTerminal: boolean;
+  terminalStatus?: OrderStatus;
+  terminalNote?: string;
+  terminalAt?: string;
+  stages: DerivedStage[];
+  activeIndex: number;
+  percent: number;
+  currentTitle: string;
+  currentDescription: string;
+  lastUpdatedAt?: string;
+}
+
+export const deriveTimeline = (order: OrderDTO): DerivedTimeline => {
+  const isTerminal = TERMINAL_STATUSES.has(order.status);
+
+  if (isTerminal) {
+    const terminalEntry = [...order.statusHistory]
+      .reverse()
+      .find((h) => h.status === order.status);
+
+    return {
+      isTerminal: true,
+      terminalStatus: order.status,
+      terminalNote: terminalEntry?.note || `This order has been marked as ${order.status.toLowerCase().replace(/_/g, ' ')}.`,
+      terminalAt: terminalEntry?.at || order.createdAt,
+      stages: [],
+      activeIndex: -1,
+      percent: 0,
+      currentTitle: order.status.replace(/_/g, ' '),
+      currentDescription: terminalEntry?.note || 'No further fulfillment steps will be processed.',
+      lastUpdatedAt: terminalEntry?.at || order.createdAt,
+    };
+  }
+
+  // Find stage index
+  let activeIndex = TIMELINE_STAGES.findIndex((s) => s.status === order.status);
+  if (activeIndex === -1) {
+    activeIndex = 0;
+  }
+
+  // Map history map for O(1) lookup
+  const historyMap = new Map<OrderStatus, StatusHistoryEntry>();
+  order.statusHistory.forEach((item) => {
+    historyMap.set(item.status, item);
+  });
+
+  const stages: DerivedStage[] = TIMELINE_STAGES.map((def, idx) => {
+    const isCompleted = idx < activeIndex;
+    const isActive = idx === activeIndex;
+    const isPending = idx > activeIndex;
+
+    const historyEntry = historyMap.get(def.status);
+
+    return {
+      id: idx + 1,
+      status: def.status,
+      title: def.title,
+      description: historyEntry?.note || def.defaultDescription,
+      location: historyEntry?.location || def.defaultLocation,
+      timestamp: historyEntry?.at ? formatDateTime(historyEntry.at) : 'Pending',
+      isCompleted,
+      isActive,
+      isPending,
+    };
+  });
+
+  const percent = Math.min(100, Math.round(((activeIndex + 1) / TIMELINE_STAGES.length) * 100));
+  const activeStage = stages[activeIndex] || stages[0];
+  const lastHistoryEntry = order.statusHistory[order.statusHistory.length - 1];
+
+  return {
+    isTerminal: false,
+    stages,
+    activeIndex,
+    percent,
+    currentTitle: activeStage.title,
+    currentDescription: activeStage.description,
+    lastUpdatedAt: lastHistoryEntry?.at,
+  };
+};
+
+export const OrderSummaryBar: React.FC<{ order: OrderDTO; onOpenInvoice: () => void }> = ({
+  order,
+  onOpenInvoice,
+}) => {
+  const shortId = order.id.slice(-8).toUpperCase();
+  const isTerminal = TERMINAL_STATUSES.has(order.status);
+  const isConfirmed = order.status === OrderStatus.CONFIRMED || order.status === OrderStatus.DELIVERED;
+
+  let badgeColor = 'bg-[#FAF7F2] text-[#141414] border-[#DDD6CA]';
+  if (isConfirmed) {
+    badgeColor = 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]';
+  } else if (isTerminal) {
+    badgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
+  } else {
+    badgeColor = 'bg-neutral-900 text-white border-neutral-800';
+  }
+
+  const statusLabel = order.status.replace(/_/g, ' ');
+
+  return (
+    <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all">
+      <div className="space-y-1.5">
+        <div className="flex items-center flex-wrap gap-3">
+          <h1 className="text-2xl sm:text-3xl font-serif text-[#141414] tracking-tight">
+            Order <span className="font-normal text-[#1F1E1B]">#{shortId}</span>
+          </h1>
+
+          <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badgeColor}`}
+          >
+            {isConfirmed && (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {isTerminal && (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span className="capitalize">{statusLabel.toLowerCase()}</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-[#7A756D]">
+          <svg className="w-3.5 h-3.5 text-[#9E988F]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>Placed on {formatDateTime(order.createdAt)}</span>
+        </div>
+      </div>
+
+      <div className="flex items-start md:items-end flex-col gap-2">
+        <div className="text-left md:text-right">
+          <span className="text-[11px] font-semibold text-[#8C867D] uppercase tracking-wider block">
+            Total Amount
+          </span>
+          <div className="text-2xl sm:text-3xl font-serif font-bold text-[#141414] leading-tight">
+            {formatLKR(order.total)}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpenInvoice}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#FAF7F2] hover:bg-[#F2ECE1] text-[#22211F] border border-[#E2DBD0] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer shadow-xs"
+        >
+          <svg className="w-3.5 h-3.5 text-[#6B655D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>View Invoice</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export const MilestoneCard: React.FC<{
+  order: OrderDTO;
+  timeline: DerivedTimeline;
+  copiedTracking?: boolean;
+  onCopyTracking?: (tracking: string) => void;
+}> = ({ order, timeline, copiedTracking, onCopyTracking }) => {
+  const isTerminal = timeline.isTerminal;
+
+  if (isTerminal) {
+    return (
+      <div className="bg-gradient-to-br from-[#27272A] to-[#3F3F46] text-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_-4px_rgba(20,20,20,0.05)] border border-neutral-700">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className="text-[11px] uppercase tracking-wider font-semibold text-rose-300 bg-rose-950/70 border border-rose-500/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+            Terminal State
+          </span>
+          <span className="text-xs font-mono text-neutral-300">
+            {formatDateTime(timeline.terminalAt)}
+          </span>
+        </div>
+        <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+          {timeline.currentTitle}
+        </h3>
+        <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed mt-1">
+          {timeline.terminalNote}
+        </p>
+      </div>
+    );
+  }
+
+  const destinationSummary = `${order.shippingAddress.line1}, ${order.shippingAddress.city}`;
+  const totalStages = TIMELINE_STAGES.length;
+  const currentStepNum = timeline.activeIndex + 1;
+  const hasCourierDetails = Boolean(order.delivery?.courier || order.delivery?.waybill);
+
+  return (
+    <div className="bg-gradient-to-br from-[#1C1B19] to-[#2C2925] text-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_-4px_rgba(20,20,20,0.05)] relative overflow-hidden">
+      {/* Soft emerald glow background */}
+      <div
+        className="absolute -right-10 -bottom-10 w-44 h-44 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none"
+        aria-hidden="true"
+      />
+
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <span className="text-[11px] uppercase tracking-wider font-semibold text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-ping" aria-hidden="true" />
+          Active Milestone
+        </span>
+        <span className="text-xs font-mono text-neutral-300">
+          {timeline.percent}% Completed ({currentStepNum}/{totalStages})
+        </span>
+      </div>
+
+      <div className="space-y-1">
+        <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+          {timeline.currentTitle}
+        </h3>
+        <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+          {timeline.currentDescription}
+        </p>
+      </div>
+
+      {/* 2-col Estimated Arrival / Destination grid */}
+      <div className="mt-6 pt-5 border-t border-neutral-700/60 grid grid-cols-2 gap-4">
+        <div>
+          <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block">
+            Estimated Arrival
+          </span>
+          <span className="text-xs sm:text-sm font-semibold text-white mt-0.5 block">
+            {formatDateRange(order.delivery?.estimatedFrom, order.delivery?.estimatedTo)}
+          </span>
+        </div>
+        <div>
+          <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block">
+            Destination
+          </span>
+          <span className="text-xs sm:text-sm font-semibold text-white mt-0.5 block truncate" title={destinationSummary}>
+            {destinationSummary}
+          </span>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mt-5" aria-label={`Progress: ${timeline.percent}%`} role="progressbar" aria-valuenow={timeline.percent} aria-valuemin={0} aria-valuemax={100}>
+        <div className="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
+          <div
+            className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+            style={{ width: `${timeline.percent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Courier & Waybill footer row */}
+      {hasCourierDetails && (
+        <div className="mt-4 pt-3 border-t border-neutral-800/80 flex items-center justify-between text-[11px] text-neutral-400">
+          <span className="inline-flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+            </svg>
+            {order.delivery?.courier || 'Designated Courier'}
+          </span>
+          {order.delivery?.waybill && (
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-neutral-300">
+                Waybill #{order.delivery.waybill}
+              </span>
+              {onCopyTracking && (
+                <button
+                  type="button"
+                  onClick={() => onCopyTracking(order.delivery!.waybill!)}
+                  className="px-2 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[10px] text-neutral-300 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Copy Waybill / Tracking number"
+                >
+                  {copiedTracking ? 'Copied' : 'Copy'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const OrderItemsCard: React.FC<{ items: OrderItemDTO[] }> = ({ items }) => {
+  const [imageErrorMap, setImageErrorMap] = useState<Record<string, boolean>>({});
+
+  const handleImageError = (sku: string) => {
+    setImageErrorMap((prev) => ({ ...prev, [sku]: true }));
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-6">
+      <div className="flex items-center gap-2 pb-4 border-b border-[#F0EBE2]">
+        <svg className="w-4 h-4 text-[#6B655D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <h2 className="text-sm font-bold text-[#141414]">
+          Order Items ({items.length})
+        </h2>
+      </div>
+
+      <div className="divide-y divide-[#F0EBE2]">
+        {items.map((item, idx) => {
+          const itemKey = `${item.sku}-${idx}`;
+          const hasError = !item.imageUrl || imageErrorMap[itemKey];
+
+          return (
+            <div key={itemKey} className="py-4 first:pt-0 last:pb-0 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-20 h-24 rounded-2xl bg-[#F6F2EB] border border-[#EAE4D9] overflow-hidden shrink-0 flex items-center justify-center relative">
+                  {!hasError && item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.productName}
+                      className="w-full h-full object-cover object-top"
+                      onError={() => handleImageError(itemKey)}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-2 text-center text-[#8C867D]">
+                      <svg className="w-6 h-6 stroke-[#8C867D]" fill="none" viewBox="0 0 24 24" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                      </svg>
+                      <span className="text-[9px] font-mono mt-1 uppercase">LARVO</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-bold text-[#141414] leading-snug">
+                    {item.productName}
+                  </h3>
+                  <p className="text-[11px] font-mono text-[#8C867D]">
+                    SKU: {item.sku}
+                  </p>
+
+                  <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                    <span className="text-[11px] font-medium bg-[#FAF7F2] text-[#47433E] border border-[#EAE4D9] px-2.5 py-0.5 rounded-md">
+                      Size: {item.size}
+                    </span>
+                    <span className="text-[11px] font-medium bg-[#FAF7F2] text-[#47433E] border border-[#EAE4D9] px-2.5 py-0.5 rounded-md">
+                      Color: {item.color}
+                    </span>
+                    <span className="text-[11px] font-medium bg-[#FAF7F2] text-[#47433E] border border-[#EAE4D9] px-2.5 py-0.5 rounded-md">
+                      Qty: {item.qty}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <span className="text-base font-bold font-serif text-[#141414] block">
+                  {formatLKR(item.unitPrice * item.qty)}
+                </span>
+                <span className="text-[11px] text-[#8C867D] block">
+                  {formatLKR(item.unitPrice)} each
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#DCFCE7] flex items-center gap-3">
+        <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p className="text-xs text-[#166534] font-medium">
+          Item verified in warehouse inventory. Securely packaged in protective garment wrap.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export const ShippingCard: React.FC<{ address: ShippingAddressDTO }> = ({ address }) => {
+  return (
+    <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-3 h-full">
+      <div className="flex items-center gap-2 text-sm font-bold text-[#141414]">
+        <svg className="w-4 h-4 text-[#6B655D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>Shipping Destination</span>
+      </div>
+
+      <div className="pt-1">
+        <span className="inline-block text-[11px] font-semibold bg-[#FAF7F2] text-[#47433E] border border-[#EAE4D9] px-2.5 py-0.5 rounded-full mb-2">
+          {address.label}
+        </span>
+
+        <div className="text-xs text-[#47433E] leading-relaxed space-y-0.5">
+          <p className="font-bold text-[#141414]">{address.line1}</p>
+          <p>{address.city}</p>
+          <p>{address.province}</p>
+          <p>
+            {address.postalCode}, {address.country}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const CostBreakdownCard: React.FC<{
+  subtotal: number;
+  shippingFee: number;
+  discount?: number;
+  total: number;
+}> = ({ subtotal, shippingFee, discount, total }) => {
+  const hasDiscount = typeof discount === 'number' && discount > 0;
+
+  return (
+    <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-3.5 h-full">
+      <h2 className="text-sm font-bold text-[#141414]">Cost Breakdown</h2>
+
+      <div className="space-y-2 text-xs text-[#524D46]">
+        <div className="flex items-center justify-between">
+          <span>Subtotal</span>
+          <span className="font-medium text-[#141414]">{formatLKR(subtotal)}</span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span>Shipping Fee</span>
+          <span className="font-medium text-[#141414]">{formatLKR(shippingFee)}</span>
+        </div>
+
+        {hasDiscount && (
+          <div className="flex items-center justify-between text-emerald-700">
+            <span>Special Discount</span>
+            <span className="font-medium">-{formatLKR(discount!)}</span>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-[#F0EBE2] flex items-center justify-between text-sm font-bold text-[#141414]">
+          <span>Total</span>
+          <span className="font-serif text-base text-[#141414]">{formatLKR(total)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const PaymentCard: React.FC<{ payment: PaymentDetailsDTO }> = ({ payment }) => {
+  const isApproved =
+    payment.status.toLowerCase() === 'approved' ||
+    payment.status.toLowerCase() === 'paid' ||
+    payment.status.toLowerCase() === 'verified';
+
+  return (
+    <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-3 h-full">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold text-[#141414]">Payment Details</h2>
+        <span
+          className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+            isApproved
+              ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]'
+              : 'bg-neutral-100 text-neutral-700 border-neutral-300'
+          }`}
+        >
+          {payment.status}
+        </span>
+      </div>
+
+      <div className="space-y-2 text-xs text-[#524D46] pt-1">
+        <div className="flex items-center justify-between">
+          <span>Method</span>
+          <span className="font-semibold text-[#141414] capitalize">{payment.method}</span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span>Amount</span>
+          <span className="font-semibold text-[#141414]">{formatLKR(payment.amount)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const FulfillmentTimeline: React.FC<{ timeline: DerivedTimeline }> = ({ timeline }) => {
+  if (timeline.isTerminal) {
+    return (
+      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8C867D]">
+          FULFILLMENT & DELIVERY TIMELINE
+        </h2>
+        <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-600 leading-relaxed">
+          <p className="font-bold text-neutral-800">
+            Order Status: {timeline.currentTitle}
+          </p>
+          <p className="mt-1">
+            Fulfillment timeline is inactive because this order reached a terminal state.
+          </p>
+          {timeline.lastUpdatedAt && (
+            <p className="mt-2 font-mono text-[11px] text-neutral-400">
+              Recorded at: {formatDateTime(timeline.lastUpdatedAt)}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const stages = timeline.stages;
+
+  return (
+    <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_20px_-2px_rgba(20,20,20,0.04)] border border-[#EFEAE2] space-y-6">
+      <div className="space-y-1 pb-4 border-b border-[#F0EBE2]">
+        <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8C867D]">
+          FULFILLMENT & DELIVERY TIMELINE
+        </h2>
+        <p className="text-xs text-[#7A756D]">
+          Live status recorded by LARVO Express Logistics
+        </p>
+      </div>
+
+      <ol
+        className="relative space-y-6 pt-1"
+        aria-label="Fulfillment and delivery timeline"
+      >
+        {stages.map((stage, idx) => {
+          const isLast = idx === stages.length - 1;
+          const isDone = stage.isCompleted;
+          const isActive = stage.isActive;
+          const connectorColor = isDone ? 'bg-[#059669]' : 'bg-[#EAE4D9]';
+
+          return (
+            <li
+              key={stage.id}
+              className="relative flex items-start gap-4"
+              aria-current={isActive ? 'step' : undefined}
+            >
+              {!isLast && (
+                <div
+                  className={`absolute top-6 bottom-[-24px] left-[17px] w-[2px] z-0 transition-colors duration-300 ${connectorColor}`}
+                  aria-hidden="true"
+                />
+              )}
+
+              <div className="relative z-10 shrink-0">
+                {isDone ? (
+                  <div
+                    className="w-9 h-9 rounded-full bg-[#059669] text-white flex items-center justify-center shadow-xs"
+                    aria-label={`Completed: Step ${stage.id}, ${stage.title}`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                ) : isActive ? (
+                  <div
+                    className="w-9 h-9 rounded-full bg-[#141414] text-white flex items-center justify-center ring-4 ring-emerald-200/80 shadow-md scale-105"
+                    aria-label={`Current Step: ${stage.id}, ${stage.title}`}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full bg-[#34D399] motion-safe:animate-pulse"
+                      aria-hidden="true"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="w-9 h-9 rounded-full bg-[#FAF7F2] text-[#8C867D] border border-[#DDD6CA] flex items-center justify-center font-mono text-[11px] font-semibold"
+                    aria-label={`Pending Step: ${stage.id}, ${stage.title}`}
+                  >
+                    {stage.id}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 pb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <div className="flex items-center gap-2">
+                    <h3
+                      className={`text-sm font-bold ${
+                        isActive
+                          ? 'text-[#059669] text-base font-serif'
+                          : isDone
+                          ? 'text-[#141414]'
+                          : 'text-[#8C867D]'
+                      }`}
+                    >
+                      {stage.title}
+                    </h3>
+                    {isActive && (
+                      <span className="text-[10px] uppercase font-bold tracking-wider bg-[#ECFDF5] text-[#059669] px-2 py-0.5 rounded-full border border-[#A7F3D0]">
+                        Current
+                      </span>
+                    )}
+                  </div>
+
+                  <span
+                    className={`text-[11px] font-mono ${
+                      isActive ? 'text-[#059669] font-semibold' : 'text-[#8C867D]'
+                    }`}
+                  >
+                    {stage.timestamp}
+                  </span>
+                </div>
+
+                <p
+                  className={`text-xs ${
+                    isActive ? 'text-[#3D3A35] font-medium' : 'text-[#7A756D]'
+                  } mt-1 leading-relaxed`}
+                >
+                  {stage.description}
+                </p>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="inline-flex items-center text-[10px] font-medium text-[#6B655D] bg-[#FAF7F2] border border-[#EAE4D9] px-2.5 py-0.5 rounded-md">
+                    <svg className="w-3 h-3 mr-1 text-[#8C867D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                    {stage.location}
+                  </span>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+};
+
+export const InvoiceModal: React.FC<{ isOpen: boolean; onClose: () => void; order: OrderDTO }> = ({
+  isOpen,
+  onClose,
+  order,
+}) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const invoiceNumber = deriveInvoiceNumber(order.id, order.createdAt);
+  const hasDiscount = typeof order.discount === 'number' && order.discount > 0;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs print:p-0 print:bg-transparent"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={modalRef}
+        className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#EAE4D9] space-y-5 print:shadow-none print:border-none print:p-0 print:max-w-none"
+      >
+        <div className="flex items-center justify-between pb-4 border-b border-[#F0EBE2] print:border-black">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs">
+              L
+            </div>
+            <h2 id={titleId} className="font-serif font-bold text-base tracking-widest text-[#141414]">
+              LARVO INVOICE
+            </h2>
+          </div>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-[#FAF7F2] hover:bg-neutral-200 flex items-center justify-center text-slate-600 transition-colors print:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer"
+            aria-label="Close invoice dialog"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="space-y-4 text-xs">
+          <div className="flex justify-between">
+            <div>
+              <span className="text-[#8C867D] block">Invoice No:</span>
+              <span className="font-mono font-bold text-[#141414]">{invoiceNumber}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[#8C867D] block">Issue Date:</span>
+              <span className="font-bold text-[#141414]">{formatDateTime(order.createdAt)}</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#EAE4D9] space-y-1 print:bg-white print:border-black">
+            <div className="font-bold text-[#141414]">Billed To:</div>
+            <div>{order.shippingAddress.line1}</div>
+            <div>
+              {order.shippingAddress.city}, {order.shippingAddress.province}{' '}
+              {order.shippingAddress.postalCode}
+            </div>
+            <div>{order.shippingAddress.country}</div>
+          </div>
+
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#EAE4D9] text-[#8C867D] print:border-black">
+                <th className="py-2 font-semibold">Item</th>
+                <th className="py-2 text-center font-semibold">Qty</th>
+                <th className="py-2 text-right font-semibold">Price</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F0EBE2] print:divide-neutral-300">
+              {order.items.map((item, i) => (
+                <tr key={`${item.sku}-${i}`}>
+                  <td className="py-2 font-medium text-[#141414]">
+                    {item.productName} ({item.color}, {item.size})
+                  </td>
+                  <td className="py-2 text-center text-[#524D46]">{item.qty}</td>
+                  <td className="py-2 text-right text-[#141414]">
+                    {formatLKR(item.unitPrice * item.qty)}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td className="py-2 text-[#7A756D]">Standard Express Shipping</td>
+                <td className="py-2 text-center text-[#524D46]">1</td>
+                <td className="py-2 text-right text-[#141414]">
+                  {formatLKR(order.shippingFee)}
+                </td>
+              </tr>
+              {hasDiscount && (
+                <tr className="text-emerald-700">
+                  <td className="py-2">Discount Applied</td>
+                  <td className="py-2 text-center">1</td>
+                  <td className="py-2 text-right">-{formatLKR(order.discount!)}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="pt-2 border-t border-[#EAE4D9] flex justify-between font-bold text-sm text-[#141414] print:border-black">
+            <span>Total Paid ({order.payment.method})</span>
+            <span className="font-serif">{formatLKR(order.total)}</span>
+          </div>
+        </div>
+
+        <div className="pt-2 flex gap-2.5 print:hidden">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="flex-1 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer"
+          >
+            Print / Save as PDF
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl bg-[#FAF7F2] hover:bg-neutral-100 text-xs font-semibold text-[#141414] border border-[#EAE4D9] focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const OrderDetailSkeleton: React.FC = () => {
+  return (
+    <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Loading order details">
+      <div className="bg-white rounded-3xl p-7 border border-[#EFEAE2] h-28 flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="w-48 h-7 bg-neutral-200 rounded-md" />
+          <div className="w-36 h-4 bg-neutral-100 rounded-md" />
+        </div>
+        <div className="w-32 h-10 bg-neutral-200 rounded-xl" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-7 2xl:col-span-8 space-y-6">
+          <div className="h-64 bg-neutral-200 rounded-3xl" />
+          <div className="h-56 bg-neutral-200 rounded-3xl" />
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="h-44 bg-neutral-200 rounded-3xl" />
+            <div className="h-44 bg-neutral-200 rounded-3xl" />
+            <div className="h-44 bg-neutral-200 rounded-3xl" />
+          </div>
+        </div>
+        <div className="lg:col-span-5 2xl:col-span-4 h-96 bg-neutral-200 rounded-3xl" />
+      </div>
+    </div>
+  );
+};
+
+export const OrderNotFoundState: React.FC<{ onRetry?: () => void }> = ({ onRetry }) => {
+  return (
+    <div className="bg-white rounded-3xl p-12 text-center max-w-xl mx-auto border border-[#EFEAE2] shadow-sm space-y-4 my-12">
+      <div className="w-12 h-12 rounded-full bg-neutral-100 text-[#141414] flex items-center justify-center mx-auto">
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-serif font-bold text-[#141414]">Order Not Found</h2>
+      <p className="text-xs text-[#7A756D]">
+        We could not locate the requested order ID in your account history. It may have expired or belongs to another customer session.
+      </p>
+      <div className="pt-2 flex justify-center gap-3">
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="px-4 py-2 text-xs font-semibold bg-[#141414] text-white rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+          >
+            Try Again
+          </button>
+        )}
+        <Link
+          to="/orders"
+          className="px-4 py-2 text-xs font-semibold bg-[#FAF7F2] text-[#141414] border border-[#DDD6CA] rounded-xl hover:bg-neutral-100 transition-colors"
+        >
+          Back to My Orders
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+const mapBackendStatusToEnum = (status: string): OrderStatus => {
+  const s = (status || '').toLowerCase();
+  switch (s) {
+    case 'pending_payment':
+      return OrderStatus.ORDER_PLACED;
+    case 'payment_review':
+      return OrderStatus.PAYMENT_REVIEW;
+    case 'confirmed':
+      return OrderStatus.CONFIRMED;
+    case 'processing':
+      return OrderStatus.PROCESSING;
+    case 'ready_for_dispatch':
+      return OrderStatus.READY_FOR_DISPATCH;
+    case 'picked_up':
+      return OrderStatus.PICKED_UP;
+    case 'in_transit':
+      return OrderStatus.IN_TRANSIT;
+    case 'out_for_delivery':
+      return OrderStatus.OUT_FOR_DELIVERY;
+    case 'delivered':
+      return OrderStatus.DELIVERED;
+    case 'cancelled':
+      return OrderStatus.CANCELLED;
+    case 'rejected':
+      return OrderStatus.REJECTED;
+    case 'returned':
+      return OrderStatus.RETURNED;
+    default:
+      return OrderStatus.ORDER_PLACED;
+  }
+};
+
+const convertOrderToDTO = (order: Order, returnDoc?: IReturnRequest | null): OrderDTO => {
+  let mappedStatus = mapBackendStatusToEnum(order.status);
+  if (returnDoc && (returnDoc.status === 'received' || returnDoc.status === 'refunded')) {
+    mappedStatus = OrderStatus.RETURNED;
+  }
+
+  const allStagesList = TIMELINE_STAGES.map((s) => s.status);
+  const targetIndex = allStagesList.indexOf(mappedStatus);
+
+  let statusHistory: StatusHistoryEntry[] = [];
+  const baseDate = new Date(order.createdAt).getTime();
+
+  if (TERMINAL_STATUSES.has(mappedStatus)) {
+    statusHistory = [
+      {
+        status: OrderStatus.ORDER_PLACED,
+        at: order.createdAt,
+        note: TIMELINE_STAGES[0].defaultDescription,
+        location: TIMELINE_STAGES[0].defaultLocation,
+      },
+      {
+        status: mappedStatus,
+        at: order.updatedAt || order.createdAt,
+        note: `Order was marked as ${mappedStatus.toLowerCase().replace(/_/g, ' ')}.`,
+        location: 'Colombo Resolution Hub',
+      },
+    ];
+  } else if (targetIndex >= 0) {
+    statusHistory = allStagesList.slice(0, targetIndex + 1).map((st, i) => {
+      const config = TIMELINE_STAGES[i];
+      let stageTime = new Date(baseDate + i * 2 * 60 * 60 * 1000).toISOString();
+      if (st === OrderStatus.DELIVERED && order.deliveredAt) {
+        stageTime = new Date(order.deliveredAt).toISOString();
+      }
+      return {
+        status: st,
+        at: stageTime,
+        note: config.defaultDescription,
+        location: config.defaultLocation,
+      };
+    });
+  }
+
+  const estFrom = new Date(baseDate + 2 * 24 * 60 * 60 * 1000).toISOString();
+  const estTo = new Date(baseDate + 4 * 24 * 60 * 60 * 1000).toISOString();
+
+  const delivery: DeliveryDetailsDTO = {
+    courier: order.trackingNumber ? 'Express Courier LK • Van #12' : 'LARVO Express Logistics',
+    waybill: order.trackingNumber || undefined,
+    estimatedFrom: estFrom,
+    estimatedTo: estTo,
+  };
+
+  return {
+    id: order._id,
+    status: mappedStatus,
+    statusHistory,
+    createdAt: order.createdAt,
+    items: (order.items || []).map((it) => ({
+      productName: it.name,
+      sku: it.variantSku || 'SKU-STANDARD',
+      size: it.size || 'Standard',
+      color: it.color || 'Standard',
+      qty: it.quantity,
+      unitPrice: it.unitPrice,
+      imageUrl: it.image,
+    })),
+    subtotal: order.subtotal,
+    shippingFee: order.shippingFee,
+    discount: order.discountAmount || 0,
+    total: order.total,
+    shippingAddress: {
+      label: order.shippingAddress?.label || 'Home',
+      line1: order.shippingAddress?.line1 || '',
+      city: order.shippingAddress?.city || '',
+      province: order.shippingAddress?.province || 'Western Province',
+      postalCode: order.shippingAddress?.postalCode || '',
+      country: order.shippingAddress?.country || 'Sri Lanka',
+    },
+    payment: {
+      method: (order.payment?.method || 'Simulated Online').replace(/_/g, ' '),
+      status: order.payment?.status ? order.payment.status.charAt(0).toUpperCase() + order.payment.status.slice(1) : 'Approved',
+      amount: order.payment?.amount ?? order.total,
+    },
+    delivery,
+  };
+};
+
 export const OrdersPage: React.FC = () => {
   const { orderId } = useParams<{ orderId?: string }>();
   const navigate = useNavigate();
@@ -194,6 +1358,7 @@ export const OrdersPage: React.FC = () => {
   const [copiedTracking, setCopiedTracking] = useState<boolean>(false);
   const [cancelling, setCancelling] = useState<boolean>(false);
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState<boolean>(false);
 
   // Return Request state (P56)
   const [orderReturn, setOrderReturn] = useState<IReturnRequest | null>(null);
@@ -383,7 +1548,7 @@ export const OrdersPage: React.FC = () => {
   };
 
   // Helper to determine step progression
-  const getStepIndex = (status: OrderStatus): number => {
+  const getStepIndex = (status: ServiceOrderStatus): number => {
     return LIFECYCLE_STEPS.findIndex((s) => s.status === status);
   };
 
@@ -391,31 +1556,23 @@ export const OrdersPage: React.FC = () => {
   if (orderId || selectedOrder) {
     if (detailLoading) {
       return (
-        <div className="max-w-4xl mx-auto py-16 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-ink-600 mb-3" />
-          <p className="text-sm text-ink-600 font-medium">Loading order details...</p>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full">
+          <OrderDetailSkeleton />
         </div>
       );
     }
 
     if (!selectedOrder) {
       return (
-        <div className="max-w-4xl mx-auto py-16 text-center">
-          <AlertCircle className="w-10 h-10 text-ink-400 mx-auto mb-3" />
-          <h2 className="text-lg font-semibold text-ink-900">Order Not Found</h2>
-          <p className="text-sm text-ink-500 mt-1 mb-6">The requested order could not be located or you do not have permission.</p>
-          <Link
-            to="/orders"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-ink-900 rounded-lg hover:bg-ink-800 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to My Orders
-          </Link>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full">
+          <OrderNotFoundState onRetry={() => orderId && fetchOrderDetail(orderId)} />
         </div>
       );
     }
 
-    const currentStepIdx = getStepIndex(selectedOrder.status);
-    const statusCfg = STATUS_CONFIG[selectedOrder.status] || STATUS_CONFIG.pending_payment;
+    const dto = convertOrderToDTO(selectedOrder, orderReturn);
+    const timeline = deriveTimeline(dto);
+
     // P46 customer legality: customer can self-cancel only from pending_payment
     const canCustomerCancel = selectedOrder.status === 'pending_payment';
 
@@ -430,491 +1587,144 @@ export const OrdersPage: React.FC = () => {
     const returnCfg = orderReturn ? RETURN_STATUS_CONFIG[orderReturn.status] : null;
 
     return (
-      <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 sm:px-6">
-        {/* Navigation / Header */}
-        <div className="flex items-center justify-between gap-4 mb-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 w-full space-y-6">
+        {/* Navigation & Actions Top Bar */}
+        <div className="flex items-center justify-between gap-4 print:hidden">
           <Link
             to="/orders"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-ink-600 hover:text-ink-950 transition-colors"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#524D46] hover:text-[#141414] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back to All Orders
           </Link>
-          <button
-            type="button"
-            onClick={() => fetchOrderDetail(selectedOrder._id)}
-            className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-ink-900 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
-          </button>
-        </div>
-
-        {/* Order Card Header */}
-        <div className="bg-white rounded-2xl border border-sand-200 shadow-sm p-6 sm:p-8 mb-6">
-          <div className="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-sand-200">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl sm:text-2xl font-display font-bold text-ink-950">
-                  Order #{selectedOrder._id.slice(-8).toUpperCase()}
-                </h1>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}
-                >
-                  {statusCfg.icon}
-                  {statusCfg.label}
-                </span>
-              </div>
-              <p className="text-xs text-ink-500 mt-1 flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5" />
-                Placed on {new Date(selectedOrder.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            </div>
-
-            <div className="text-right flex flex-col items-end gap-2">
-              <div>
-                <span className="text-xs text-ink-500 block">Total Amount</span>
-                <span className="text-2xl font-bold font-display text-ink-950">
-                  Rs. {selectedOrder.total?.toLocaleString() || '0'}
-                </span>
-              </div>
-              {selectedOrder.status !== 'pending_payment' &&
-                selectedOrder.status !== 'payment_review' &&
-                selectedOrder.status !== 'cancelled' && (
-                  <Link
-                    to={`/orders/${selectedOrder._id}/invoice`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-ink-900 bg-sand-100 hover:bg-sand-200 border border-sand-300 rounded-lg transition-colors"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-ink-600" /> View Invoice
-                  </Link>
-                )}
-            </div>
-          </div>
-
-          {/* Reward Points Badge Banner */}
-          {selectedOrder.pointsPaid > 0 && (
-            <div className="mt-4 p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
-                <Coins className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-amber-900">
-                  Paid with Reward Points ({selectedOrder.pointsPaid.toLocaleString()} pts)
-                </p>
-                <p className="text-[11px] text-amber-700">
-                  Order total fully covered via customer reward balance redemption.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Tracking Number Card */}
-          {selectedOrder.trackingNumber && (
-            <div className="mt-4 p-4 bg-sky-50/80 border border-sky-200 rounded-xl flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 flex-shrink-0">
-                  <Truck className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[11px] font-medium text-sky-700 block uppercase tracking-wider">
-                    Courier Tracking Number
-                  </span>
-                  <span className="text-sm font-mono font-bold text-sky-950">
-                    {selectedOrder.trackingNumber}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopyTracking(selectedOrder.trackingNumber!)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-sky-800 bg-white border border-sky-300 rounded-lg hover:bg-sky-100 transition-colors"
-              >
-                {copiedTracking ? <Check className="w-3.5 h-3.5 text-teal-600" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedTracking ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-          )}
-
-          {/* Cancellation Banner */}
-          {selectedOrder.status === 'cancelled' && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-              <Ban className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-xs font-bold text-red-900 uppercase tracking-wider">Order Cancelled</h3>
-                <p className="text-xs text-red-700 mt-0.5">
-                  This order has been cancelled and will not be processed or delivered. Reserved items were returned to inventory.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Slip Rejection Alert Banner (P49) */}
-          {selectedOrder.payment?.status === 'rejected' && selectedOrder.payment?.reviewNote && (
-            <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <AlertCircle className="w-4 h-4" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-xs font-bold text-rose-900 uppercase tracking-wider">
-                  Payment Verification Notice
-                </h3>
-                <p className="text-xs text-rose-800 leading-relaxed">
-                  <span className="font-semibold">Reviewer note: </span>
-                  {selectedOrder.payment.reviewNote}
-                </p>
-                <p className="text-[11px] text-rose-600">
-                  Your submitted bank transfer receipt could not be approved. Please upload a valid receipt or contact support.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Horizontal Status Timeline */}
-          {selectedOrder.status !== 'cancelled' && (
-            <div className="mt-8 pt-6 border-t border-sand-100">
-              <h3 className="text-xs font-bold text-ink-400 uppercase tracking-wider mb-6">
-                Fulfillment & Delivery Timeline
-              </h3>
-
-              {/* Desktop Horizontal Stepper */}
-              <div className="hidden md:block overflow-x-auto pb-4">
-                <div className="flex items-center min-w-[700px] justify-between relative">
-                  {LIFECYCLE_STEPS.map((step, idx) => {
-                    const isCompleted = currentStepIdx > idx || selectedOrder.status === 'delivered';
-                    const isCurrent = currentStepIdx === idx && selectedOrder.status !== 'delivered';
-
-                    return (
-                      <div key={step.status} className="flex-1 flex flex-col items-center relative text-center px-1">
-                        {/* Connecting line */}
-                        {idx !== 0 && (
-                          <div
-                            className={`absolute top-4 -left-1/2 w-full h-0.5 -z-0 transition-colors ${
-                              isCompleted || isCurrent ? 'bg-emerald-500' : 'bg-sand-200'
-                            }`}
-                          />
-                        )}
-
-                        {/* Node circle */}
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold z-10 transition-all ${
-                            isCompleted
-                              ? 'bg-emerald-500 text-white shadow-sm'
-                              : isCurrent
-                              ? 'bg-ink-950 text-white ring-4 ring-ink-100 shadow'
-                              : 'bg-sand-100 text-ink-400 border border-sand-300'
-                          }`}
-                        >
-                          {isCompleted ? (
-                            <Check className="w-4 h-4" />
-                          ) : isCurrent ? (
-                            <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                          ) : (
-                            <span>{idx + 1}</span>
-                          )}
-                        </div>
-
-                        {/* Label & Description */}
-                        <span
-                          className={`text-xs mt-2 font-medium leading-tight ${
-                            isCurrent
-                              ? 'text-ink-950 font-bold'
-                              : isCompleted
-                              ? 'text-ink-800'
-                              : 'text-ink-400'
-                          }`}
-                        >
-                          {step.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Mobile Vertical Stepper */}
-              <div className="md:hidden space-y-4">
-                {LIFECYCLE_STEPS.map((step, idx) => {
-                  const isCompleted = currentStepIdx > idx || selectedOrder.status === 'delivered';
-                  const isCurrent = currentStepIdx === idx && selectedOrder.status !== 'delivered';
-
-                  return (
-                    <div key={step.status} className="flex items-start gap-3">
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 ${
-                          isCompleted
-                            ? 'bg-emerald-500 text-white'
-                            : isCurrent
-                            ? 'bg-ink-950 text-white ring-2 ring-ink-200'
-                            : 'bg-sand-100 text-ink-400 border border-sand-200'
-                        }`}
-                      >
-                        {isCompleted ? <Check className="w-3.5 h-3.5" /> : idx + 1}
-                      </div>
-                      <div>
-                        <p
-                          className={`text-xs ${
-                            isCurrent ? 'font-bold text-ink-950' : isCompleted ? 'font-semibold text-ink-800' : 'text-ink-400'
-                          }`}
-                        >
-                          {step.label}
-                        </p>
-                        <p className="text-[11px] text-ink-400 leading-tight">{step.description}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Action Row: Cancel Order button (only when permitted by P46 transition rules) */}
-          {canCustomerCancel && (
-            <div className="mt-8 pt-6 border-t border-sand-200 flex items-center justify-between gap-4">
-              <div className="text-xs text-ink-500">
-                <span>Want to change or cancel this order? It can be cancelled while in pending payment.</span>
-              </div>
+          <div className="flex items-center gap-2">
+            {canCustomerCancel && (
               <button
                 type="button"
                 onClick={() => setShowCancelModal(true)}
-                className="px-4 py-2 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors flex items-center gap-1.5"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
               >
-                <Ban className="w-3.5 h-3.5" /> Cancel Order
+                <Ban className="w-3.5 h-3.5 text-rose-600" /> Cancel Order
               </button>
-            </div>
-          )}
-
-          {/* Return Status Banner (P56) */}
-          {orderReturn && returnCfg && (
-            <div
-              className={`mt-6 p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${returnCfg.bg} ${returnCfg.border}`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg bg-white/80 border ${returnCfg.border} ${returnCfg.text} mt-0.5`}>
-                  {returnCfg.icon}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-bold uppercase tracking-wider ${returnCfg.text}`}>
-                      {returnCfg.label}
-                    </span>
-                    <span className="text-[11px] text-ink-500">
-                      • Submitted {new Date(orderReturn.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-ink-700 mt-1">
-                    {orderReturn.status === 'requested' && 'Your return request has been received and will be reviewed shortly.'}
-                    {orderReturn.status === 'under_review' && 'Our staff is currently reviewing your return request details.'}
-                    {orderReturn.status === 'approved' && 'Your return is approved. Courier pickup will be scheduled.'}
-                    {orderReturn.status === 'pickup_scheduled' && 'A courier pickup has been scheduled for your return.'}
-                    {orderReturn.status === 'picked_up' && 'Courier has picked up your returned package.'}
-                    {orderReturn.status === 'received' && 'Package has been received at our inspection facility.'}
-                    {orderReturn.status === 'refunded' && `Refund issued${orderReturn.refundPoints ? `: ${orderReturn.refundPoints} reward points credited to your wallet` : ''}.`}
-                    {orderReturn.status === 'rejected' && `Return request rejected: ${orderReturn.rejectionReason || 'Does not meet return criteria'}.`}
-                  </p>
-                </div>
-              </div>
-              {orderReturn.status === 'rejected' && isWithinReturnWindow && (
-                <button
-                  type="button"
-                  id="request-return-btn"
-                  onClick={handleOpenReturnModal}
-                  className="px-3.5 py-2 text-xs font-semibold text-white bg-ink-900 hover:bg-ink-800 rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Re-apply Return
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Return Order Action Banner (P56) */}
-          {canRequestReturn && (
-            <div className="mt-8 pt-6 border-t border-sand-200 flex flex-wrap items-center justify-between gap-4">
-              <div className="text-xs text-ink-600">
-                <span className="font-semibold text-ink-900 block">Need to return this order?</span>
-                <span>
-                  Eligible for return until{' '}
-                  {new Date(new Date(selectedOrder.deliveredAt!).getTime() + SEVEN_DAYS_MS).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}{' '}
-                  (7-day return window).
-                </span>
-              </div>
+            )}
+            {canRequestReturn && (
               <button
                 type="button"
-                id="request-return-btn"
                 onClick={handleOpenReturnModal}
-                className="px-4 py-2 text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" /> Request Return
+                <RotateCcw className="w-3.5 h-3.5 text-amber-700" /> Request Return
               </button>
-            </div>
-          )}
-
-          {/* Return Expired Notice */}
-          {isDelivered && !isWithinReturnWindow && !orderReturn && (
-            <div className="mt-8 pt-6 border-t border-sand-200 text-xs text-ink-400 italic">
-              Return window expired for this order (7 days after delivery date).
-            </div>
-          )}
-        </div>
-
-        {/* Two-column Order Details: Items & Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Items List (col-span-2) */}
-          <div className="md:col-span-2 bg-white rounded-2xl border border-sand-200 shadow-sm p-6">
-            <h2 className="text-sm font-bold font-display text-ink-900 mb-4 flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-ink-600" /> Order Items ({selectedOrder.items.length})
-            </h2>
-
-            <div className="divide-y divide-sand-100">
-              {selectedOrder.items.map((item, idx) => (
-                <div key={idx} className="py-3.5 flex items-center gap-4">
-                  <div className="w-14 h-16 rounded-lg bg-sand-100 border border-sand-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Package className="w-6 h-6 text-sand-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-ink-900 truncate">{item.name}</p>
-                    <p className="text-[11px] text-ink-500">
-                      SKU: <span className="font-mono text-ink-600">{item.variantSku}</span>
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 text-[11px] text-ink-600">
-                      {item.size && (
-                        <span className="px-1.5 py-0.5 bg-sand-100 rounded text-ink-700">Size: {item.size}</span>
-                      )}
-                      {item.color && (
-                        <span className="px-1.5 py-0.5 bg-sand-100 rounded text-ink-700">Color: {item.color}</span>
-                      )}
-                      <span>Qty: {item.quantity}</span>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-xs font-bold text-ink-900">
-                      Rs. {(item.unitPrice * item.quantity).toLocaleString()}
-                    </p>
-                    <p className="text-[10px] text-ink-400">Rs. {item.unitPrice} each</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Column: Address & Price breakdown */}
-          <div className="space-y-6">
-            {/* Shipping Address */}
-            <div className="bg-white rounded-2xl border border-sand-200 shadow-sm p-6">
-              <h2 className="text-sm font-bold font-display text-ink-900 mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-ink-600" /> Shipping Destination
-              </h2>
-              {selectedOrder.shippingAddress ? (
-                <div className="text-xs text-ink-700 space-y-1">
-                  {selectedOrder.shippingAddress.label && (
-                    <span className="inline-block px-2 py-0.5 text-[10px] font-semibold bg-sand-100 text-ink-700 rounded-full mb-1">
-                      {selectedOrder.shippingAddress.label}
-                    </span>
-                  )}
-                  <p className="font-medium text-ink-900">{selectedOrder.shippingAddress.line1}</p>
-                  {selectedOrder.shippingAddress.line2 && <p>{selectedOrder.shippingAddress.line2}</p>}
-                  <p>
-                    {selectedOrder.shippingAddress.city}
-                    {selectedOrder.shippingAddress.province ? `, ${selectedOrder.shippingAddress.province}` : ''}
-                  </p>
-                  <p>
-                    {selectedOrder.shippingAddress.postalCode}, {selectedOrder.shippingAddress.country}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-xs text-ink-400 italic">No shipping address recorded</p>
-              )}
-            </div>
-
-            {/* Price Summary */}
-            <div className="bg-white rounded-2xl border border-sand-200 shadow-sm p-6">
-              <h2 className="text-sm font-bold font-display text-ink-900 mb-3">Cost Breakdown</h2>
-              <div className="space-y-2 text-xs divide-y divide-sand-50">
-                <div className="flex justify-between text-ink-600 pt-1">
-                  <span>Subtotal</span>
-                  <span className="font-medium text-ink-900">Rs. {selectedOrder.subtotal?.toLocaleString() || '0'}</span>
-                </div>
-                {selectedOrder.discountAmount ? (
-                  <div className="flex justify-between text-teal-700 pt-2">
-                    <span>Discount {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
-                    <span className="font-semibold">-Rs. {selectedOrder.discountAmount.toLocaleString()}</span>
-                  </div>
-                ) : null}
-                <div className="flex justify-between text-ink-600 pt-2">
-                  <span>Shipping Fee</span>
-                  <span className="font-medium text-ink-900">
-                    {selectedOrder.shippingFee === 0 ? 'Free' : `Rs. ${selectedOrder.shippingFee}`}
-                  </span>
-                </div>
-                <div className="flex justify-between text-ink-950 font-bold text-sm pt-3 border-t border-sand-200">
-                  <span>Total</span>
-                  <span>Rs. {selectedOrder.total?.toLocaleString() || '0'}</span>
-                </div>
-                {selectedOrder.pointsPaid > 0 && (
-                  <div className="flex justify-between text-amber-700 font-semibold pt-2">
-                    <span>Points Redeemed</span>
-                    <span>{selectedOrder.pointsPaid.toLocaleString()} pts</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Payment Verification Details (P49) */}
-            {selectedOrder.payment && (
-              <div className="bg-white rounded-2xl border border-sand-200 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-bold font-display text-ink-900">Payment Details</h2>
-                  <span
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded capitalize ${
-                      selectedOrder.payment.status === 'approved'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : selectedOrder.payment.status === 'rejected'
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
-                  >
-                    {selectedOrder.payment.status}
-                  </span>
-                </div>
-                <div className="space-y-2 text-xs divide-y divide-sand-50">
-                  <div className="flex justify-between text-ink-600 pt-1">
-                    <span>Method</span>
-                    <span className="font-medium text-ink-900 capitalize">
-                      {selectedOrder.payment.method.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-ink-600 pt-2">
-                    <span>Amount</span>
-                    <span className="font-medium text-ink-900">
-                      ${(selectedOrder.payment.amount ?? selectedOrder.total).toLocaleString()}
-                    </span>
-                  </div>
-                  {selectedOrder.payment.reviewNote && (
-                    <div className="pt-2">
-                      <span className="font-semibold block text-[10px] text-rose-800 uppercase tracking-wider">
-                        Reviewer Feedback:
-                      </span>
-                      <p className="mt-1 text-rose-700 leading-relaxed bg-rose-50 p-2.5 rounded-lg border border-rose-100 whitespace-pre-wrap">
-                        {selectedOrder.payment.reviewNote}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
             )}
+            <button
+              type="button"
+              onClick={() => fetchOrderDetail(selectedOrder._id)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#524D46] hover:text-[#141414] bg-white border border-[#EFEAE2] rounded-xl transition-colors shadow-xs cursor-pointer"
+              title="Refresh order status"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#7A756D]" /> Refresh
+            </button>
           </div>
         </div>
+
+        {/* Reward Points Banner */}
+        {selectedOrder.pointsPaid > 0 && (
+          <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/70 flex items-center gap-3 text-xs text-amber-950">
+            <Coins className="w-4 h-4 text-amber-700 shrink-0" />
+            <div>
+              <p className="font-semibold">
+                Paid with Reward Points ({selectedOrder.pointsPaid.toLocaleString()} pts)
+              </p>
+              <p className="text-[11px] text-amber-800">
+                Order total fully covered via loyalty point redemption.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Return Status Banner */}
+        {returnCfg && orderReturn && (
+          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <RotateCcw className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="font-bold text-amber-950">{returnCfg.label}</p>
+                <p className="text-[11px] text-amber-800">
+                  Return reference #{orderReturn._id?.slice(-8).toUpperCase()} • {orderReturn.items.length} item(s)
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border bg-white border-amber-300 text-amber-900">
+              {orderReturn.status.replace(/_/g, ' ')}
+            </span>
+          </div>
+        )}
+
+        {/* Payment Verification Feedback Alert */}
+        {selectedOrder.payment?.status === 'rejected' && selectedOrder.payment?.reviewNote && (
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xs font-bold text-rose-900 uppercase tracking-wider">
+                Payment Verification Notice
+              </h3>
+              <p className="text-xs text-rose-800 leading-relaxed">
+                <span className="font-semibold">Reviewer note: </span>
+                {selectedOrder.payment.reviewNote}
+              </p>
+              <p className="text-[11px] text-rose-600">
+                Your submitted bank transfer receipt could not be approved. Please upload a valid receipt or contact support.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Top Master Summary Bar */}
+        <OrderSummaryBar
+          order={dto}
+          onOpenInvoice={() => setIsInvoiceOpen(true)}
+        />
+
+        {/* Main Content Layout (Dual Column 12-Grid) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Milestones, Items, and 3-Up Info Grid */}
+          <div className="lg:col-span-7 2xl:col-span-8 space-y-8">
+            <MilestoneCard
+              order={dto}
+              timeline={timeline}
+              copiedTracking={copiedTracking}
+              onCopyTracking={handleCopyTracking}
+            />
+
+            <OrderItemsCard items={dto.items} />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <ShippingCard address={dto.shippingAddress} />
+              <CostBreakdownCard
+                subtotal={dto.subtotal}
+                shippingFee={dto.shippingFee}
+                discount={dto.discount}
+                total={dto.total}
+              />
+              <PaymentCard payment={dto.payment} />
+            </div>
+          </div>
+
+          {/* Right Column: Sticky Fulfillment Timeline */}
+          <div className="lg:col-span-5 2xl:col-span-4 lg:sticky lg:top-6">
+            <FulfillmentTimeline timeline={timeline} />
+          </div>
+        </div>
+
+        {/* Invoice Modal */}
+        <InvoiceModal
+          isOpen={isInvoiceOpen}
+          onClose={() => setIsInvoiceOpen(false)}
+          order={dto}
+        />
 
         {/* Cancel Confirmation Modal */}
         {showCancelModal && (
