@@ -379,17 +379,16 @@ export class PurchaseOrderService {
 
       await po.save({ session });
       await session.commitTransaction();
-
-      return po.populate([
-        { path: 'supplier', select: 'name companyName email status' },
-        { path: 'items.product', select: 'name slug images basePrice' },
-      ]);
     } catch (err) {
-      await session.abortTransaction();
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
       throw err;
     } finally {
-      session.endSession();
+      await session.endSession();
     }
+
+    return this.getPurchaseOrderById(id);
   }
 
   /**
