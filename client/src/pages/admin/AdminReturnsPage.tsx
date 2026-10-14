@@ -319,17 +319,17 @@ export const AdminReturnsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-slate-900 text-white rounded-xl shadow-sm">
-              <RotateCcw className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <RotateCcw className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">Return Requests</h1>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                <h1 className="text-2xl font-bold text-white">Return Requests</h1>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                   {total}
                 </span>
               </div>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-400">
                 Review, approve, or reject customer return requests and inspect estimated refund points.
               </p>
             </div>
@@ -339,9 +339,9 @@ export const AdminReturnsPage: React.FC = () => {
         <button
           onClick={fetchReturns}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-slate-700' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-400' : ''}`} />
           Refresh
         </button>
       </div>
