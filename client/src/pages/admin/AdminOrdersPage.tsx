@@ -49,73 +49,73 @@ interface StatusBadgeConfig {
 const STATUS_CONFIG: Record<OrderStatus, StatusBadgeConfig> = {
   pending_payment: {
     label: 'Pending Payment',
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    dot: 'bg-amber-500',
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-400',
+    border: 'border-amber-500/30',
+    dot: 'bg-amber-400',
   },
   payment_review: {
     label: 'Payment Review',
-    bg: 'bg-purple-50',
-    text: 'text-purple-700',
-    border: 'border-purple-200',
-    dot: 'bg-purple-500',
+    bg: 'bg-purple-500/15',
+    text: 'text-purple-400',
+    border: 'border-purple-500/30',
+    dot: 'bg-purple-400',
   },
   confirmed: {
     label: 'Confirmed',
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    border: 'border-blue-200',
-    dot: 'bg-blue-500',
+    bg: 'bg-blue-500/15',
+    text: 'text-blue-400',
+    border: 'border-blue-500/30',
+    dot: 'bg-blue-400',
   },
   processing: {
     label: 'Processing',
-    bg: 'bg-cyan-50',
-    text: 'text-cyan-700',
-    border: 'border-cyan-200',
-    dot: 'bg-cyan-500',
+    bg: 'bg-cyan-500/15',
+    text: 'text-cyan-400',
+    border: 'border-cyan-500/30',
+    dot: 'bg-cyan-400',
   },
   ready_for_dispatch: {
     label: 'Ready for Dispatch',
-    bg: 'bg-teal-50',
-    text: 'text-teal-700',
-    border: 'border-teal-200',
-    dot: 'bg-teal-500',
+    bg: 'bg-teal-500/15',
+    text: 'text-teal-400',
+    border: 'border-teal-500/30',
+    dot: 'bg-teal-400',
   },
   picked_up: {
     label: 'Picked Up',
-    bg: 'bg-indigo-50',
-    text: 'text-indigo-700',
-    border: 'border-indigo-200',
-    dot: 'bg-indigo-500',
+    bg: 'bg-indigo-500/15',
+    text: 'text-indigo-400',
+    border: 'border-indigo-500/30',
+    dot: 'bg-indigo-400',
   },
   in_transit: {
     label: 'In Transit',
-    bg: 'bg-sky-50',
-    text: 'text-sky-700',
-    border: 'border-sky-200',
-    dot: 'bg-sky-500',
+    bg: 'bg-sky-500/15',
+    text: 'text-sky-400',
+    border: 'border-sky-500/30',
+    dot: 'bg-sky-400',
   },
   out_for_delivery: {
     label: 'Out for Delivery',
-    bg: 'bg-violet-50',
-    text: 'text-violet-700',
-    border: 'border-violet-200',
-    dot: 'bg-violet-500',
+    bg: 'bg-violet-500/15',
+    text: 'text-violet-400',
+    border: 'border-violet-500/30',
+    dot: 'bg-violet-400',
   },
   delivered: {
     label: 'Delivered',
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-500/15',
+    text: 'text-emerald-400',
+    border: 'border-emerald-500/30',
+    dot: 'bg-emerald-400',
   },
   cancelled: {
     label: 'Cancelled',
-    bg: 'bg-rose-50',
-    text: 'text-rose-700',
-    border: 'border-rose-200',
-    dot: 'bg-rose-500',
+    bg: 'bg-rose-500/15',
+    text: 'text-rose-400',
+    border: 'border-rose-500/30',
+    dot: 'bg-rose-400',
   },
 };
 
@@ -402,22 +402,22 @@ export const AdminOrdersPage: React.FC = () => {
       </div>
 
         {/* ── Filters & Search ──────────────────────────────────────────────── */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-md space-y-4">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
             {/* Search Input */}
             <div className="relative w-full md:w-96">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by customer name, email, or order ID..."
-                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-slate-200 placeholder:text-slate-500 transition-all"
               />
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -430,7 +430,7 @@ export const AdminOrdersPage: React.FC = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full md:w-56 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700"
+                className="w-full md:w-56 px-3 py-2 text-sm bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-slate-200"
               >
                 <option value="all">All Statuses</option>
                 {ALL_STATUSES.map((st) => (
@@ -443,64 +443,64 @@ export const AdminOrdersPage: React.FC = () => {
           </div>
 
           {/* Quick status tabs */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 statusFilter === 'all'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                  : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80'
               }`}
             >
               All Orders ({total})
             </button>
             <button
               onClick={() => setStatusFilter('payment_review')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
                 statusFilter === 'payment_review'
-                  ? 'bg-purple-700 text-white'
-                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
+                  ? 'bg-purple-600 text-white font-bold shadow-sm'
+                  : 'bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 border border-purple-500/30'
               }`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
               Review Slips
             </button>
             <button
               onClick={() => setStatusFilter('pending_payment')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 statusFilter === 'pending_payment'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                  : 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30'
               }`}
             >
               Pending Payment
             </button>
             <button
               onClick={() => setStatusFilter('confirmed')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 statusFilter === 'confirmed'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 border border-blue-500/30'
               }`}
             >
               Confirmed
             </button>
             <button
               onClick={() => setStatusFilter('processing')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 statusFilter === 'processing'
-                  ? 'bg-cyan-700 text-white'
-                  : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200'
+                  ? 'bg-cyan-600 text-white font-bold shadow-sm'
+                  : 'bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 border border-cyan-500/30'
               }`}
             >
               Processing
             </button>
             <button
               onClick={() => setStatusFilter('delivered')}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 statusFilter === 'delivered'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                  ? 'bg-emerald-600 text-white font-bold shadow-sm'
+                  : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30'
               }`}
             >
               Delivered
@@ -509,9 +509,9 @@ export const AdminOrdersPage: React.FC = () => {
         </div>
 
         {/* ── Table Container ───────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden shadow-xl backdrop-blur-md">
           {listError && (
-            <div className="p-4 bg-rose-50 border-b border-rose-100 flex items-center gap-3 text-rose-700 text-sm">
+            <div className="p-4 bg-rose-500/10 border-b border-rose-500/20 flex items-center gap-3 text-rose-400 text-sm">
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <p>{listError}</p>
             </div>
@@ -520,7 +520,7 @@ export const AdminOrdersPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/75 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="bg-slate-950/70 border-b border-slate-800 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   <th className="py-3.5 px-4 sm:px-6">Order ID</th>
                   <th className="py-3.5 px-4">Date</th>
                   <th className="py-3.5 px-4">Customer</th>
@@ -531,45 +531,45 @@ export const AdminOrdersPage: React.FC = () => {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
+              <tbody className="divide-y divide-slate-800/60 text-sm">
                 {loading ? (
                   Array.from({ length: 5 }).map((_, idx) => (
                     <tr key={idx} className="animate-pulse">
                       <td className="py-4 px-6">
-                        <div className="h-4 bg-slate-200 rounded w-24 mb-1"></div>
-                        <div className="h-3 bg-slate-100 rounded w-16"></div>
+                        <div className="h-4 bg-slate-800 rounded w-24 mb-1"></div>
+                        <div className="h-3 bg-slate-800/60 rounded w-16"></div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="h-4 bg-slate-200 rounded w-20"></div>
+                        <div className="h-4 bg-slate-800 rounded w-20"></div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="h-4 bg-slate-200 rounded w-28 mb-1"></div>
-                        <div className="h-3 bg-slate-100 rounded w-36"></div>
+                        <div className="h-4 bg-slate-800 rounded w-28 mb-1"></div>
+                        <div className="h-3 bg-slate-800/60 rounded w-36"></div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="h-4 bg-slate-200 rounded w-12"></div>
+                        <div className="h-4 bg-slate-800 rounded w-12"></div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="h-4 bg-slate-200 rounded w-16"></div>
+                        <div className="h-4 bg-slate-800 rounded w-16"></div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="h-4 bg-slate-200 rounded w-24"></div>
+                        <div className="h-4 bg-slate-800 rounded w-24"></div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="h-6 bg-slate-200 rounded-full w-24"></div>
+                        <div className="h-6 bg-slate-800 rounded-full w-24"></div>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <div className="h-8 bg-slate-200 rounded-lg w-16 ml-auto"></div>
+                        <div className="h-8 bg-slate-800 rounded-lg w-16 ml-auto"></div>
                       </td>
                     </tr>
                   ))
                 ) : orders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center text-slate-500">
-                      <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+                    <td colSpan={8} className="py-16 text-center text-slate-400">
+                      <div className="w-12 h-12 rounded-full bg-slate-800 text-slate-500 mx-auto flex items-center justify-center mb-3">
                         <ShoppingCart className="w-6 h-6" />
                       </div>
-                      <p className="font-medium text-slate-800 mb-1">No orders found</p>
+                      <p className="font-medium text-slate-200 mb-1">No orders found</p>
                       <p className="text-xs text-slate-400 max-w-sm mx-auto">
                         No orders match your filter criteria. Try choosing a different status filter or clear your search keyword.
                       </p>
@@ -585,13 +585,13 @@ export const AdminOrdersPage: React.FC = () => {
                     return (
                       <tr
                         key={order._id}
-                        className="hover:bg-slate-50/75 transition-colors group cursor-pointer"
+                        className="hover:bg-slate-800/40 transition-colors group cursor-pointer text-slate-300"
                         onClick={() => handleOpenDrawer(order)}
                       >
                         {/* Order ID */}
                         <td className="py-4 px-4 sm:px-6">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-xs font-semibold text-slate-900">
+                            <span className="font-mono text-xs font-semibold text-white">
                               #{order._id.slice(-6).toUpperCase()}
                             </span>
                             <button
@@ -599,11 +599,11 @@ export const AdminOrdersPage: React.FC = () => {
                                 e.stopPropagation();
                                 handleCopy(order._id, order._id);
                               }}
-                              className="text-slate-300 hover:text-slate-600 p-0.5 rounded transition-colors"
+                              className="text-slate-500 hover:text-slate-300 p-0.5 rounded transition-colors"
                               title="Copy full order ID"
                             >
                               {copiedId === order._id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
                               ) : (
                                 <Copy className="w-3.5 h-3.5" />
                               )}
@@ -618,13 +618,13 @@ export const AdminOrdersPage: React.FC = () => {
                         </td>
 
                         {/* Date */}
-                        <td className="py-4 px-4 whitespace-nowrap text-xs text-slate-500">
+                        <td className="py-4 px-4 whitespace-nowrap text-xs text-slate-400">
                           {new Date(order.createdAt).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
                           })}
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[10px] text-slate-500">
                             {new Date(order.createdAt).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -634,7 +634,7 @@ export const AdminOrdersPage: React.FC = () => {
 
                         {/* Customer */}
                         <td className="py-4 px-4">
-                          <div className="font-medium text-slate-900 text-xs sm:text-sm">
+                          <div className="font-medium text-white text-xs sm:text-sm">
                             {cust.name}
                           </div>
                           <div className="text-xs text-slate-400 truncate max-w-[180px]">
@@ -643,21 +643,21 @@ export const AdminOrdersPage: React.FC = () => {
                         </td>
 
                         {/* Items */}
-                        <td className="py-4 px-4 whitespace-nowrap text-xs text-slate-600">
-                          <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-2 py-0.5 rounded-md">
-                            <Package className="w-3 h-3 text-slate-500" />
+                        <td className="py-4 px-4 whitespace-nowrap text-xs text-slate-300">
+                          <span className="inline-flex items-center gap-1 font-medium bg-slate-800 border border-slate-700/60 px-2 py-0.5 rounded-md">
+                            <Package className="w-3 h-3 text-slate-400" />
                             {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
                           </span>
                         </td>
 
                         {/* Total */}
                         <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="font-semibold text-slate-900 text-sm">
+                          <div className="font-semibold text-white text-sm">
                             Rs. {order.total.toLocaleString()}
                           </div>
                           {order.pointsPaid > 0 && (
-                            <div className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-0.5">
-                              <Coins className="w-3 h-3 text-amber-600" />
+                            <div className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30 mt-0.5">
+                              <Coins className="w-3 h-3 text-amber-400" />
                               {order.pointsPaid.toLocaleString()} pts
                             </div>
                           )}
@@ -667,27 +667,27 @@ export const AdminOrdersPage: React.FC = () => {
                         <td className="py-4 px-4 whitespace-nowrap">
                           {paymentMethod === 'bank_transfer' ? (
                             <div className="flex flex-col gap-0.5">
-                              <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 w-fit">
-                                <FileText className="w-3 h-3 text-purple-600" />
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded border border-purple-500/30 w-fit">
+                                <FileText className="w-3 h-3 text-purple-400" />
                                 Bank Slip
                               </span>
                               {order.payment?.slipImageUrl && (
-                                <span className="text-[10px] text-purple-600 font-medium flex items-center gap-1">
+                                <span className="text-[10px] text-purple-400 font-medium flex items-center gap-1">
                                   Slip attached
                                 </span>
                               )}
                             </div>
                           ) : paymentMethod === 'reward_points' ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                              <Coins className="w-3 h-3 text-amber-600" />
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
+                              <Coins className="w-3 h-3 text-amber-400" />
                               Points
                             </span>
                           ) : paymentMethod === 'simulated_online' ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/15 px-2 py-0.5 rounded border border-blue-500/30">
                               Card (Online)
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-400">Unpaid</span>
+                            <span className="text-xs text-slate-500">Unpaid</span>
                           )}
                         </td>
 
@@ -708,9 +708,9 @@ export const AdminOrdersPage: React.FC = () => {
                               e.stopPropagation();
                               handleOpenDrawer(order);
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           >
-                            <Eye className="w-3.5 h-3.5 text-slate-500" />
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
                             View
                           </button>
                         </td>
@@ -723,27 +723,27 @@ export const AdminOrdersPage: React.FC = () => {
           </div>
 
           {/* ── Pagination ────────────────────────────────────────────────────── */}
-          <div className="py-3 px-6 border-t border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="py-3 px-6 border-t border-slate-800 bg-slate-950/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
             <div>
-              Showing <span className="font-semibold text-slate-700">{orders.length}</span> of{' '}
-              <span className="font-semibold text-slate-700">{total}</span> orders
+              Showing <span className="font-semibold text-slate-200">{orders.length}</span> of{' '}
+              <span className="font-semibold text-slate-200">{total}</span> orders
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1 || loading}
-                className="p-1.5 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                className="p-1.5 border border-slate-700 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40 transition-colors"
                 title="Previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-slate-300">
                 Page {page} of {pages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page >= pages || loading}
-                className="p-1.5 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                className="p-1.5 border border-slate-700 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40 transition-colors"
                 title="Next page"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -762,12 +762,12 @@ export const AdminOrdersPage: React.FC = () => {
           />
 
           <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-2xl bg-white shadow-2xl flex flex-col border-l border-slate-200">
+            <div className="w-screen max-w-2xl bg-slate-900 shadow-2xl flex flex-col border-l border-slate-800 text-slate-100">
               {/* Drawer Header */}
               <div className="p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-bold text-indigo-300">
+                    <span className="font-mono text-sm font-bold text-indigo-400">
                       #{selectedOrder._id}
                     </span>
                     <button
@@ -782,7 +782,7 @@ export const AdminOrdersPage: React.FC = () => {
                       )}
                     </button>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-slate-300">
+                  <div className="flex items-center gap-3 text-xs text-slate-400">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
                       {new Date(selectedOrder.createdAt).toLocaleString()}
@@ -815,7 +815,7 @@ export const AdminOrdersPage: React.FC = () => {
               {/* Drawer Body */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {drawerLoading && (
-                  <div className="flex items-center justify-center py-4 text-xs text-indigo-600 gap-2">
+                  <div className="flex items-center justify-center py-4 text-xs text-indigo-400 gap-2">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Refreshing order details...
                   </div>
@@ -823,16 +823,16 @@ export const AdminOrdersPage: React.FC = () => {
 
                 {/* ── Bank Slip Review Alert & Actions (P49) ────────────────── */}
                 {selectedOrder.status === 'payment_review' && (
-                  <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl space-y-3">
+                  <div className="p-4 bg-purple-950/40 border border-purple-800/60 rounded-xl space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
                         <FileText className="w-4 h-4" />
                       </div>
                       <div className="space-y-1 flex-1">
-                        <h4 className="text-sm font-semibold text-purple-900">
+                        <h4 className="text-sm font-semibold text-purple-300">
                           Bank Transfer Slip Needs Verification
                         </h4>
-                        <p className="text-xs text-purple-700 leading-relaxed">
+                        <p className="text-xs text-purple-200/80 leading-relaxed">
                           A customer submitted a deposit receipt. Inspect the slip preview below. If valid, approve to advance the order to confirmed status. If invalid, specify the rejection reason and reject to return the order to pending payment.
                         </p>
                       </div>
@@ -840,24 +840,24 @@ export const AdminOrdersPage: React.FC = () => {
 
                     {/* Rejection Note Field */}
                     <div className="pt-1">
-                      <label className="block text-xs font-semibold text-purple-950 mb-1">
-                        Rejection Reason <span className="text-rose-500 font-normal">(required if rejecting)</span>
+                      <label className="block text-xs font-semibold text-purple-300 mb-1">
+                        Rejection Reason <span className="text-rose-400 font-normal">(required if rejecting)</span>
                       </label>
                       <textarea
                         value={rejectionNote}
                         onChange={(e) => setRejectionNote(e.target.value)}
                         placeholder="State why the slip is invalid (e.g. Deposit amount mismatch, receipt illegible, incorrect reference)..."
                         rows={2}
-                        className="w-full text-xs p-2.5 rounded-lg border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white placeholder:text-slate-400 text-slate-800"
+                        className="w-full text-xs p-2.5 rounded-lg border border-purple-800/60 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-slate-950 placeholder:text-slate-500 text-slate-200"
                         disabled={reviewingSlip || updatingStatus}
                       />
                     </div>
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-purple-100">
+                    <div className="flex items-center gap-2 pt-2 border-t border-purple-900/60">
                       <button
                         onClick={() => handleReviewPayment('approved')}
                         disabled={reviewingSlip || updatingStatus}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm transition-colors disabled:opacity-50"
                       >
                         {reviewingSlip ? (
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -870,12 +870,12 @@ export const AdminOrdersPage: React.FC = () => {
                         onClick={() => handleReviewPayment('rejected')}
                         disabled={reviewingSlip || updatingStatus || !rejectionNote.trim()}
                         title={!rejectionNote.trim() ? 'Please provide a rejection reason' : 'Reject slip'}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-rose-700 bg-white border border-rose-300 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-rose-400 bg-slate-800 border border-rose-500/30 hover:bg-rose-500/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {reviewingSlip ? (
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <Ban className="w-4 h-4 text-rose-600" />
+                          <Ban className="w-4 h-4 text-rose-400" />
                         )}
                         Reject Slip (Return to Pending)
                       </button>
@@ -884,13 +884,13 @@ export const AdminOrdersPage: React.FC = () => {
                 )}
 
                 {/* ── Status Transition Controls ────────────────────────────── */}
-                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
+                <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl shadow-sm space-y-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Order Status Control
                   </h3>
 
                   {allowedNext.length === 0 ? (
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2">
+                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-400 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" />
                       This order is in a terminal state ({STATUS_CONFIG[selectedOrder.status]?.label}). No further status transitions are allowed.
                     </div>
@@ -900,7 +900,7 @@ export const AdminOrdersPage: React.FC = () => {
                         <select
                           value={targetStatus}
                           onChange={(e) => setTargetStatus(e.target.value as OrderStatus)}
-                          className="flex-1 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                          className="flex-1 px-3 py-2 text-sm bg-slate-900 border border-slate-800 rounded-xl focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-200"
                         >
                           <option value="">Select next status transition...</option>
                           {allowedNext.map((st) => (
@@ -917,7 +917,7 @@ export const AdminOrdersPage: React.FC = () => {
                             }
                           }}
                           disabled={!targetStatus || updatingStatus}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-sm transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                           {updatingStatus ? (
                             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -930,7 +930,7 @@ export const AdminOrdersPage: React.FC = () => {
 
                       {/* Optional Tracking Number input */}
                       <div className="pt-2">
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
                           Tracking Number (optional courier tracking ID)
                         </label>
                         <div className="flex gap-2">
@@ -939,13 +939,13 @@ export const AdminOrdersPage: React.FC = () => {
                             value={trackingNumberInput}
                             onChange={(e) => setTrackingNumberInput(e.target.value)}
                             placeholder="e.g. SLPOST-9823481 or COURIER-XYZ"
-                            className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="flex-1 px-3 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-200"
                           />
                           {selectedOrder.trackingNumber !== trackingNumberInput && (
                             <button
                               onClick={() => handleTransition(selectedOrder.status, trackingNumberInput)}
                               disabled={updatingStatus}
-                              className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                              className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                             >
                               Save Tracking
                             </button>
@@ -959,7 +959,7 @@ export const AdminOrdersPage: React.FC = () => {
                 {/* ── Customer & Shipping Address ───────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Customer Card */}
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                       <User className="w-3.5 h-3.5" />
                       Customer Info
@@ -968,10 +968,10 @@ export const AdminOrdersPage: React.FC = () => {
                       const cust = getCustomerInfo(selectedOrder);
                       return (
                         <div className="text-xs space-y-0.5">
-                          <p className="font-semibold text-slate-900 text-sm">{cust.name}</p>
-                          <p className="text-slate-500">{cust.email}</p>
+                          <p className="font-semibold text-white text-sm">{cust.name}</p>
+                          <p className="text-slate-400">{cust.email}</p>
                           {typeof selectedOrder.user === 'object' && selectedOrder.user?._id && (
-                            <p className="text-[10px] font-mono text-slate-400 pt-1">
+                            <p className="text-[10px] font-mono text-slate-500 pt-1">
                               ID: {selectedOrder.user._id}
                             </p>
                           )}
@@ -981,13 +981,13 @@ export const AdminOrdersPage: React.FC = () => {
                   </div>
 
                   {/* Address Card */}
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                       <MapPin className="w-3.5 h-3.5" />
                       Shipping Address
                     </div>
-                    <div className="text-xs text-slate-600 space-y-0.5">
-                      <p className="font-medium text-slate-800">
+                    <div className="text-xs text-slate-300 space-y-0.5">
+                      <p className="font-medium text-slate-200">
                         {selectedOrder.shippingAddress.line1}
                       </p>
                       {selectedOrder.shippingAddress.line2 && (
@@ -1000,7 +1000,7 @@ export const AdminOrdersPage: React.FC = () => {
                           : ''}{' '}
                         {selectedOrder.shippingAddress.postalCode}
                       </p>
-                      <p className="font-medium text-slate-700">
+                      <p className="font-medium text-slate-300">
                         {selectedOrder.shippingAddress.country}
                       </p>
                     </div>
@@ -1008,19 +1008,19 @@ export const AdminOrdersPage: React.FC = () => {
                 </div>
 
                 {/* ── Payment Information & Slip Viewer ───────────────────────── */}
-                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
+                <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                       Payment Verification
                     </h3>
                     {selectedOrder.payment && (
                       <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded capitalize ${
+                        className={`text-xs font-semibold px-2 py-0.5 rounded capitalize border ${
                           selectedOrder.payment.status === 'approved'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                             : selectedOrder.payment.status === 'rejected'
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                            : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                         }`}
                       >
                         Payment: {selectedOrder.payment.status}
@@ -1031,20 +1031,20 @@ export const AdminOrdersPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div>
                       <span className="text-slate-400">Method:</span>{' '}
-                      <span className="font-semibold text-slate-800 capitalize">
+                      <span className="font-semibold text-white capitalize">
                         {selectedOrder.payment?.method?.replace('_', ' ') || 'Pending'}
                       </span>
                     </div>
                     <div>
                       <span className="text-slate-400">Amount:</span>{' '}
-                      <span className="font-semibold text-slate-800">
+                      <span className="font-semibold text-white">
                         Rs. {(selectedOrder.payment?.amount ?? selectedOrder.total).toLocaleString()}
                       </span>
                     </div>
                     {selectedOrder.pointsPaid > 0 && (
-                      <div className="sm:col-span-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-amber-800">
+                      <div className="sm:col-span-2 p-2.5 bg-amber-500/15 border border-amber-500/30 rounded-xl flex items-center justify-between text-amber-300">
                         <div className="flex items-center gap-2">
-                          <Coins className="w-4 h-4 text-amber-600" />
+                          <Coins className="w-4 h-4 text-amber-400" />
                           <span className="font-medium">Paid with Reward Points:</span>
                         </div>
                         <span className="font-bold text-sm">
@@ -1055,7 +1055,7 @@ export const AdminOrdersPage: React.FC = () => {
                     {selectedOrder.payment?.transactionId && (
                       <div>
                         <span className="text-slate-400">Transaction ID:</span>{' '}
-                        <span className="font-mono text-slate-700">
+                        <span className="font-mono text-slate-300">
                           {selectedOrder.payment.transactionId}
                         </span>
                       </div>
@@ -1063,13 +1063,13 @@ export const AdminOrdersPage: React.FC = () => {
                     {selectedOrder.payment?.maskedCardLast4 && (
                       <div>
                         <span className="text-slate-400">Card ending:</span>{' '}
-                        <span className="font-mono text-slate-700">
+                        <span className="font-mono text-slate-300">
                           •••• {selectedOrder.payment.maskedCardLast4}
                         </span>
                       </div>
                     )}
                     {selectedOrder.payment?.reviewedAt && (
-                      <div className="sm:col-span-2 text-slate-500">
+                      <div className="sm:col-span-2 text-slate-400">
                         Reviewed at: {new Date(selectedOrder.payment.reviewedAt).toLocaleString()}
                       </div>
                     )}
@@ -1077,15 +1077,15 @@ export const AdminOrdersPage: React.FC = () => {
                       <div
                         className={`sm:col-span-2 p-3 rounded-xl border text-xs space-y-1 ${
                           selectedOrder.payment.status === 'rejected'
-                            ? 'bg-rose-50 border-rose-200 text-rose-800'
-                            : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                            ? 'bg-rose-950/40 border-rose-800/60 text-rose-300'
+                            : 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
                         }`}
                       >
                         <span className="font-semibold flex items-center gap-1.5">
                           {selectedOrder.payment.status === 'rejected' ? (
-                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                           ) : (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                           )}
                           Staff Review Note:
                         </span>
@@ -1098,17 +1098,17 @@ export const AdminOrdersPage: React.FC = () => {
 
                   {/* Bank Slip Thumbnail / Preview */}
                   {selectedOrder.payment?.slipImageUrl && (
-                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                    <div className="pt-3 border-t border-slate-800 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <FileText className="w-4 h-4 text-indigo-600" />
+                        <span className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                          <FileText className="w-4 h-4 text-indigo-400" />
                           Uploaded Bank Deposit Slip
                         </span>
                         <a
                           href={resolveSlipUrl(selectedOrder.payment.slipImageUrl)}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                          className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium"
                         >
                           Open in new tab
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -1121,7 +1121,7 @@ export const AdminOrdersPage: React.FC = () => {
                             resolveSlipUrl(selectedOrder.payment?.slipImageUrl)
                           )
                         }
-                        className="relative group cursor-pointer border border-slate-200 rounded-xl overflow-hidden max-w-sm bg-slate-100 hover:border-indigo-400 transition-colors"
+                        className="relative group cursor-pointer border border-slate-800 rounded-xl overflow-hidden max-w-sm bg-slate-950 hover:border-indigo-500 transition-colors"
                       >
                         <img
                           src={resolveSlipUrl(selectedOrder.payment.slipImageUrl)}
@@ -1131,7 +1131,7 @@ export const AdminOrdersPage: React.FC = () => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
                         />
-                        <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-medium text-xs gap-1.5">
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-medium text-xs gap-1.5">
                           <Eye className="w-4 h-4" />
                           Click to enlarge
                         </div>
@@ -1141,16 +1141,16 @@ export const AdminOrdersPage: React.FC = () => {
                 </div>
 
                 {/* ── Order Items ───────────────────────────────────────────── */}
-                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
+                <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl shadow-sm space-y-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Order Items ({selectedOrder.items?.length || 0})
                   </h3>
 
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-slate-800/80">
                     {selectedOrder.items?.map((item, idx) => (
                       <div key={idx} className="py-3 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shrink-0">
+                          <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shrink-0">
                             {item.image ? (
                               <img
                                 src={item.image}
@@ -1158,25 +1158,25 @@ export const AdminOrdersPage: React.FC = () => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <div className="w-full h-full flex items-center justify-center text-slate-500">
                                 <Package className="w-5 h-5" />
                               </div>
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-800 text-xs sm:text-sm">
+                            <p className="font-semibold text-white text-xs sm:text-sm">
                               {item.name}
                             </p>
                             <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
                               {item.size && <span>Size: {item.size}</span>}
                               {item.color && <span>Color: {item.color}</span>}
-                              <span className="font-mono">SKU: {item.variantSku}</span>
+                              <span className="font-mono text-slate-400">SKU: {item.variantSku}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="text-right shrink-0">
-                          <p className="font-semibold text-slate-900 text-xs sm:text-sm">
+                          <p className="font-semibold text-white text-xs sm:text-sm">
                             Rs. {(item.unitPrice * item.quantity).toLocaleString()}
                           </p>
                           <p className="text-[11px] text-slate-400">
@@ -1188,18 +1188,18 @@ export const AdminOrdersPage: React.FC = () => {
                   </div>
 
                   {/* Price Breakdown */}
-                  <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
-                    <div className="flex justify-between text-slate-600">
+                  <div className="pt-4 border-t border-slate-800 space-y-2 text-xs">
+                    <div className="flex justify-between text-slate-400">
                       <span>Subtotal</span>
-                      <span>Rs. {selectedOrder.subtotal.toLocaleString()}</span>
+                      <span className="text-slate-200">Rs. {selectedOrder.subtotal.toLocaleString()}</span>
                     </div>
 
                     {(selectedOrder.discountAmount ?? 0) > 0 && (
-                      <div className="flex justify-between text-emerald-600">
+                      <div className="flex justify-between text-emerald-400">
                         <span className="flex items-center gap-1">
                           Coupon Discount{' '}
                           {selectedOrder.couponCode && (
-                            <span className="font-mono text-[10px] bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">
+                            <span className="font-mono text-[10px] bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30">
                               {selectedOrder.couponCode}
                             </span>
                           )}
@@ -1208,9 +1208,9 @@ export const AdminOrdersPage: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between text-slate-400">
                       <span>Shipping Fee</span>
-                      <span>
+                      <span className="text-slate-200">
                         {selectedOrder.shippingFee === 0
                           ? 'FREE'
                           : `Rs. ${selectedOrder.shippingFee.toLocaleString()}`}
@@ -1218,16 +1218,16 @@ export const AdminOrdersPage: React.FC = () => {
                     </div>
 
                     {selectedOrder.pointsPaid > 0 && (
-                      <div className="flex justify-between text-amber-700 font-medium">
+                      <div className="flex justify-between text-amber-400 font-medium">
                         <span className="flex items-center gap-1">
-                          <Coins className="w-3.5 h-3.5 text-amber-600" />
+                          <Coins className="w-3.5 h-3.5 text-amber-400" />
                           Reward Points Used
                         </span>
                         <span>{selectedOrder.pointsPaid.toLocaleString()} pts</span>
                       </div>
                     )}
 
-                    <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold text-slate-900">
+                    <div className="pt-2 border-t border-slate-800 flex justify-between text-sm font-bold text-white">
                       <span>Grand Total</span>
                       <span>Rs. {selectedOrder.total.toLocaleString()}</span>
                     </div>
@@ -1242,8 +1242,8 @@ export const AdminOrdersPage: React.FC = () => {
       {/* ── Bank Slip Lightbox Modal ────────────────────────────────────────── */}
       {lightboxSlipUrl && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="p-3 bg-slate-900 text-white flex items-center justify-between">
+          <div className="relative max-w-4xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col text-white">
+            <div className="p-3 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
               <span className="text-xs font-semibold flex items-center gap-2">
                 <FileText className="w-4 h-4 text-indigo-400" />
                 Bank Transfer Slip Inspection
@@ -1255,7 +1255,7 @@ export const AdminOrdersPage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 overflow-auto flex items-center justify-center bg-slate-100 max-h-[calc(90vh-60px)]">
+            <div className="p-4 overflow-auto flex items-center justify-center bg-slate-950 max-h-[calc(90vh-60px)]">
               <img
                 src={lightboxSlipUrl}
                 alt="Bank slip full resolution"

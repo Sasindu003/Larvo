@@ -209,15 +209,15 @@ export const AdminReviewsPage: React.FC = () => {
         {/* ── Analytics Metric Cards ────────────────────────────────────────── */}
         {analytics && (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md flex flex-col justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Average Rating
               </span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-slate-900">
+                <span className="text-3xl font-bold text-white">
                   {analytics.averageRating.toFixed(1)}
                 </span>
-                <span className="text-sm font-medium text-slate-400">/ 5.0</span>
+                <span className="text-sm font-medium text-slate-500">/ 5.0</span>
               </div>
               <div className="mt-2 flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -226,76 +226,76 @@ export const AdminReviewsPage: React.FC = () => {
                     className={`w-4 h-4 ${
                       star <= Math.round(analytics.averageRating)
                         ? 'text-amber-400 fill-amber-400'
-                        : 'text-slate-200'
+                        : 'text-slate-700'
                     }`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md flex flex-col justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Total Reviews
               </span>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-slate-900">{analytics.totalReviews}</span>
+                <span className="text-3xl font-bold text-white">{analytics.totalReviews}</span>
               </div>
-              <span className="text-xs text-slate-500 mt-2">All submitted customer reviews</span>
+              <span className="text-xs text-slate-400 mt-2">All submitted customer reviews</span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">
+            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md flex flex-col justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
                 Needs Reply
               </span>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-amber-600">
+                <span className="text-3xl font-bold text-amber-400">
                   {analytics.unansweredReviews}
                 </span>
               </div>
-              <span className="text-xs text-slate-500 mt-2">Awaiting store response</span>
+              <span className="text-xs text-slate-400 mt-2">Awaiting store response</span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-rose-600">
+            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md flex flex-col justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-rose-400">
                 Flagged
               </span>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-rose-600">{analytics.flaggedReviews}</span>
+                <span className="text-3xl font-bold text-rose-400">{analytics.flaggedReviews}</span>
               </div>
-              <span className="text-xs text-slate-500 mt-2">Requires admin attention</span>
+              <span className="text-xs text-slate-400 mt-2">Requires admin attention</span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md flex flex-col justify-between col-span-2 lg:col-span-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
                 With Photos
               </span>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-indigo-600">
+                <span className="text-3xl font-bold text-indigo-400">
                   {analytics.reviewsWithPhotos}
                 </span>
               </div>
-              <span className="text-xs text-slate-500 mt-2">Customer uploaded images</span>
+              <span className="text-xs text-slate-400 mt-2">Customer uploaded images</span>
             </div>
           </div>
         )}
 
         {/* ── Filters & Search Controls ──────────────────────────────────────── */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md space-y-4">
           <div className="flex flex-col md:flex-row gap-3">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search reviews by title or comment content..."
-                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-950 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 placeholder:text-slate-500 transition-all"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -308,7 +308,7 @@ export const AdminReviewsPage: React.FC = () => {
                 value={ratingFilter}
                 onChange={(e) => setRatingFilter(e.target.value)}
                 aria-label="Filter by star rating"
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white font-medium text-slate-700"
+                className="w-full px-3 py-2 text-sm bg-slate-950 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 font-medium"
               >
                 <option value="all">All Stars (★)</option>
                 <option value="5">5 Stars only</option>
@@ -325,7 +325,7 @@ export const AdminReviewsPage: React.FC = () => {
                 value={replyFilter}
                 onChange={(e) => setReplyFilter(e.target.value as any)}
                 aria-label="Filter by store reply status"
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white font-medium text-slate-700"
+                className="w-full px-3 py-2 text-sm bg-slate-950 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 font-medium"
               >
                 <option value="all">All Reply Status</option>
                 <option value="unreplied">Needs Reply</option>
@@ -335,7 +335,7 @@ export const AdminReviewsPage: React.FC = () => {
           </div>
 
           {/* Status Tabs & With-Photos checkbox */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
             <div className="flex flex-wrap items-center gap-1.5">
               {(['all', 'published', 'hidden', 'flagged'] as const).map((st) => (
                 <button
@@ -343,8 +343,8 @@ export const AdminReviewsPage: React.FC = () => {
                   onClick={() => setStatusFilter(st)}
                   className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all ${
                     statusFilter === st
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                      : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80'
                   }`}
                 >
                   {st}
@@ -352,14 +352,14 @@ export const AdminReviewsPage: React.FC = () => {
               ))}
             </div>
 
-            <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 select-none">
+            <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-300 select-none">
               <input
                 type="checkbox"
                 checked={withPhotosOnly}
                 onChange={(e) => setWithPhotosOnly(e.target.checked)}
-                className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                className="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500/40"
               />
-              <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
+              <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
               Only reviews with photos
             </label>
           </div>
@@ -367,15 +367,15 @@ export const AdminReviewsPage: React.FC = () => {
 
         {/* ── Reviews List ──────────────────────────────────────────────────── */}
         {loading ? (
-          <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <div className="bg-slate-900/70 p-12 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md text-center">
             <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto mb-3" />
-            <p className="text-sm text-slate-500 font-medium">Loading reviews...</p>
+            <p className="text-sm text-slate-400 font-medium">Loading reviews...</p>
           </div>
         ) : reviews.length === 0 ? (
-          <div className="bg-white p-16 rounded-2xl border border-slate-200 shadow-sm text-center max-w-md mx-auto">
-            <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900">No reviews found</h3>
-            <p className="text-sm text-slate-500 mt-1">
+          <div className="bg-slate-900/70 p-16 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md text-center max-w-md mx-auto">
+            <MessageSquare className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white">No reviews found</h3>
+            <p className="text-sm text-slate-400 mt-1">
               Try adjusting your search query, status tabs, or star rating filters.
             </p>
           </div>
@@ -389,11 +389,11 @@ export const AdminReviewsPage: React.FC = () => {
               return (
                 <div
                   key={review._id}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                  className="bg-slate-900/70 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md hover:border-slate-700 transition-all overflow-hidden"
                 >
                   <div className="p-6 space-y-4">
                     {/* Top Row: Product info + Status badge */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                       <div className="flex items-center gap-3 min-w-0">
                         {product.image ? (
                           <img
@@ -403,16 +403,16 @@ export const AdminReviewsPage: React.FC = () => {
                                 : `/api/files/${product.image}`
                             }
                             alt={product.name}
-                            className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
+                            className="w-12 h-12 rounded-xl object-cover border border-slate-800 shrink-0"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                          <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
                             <ImageIcon className="w-5 h-5" />
                           </div>
                         )}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-bold text-slate-900 truncate">
+                            <h2 className="text-sm font-bold text-white truncate">
                               {product.name}
                             </h2>
                             {product.slug && (
@@ -420,15 +420,15 @@ export const AdminReviewsPage: React.FC = () => {
                                 href={`/products/${product.slug}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-slate-400 hover:text-indigo-600 transition-colors shrink-0"
+                                className="text-slate-500 hover:text-amber-400 transition-colors shrink-0"
                                 title="View Product Page"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                            <span className="font-medium text-slate-700">{authorName}</span>
+                          <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                            <span className="font-medium text-slate-200">{authorName}</span>
                             {authorEmail && <span>• {authorEmail}</span>}
                             <span>• {new Date(review.createdAt).toLocaleDateString()}</span>
                           </div>
@@ -438,8 +438,8 @@ export const AdminReviewsPage: React.FC = () => {
                       {/* Badges & Status */}
                       <div className="flex items-center gap-2 shrink-0">
                         {review.verifiedPurchase && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                             Verified Purchase
                           </span>
                         )}
@@ -447,10 +447,10 @@ export const AdminReviewsPage: React.FC = () => {
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${
                             review.status === 'published'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                               : review.status === 'hidden'
-                              ? 'bg-slate-100 text-slate-600 border-slate-200'
-                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                              ? 'bg-slate-800 text-slate-400 border-slate-700'
+                              : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                           }`}
                         >
                           {review.status}
@@ -467,20 +467,20 @@ export const AdminReviewsPage: React.FC = () => {
                               key={star}
                               className={`w-4 h-4 ${
                                 star <= review.rating
-                                  ? 'text-amber-400 fill-amber-400'
-                                  : 'text-slate-200'
+                                    ? 'text-amber-400 fill-amber-400'
+                                    : 'text-slate-700'
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs font-bold text-slate-700">
+                        <span className="text-xs font-bold text-slate-300">
                           {review.rating} out of 5
                         </span>
-                        <span className="text-xs text-slate-400 font-semibold">•</span>
-                        <span className="text-sm font-bold text-slate-900">{review.title}</span>
+                        <span className="text-xs text-slate-600 font-semibold">•</span>
+                        <span className="text-sm font-bold text-white">{review.title}</span>
                       </div>
 
-                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">
                         {review.comment}
                       </p>
                     </div>
@@ -502,7 +502,7 @@ export const AdminReviewsPage: React.FC = () => {
                                 key={idx}
                                 type="button"
                                 onClick={() => setActiveLightboxImage(photoSrc)}
-                                className="relative group w-16 h-16 rounded-xl overflow-hidden border border-slate-200 hover:border-amber-400 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                className="relative group w-16 h-16 rounded-xl overflow-hidden border border-slate-800 hover:border-amber-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                               >
                                 <img
                                   src={photoSrc}
@@ -518,36 +518,36 @@ export const AdminReviewsPage: React.FC = () => {
 
                     {/* Official Store Reply (if present) */}
                     {review.adminReply?.text && (
-                      <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-4 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs text-amber-800 font-semibold">
+                      <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-4 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-amber-400 font-semibold">
                           <span className="flex items-center gap-1.5">
-                            <Reply className="w-3.5 h-3.5 rotate-180 text-amber-600" />
+                            <Reply className="w-3.5 h-3.5 rotate-180 text-amber-400" />
                             Official Store Reply
                           </span>
-                          <span className="text-amber-700/80 font-normal">
+                          <span className="text-amber-400/80 font-normal">
                             {new Date(review.adminReply.repliedAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-line">
+                        <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-line">
                           {review.adminReply.text}
                         </p>
                       </div>
                     )}
 
                     {/* Bottom Action Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
                       {/* Helpful score */}
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <div className="flex items-center gap-3 text-xs text-slate-400">
                         <span className="inline-flex items-center gap-1">
-                          <ThumbsUp className="w-3.5 h-3.5 text-slate-400" />
+                          <ThumbsUp className="w-3.5 h-3.5 text-slate-500" />
                           {review.helpfulVotes?.up?.length || 0}
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <ThumbsDown className="w-3.5 h-3.5 text-slate-400" />
+                          <ThumbsDown className="w-3.5 h-3.5 text-slate-500" />
                           {review.helpfulVotes?.down?.length || 0}
                         </span>
-                        <span className="text-slate-400">•</span>
-                        <span className="font-medium text-slate-600">
+                        <span className="text-slate-600">•</span>
+                        <span className="font-medium text-slate-300">
                           Score: {review.helpfulScore || 0}
                         </span>
                       </div>
@@ -557,7 +557,7 @@ export const AdminReviewsPage: React.FC = () => {
                         {/* Reply Button */}
                         <button
                           onClick={() => handleOpenReplyModal(review)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:text-white rounded-lg transition-colors"
                         >
                           <Reply className="w-3.5 h-3.5 rotate-180" />
                           {review.adminReply?.text ? 'Edit Reply' : 'Reply'}
@@ -567,7 +567,7 @@ export const AdminReviewsPage: React.FC = () => {
                         {review.status !== 'published' && (
                           <button
                             onClick={() => handleStatusChange(review._id, 'published')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/15 hover:bg-emerald-500/25 rounded-lg border border-emerald-500/30 transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             Publish
@@ -577,7 +577,7 @@ export const AdminReviewsPage: React.FC = () => {
                         {review.status !== 'hidden' && (
                           <button
                             onClick={() => handleStatusChange(review._id, 'hidden')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:text-white rounded-lg transition-colors"
                           >
                             <EyeOff className="w-3.5 h-3.5" />
                             Hide
@@ -587,7 +587,7 @@ export const AdminReviewsPage: React.FC = () => {
                         {review.status !== 'flagged' && (
                           <button
                             onClick={() => handleStatusChange(review._id, 'flagged')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-400 bg-rose-500/15 hover:bg-rose-500/25 rounded-lg border border-rose-500/30 transition-colors"
                           >
                             <Flag className="w-3.5 h-3.5" />
                             Flag
@@ -598,7 +598,7 @@ export const AdminReviewsPage: React.FC = () => {
                         <button
                           onClick={() => handleDeleteReview(review._id)}
                           disabled={deletingId === review._id}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition-colors disabled:opacity-50"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Delete
@@ -612,17 +612,17 @@ export const AdminReviewsPage: React.FC = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <span className="text-xs text-slate-500 font-medium">
-                  Showing page <span className="font-bold text-slate-800">{page}</span> of{' '}
-                  <span className="font-bold text-slate-800">{totalPages}</span> ({totalCount} total
+              <div className="flex items-center justify-between bg-slate-900/70 p-4 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md">
+                <span className="text-xs text-slate-400 font-medium">
+                  Showing page <span className="font-semibold text-white">{page}</span> of{' '}
+                  <span className="font-semibold text-white">{totalPages}</span> ({totalCount} total
                   reviews)
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1 || loading}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:text-white rounded-lg transition-colors disabled:opacity-40"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     Previous
@@ -630,7 +630,7 @@ export const AdminReviewsPage: React.FC = () => {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages || loading}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:text-white rounded-lg transition-colors disabled:opacity-40"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />
@@ -643,11 +643,11 @@ export const AdminReviewsPage: React.FC = () => {
 
         {/* ── Reply Modal ───────────────────────────────────────────────────── */}
         {replyModalOpen && activeReviewForReply && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Reply className="w-4 h-4 rotate-180 text-amber-600" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b border-slate-800">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Reply className="w-4 h-4 rotate-180 text-amber-400" />
                   Official Store Reply
                 </h3>
                 <button
@@ -655,24 +655,24 @@ export const AdminReviewsPage: React.FC = () => {
                     setReplyModalOpen(false);
                     setActiveReviewForReply(null);
                   }}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                  className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmitReply} className="p-5 space-y-4">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1">
-                  <div className="font-bold text-slate-800">
+                <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+                  <div className="font-bold text-slate-200">
                     Review by {activeReviewForReply.user?.name || 'Customer'}:
                   </div>
-                  <div className="text-slate-600 italic line-clamp-2">
+                  <div className="text-slate-400 italic line-clamp-2">
                     "{activeReviewForReply.comment}"
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
                     Store Response
                   </label>
                   <textarea
@@ -682,29 +682,29 @@ export const AdminReviewsPage: React.FC = () => {
                     placeholder="Write a professional, helpful response from Larvo customer care..."
                     required
                     maxLength={2000}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all resize-none"
+                    className="w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all resize-none"
                   />
-                  <div className="flex justify-between text-[11px] text-slate-400">
+                  <div className="flex justify-between text-[11px] text-slate-500">
                     <span>This reply will be publicly visible under the review.</span>
                     <span>{replyText.length}/2000</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => {
                       setReplyModalOpen(false);
                       setActiveReviewForReply(null);
                     }}
-                    className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                    className="px-4 py-2 text-xs font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:text-white rounded-xl transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submittingReply || !replyText.trim()}
-                    className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-sm transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-sm transition-colors disabled:opacity-50"
                   >
                     {submittingReply && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                     Post Official Reply
@@ -719,7 +719,7 @@ export const AdminReviewsPage: React.FC = () => {
         {activeLightboxImage && (
           <div
             onClick={() => setActiveLightboxImage(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-zoom-out animate-fadeIn"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm cursor-zoom-out animate-fadeIn"
           >
             <div
               onClick={(e) => e.stopPropagation()}
@@ -728,7 +728,7 @@ export const AdminReviewsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveLightboxImage(null)}
-                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-900/70 text-white flex items-center justify-center hover:bg-slate-900 transition-colors shadow-lg"
+                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-900 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-800 transition-colors shadow-lg"
               >
                 <X className="w-5 h-5" />
               </button>

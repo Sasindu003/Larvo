@@ -38,59 +38,59 @@ interface StatusBadgeConfig {
 const STATUS_CONFIG: Record<ReturnStatus, StatusBadgeConfig> = {
   requested: {
     label: 'Requested',
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    dot: 'bg-amber-500',
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-400',
+    border: 'border-amber-500/30',
+    dot: 'bg-amber-400',
   },
   under_review: {
     label: 'Under Review',
-    bg: 'bg-sky-50',
-    text: 'text-sky-700',
-    border: 'border-sky-200',
-    dot: 'bg-sky-500',
+    bg: 'bg-sky-500/15',
+    text: 'text-sky-400',
+    border: 'border-sky-500/30',
+    dot: 'bg-sky-400',
   },
   approved: {
     label: 'Approved',
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-500/15',
+    text: 'text-emerald-400',
+    border: 'border-emerald-500/30',
+    dot: 'bg-emerald-400',
   },
   rejected: {
     label: 'Rejected',
-    bg: 'bg-rose-50',
-    text: 'text-rose-700',
-    border: 'border-rose-200',
-    dot: 'bg-rose-500',
+    bg: 'bg-rose-500/15',
+    text: 'text-rose-400',
+    border: 'border-rose-500/30',
+    dot: 'bg-rose-400',
   },
   pickup_scheduled: {
     label: 'Pickup Scheduled',
-    bg: 'bg-indigo-50',
-    text: 'text-indigo-700',
-    border: 'border-indigo-200',
-    dot: 'bg-indigo-500',
+    bg: 'bg-indigo-500/15',
+    text: 'text-indigo-400',
+    border: 'border-indigo-500/30',
+    dot: 'bg-indigo-400',
   },
   picked_up: {
     label: 'Picked Up',
-    bg: 'bg-purple-50',
-    text: 'text-purple-700',
-    border: 'border-purple-200',
-    dot: 'bg-purple-500',
+    bg: 'bg-purple-500/15',
+    text: 'text-purple-400',
+    border: 'border-purple-500/30',
+    dot: 'bg-purple-400',
   },
   received: {
     label: 'Received',
-    bg: 'bg-teal-50',
-    text: 'text-teal-700',
-    border: 'border-teal-200',
-    dot: 'bg-teal-500',
+    bg: 'bg-teal-500/15',
+    text: 'text-teal-400',
+    border: 'border-teal-500/30',
+    dot: 'bg-teal-400',
   },
   refunded: {
     label: 'Refunded',
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    border: 'border-blue-200',
-    dot: 'bg-blue-500',
+    bg: 'bg-blue-500/15',
+    text: 'text-blue-400',
+    border: 'border-blue-500/30',
+    dot: 'bg-blue-400',
   },
 };
 
@@ -347,21 +347,21 @@ export const AdminReturnsPage: React.FC = () => {
       </div>
 
       {/* ── Filter Bar & Search ────────────────────────────────────────────── */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+      <div className="bg-slate-900/70 p-4 sm:p-5 rounded-2xl shadow-xl border border-slate-800 backdrop-blur-md space-y-4">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by ID, customer name, or email..."
-              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-all placeholder:text-slate-400"
+              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-950 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all placeholder:text-slate-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -377,10 +377,10 @@ export const AdminReturnsPage: React.FC = () => {
                   setStatusFilter(tab.id);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   statusFilter === tab.id
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                    : 'bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800/80'
                 }`}
               >
                 {tab.label}
@@ -391,11 +391,11 @@ export const AdminReturnsPage: React.FC = () => {
       </div>
 
       {/* ── Table Card ─────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-slate-900/70 rounded-2xl shadow-xl border border-slate-800 backdrop-blur-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-slate-800 bg-slate-950/70 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 <th className="py-3.5 px-4">Request ID</th>
                 <th className="py-3.5 px-4">Customer</th>
                 <th className="py-3.5 px-4">Items</th>
@@ -405,42 +405,42 @@ export const AdminReturnsPage: React.FC = () => {
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-800/60 text-sm">
               {loading ? (
                 Array.from({ length: 5 }).map((_, idx) => (
                   <tr key={idx} className="animate-pulse">
                     <td className="py-4 px-4">
-                      <div className="h-4 bg-slate-200 rounded w-20"></div>
+                      <div className="h-4 bg-slate-800 rounded w-20"></div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="h-4 bg-slate-200 rounded w-32 mb-1"></div>
-                      <div className="h-3 bg-slate-100 rounded w-40"></div>
+                      <div className="h-4 bg-slate-800 rounded w-32 mb-1"></div>
+                      <div className="h-3 bg-slate-800/60 rounded w-40"></div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="h-4 bg-slate-200 rounded w-16"></div>
+                      <div className="h-4 bg-slate-800 rounded w-16"></div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="h-4 bg-slate-200 rounded w-24"></div>
+                      <div className="h-4 bg-slate-800 rounded w-24"></div>
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <div className="h-6 bg-slate-200 rounded-full w-20 mx-auto"></div>
+                      <div className="h-6 bg-slate-800 rounded-full w-20 mx-auto"></div>
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <div className="h-6 bg-slate-200 rounded-full w-24 mx-auto"></div>
+                      <div className="h-6 bg-slate-800 rounded-full w-24 mx-auto"></div>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <div className="h-8 bg-slate-200 rounded-lg w-20 ml-auto"></div>
+                      <div className="h-8 bg-slate-800 rounded-lg w-20 ml-auto"></div>
                     </td>
                   </tr>
                 ))
               ) : filteredReturns.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-500">
-                    <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+                  <td colSpan={7} className="py-16 text-center text-slate-400">
+                    <div className="w-12 h-12 rounded-full bg-slate-800/60 text-slate-400 mx-auto flex items-center justify-center mb-3">
                       <RotateCcw className="w-6 h-6" />
                     </div>
-                    <p className="font-medium text-slate-800 mb-1">No return requests found</p>
-                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    <p className="font-semibold text-slate-200 mb-1">No return requests found</p>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
                       {statusFilter !== 'all'
                         ? `There are currently no return requests with status "${statusFilter}".`
                         : 'No return requests have been submitted yet.'}
@@ -466,34 +466,34 @@ export const AdminReturnsPage: React.FC = () => {
                   return (
                     <tr
                       key={ret._id}
-                      className="hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                      className="hover:bg-slate-800/40 transition-colors cursor-pointer group"
                       onClick={() => handleOpenDetail(ret)}
                     >
-                      <td className="py-4 px-4 font-mono font-medium text-slate-800">
-                        <span className="text-slate-400">#</span>
+                      <td className="py-4 px-4 font-mono font-medium text-white">
+                        <span className="text-slate-500">#</span>
                         {shortId}
                       </td>
 
                       <td className="py-4 px-4">
-                        <p className="font-medium text-slate-800">{customerName}</p>
+                        <p className="font-medium text-slate-200">{customerName}</p>
                         {customerEmail && (
                           <p className="text-xs text-slate-400">{customerEmail}</p>
                         )}
                       </td>
 
-                      <td className="py-4 px-4 text-slate-600">
+                      <td className="py-4 px-4 text-slate-300">
                         <span className="inline-flex items-center gap-1 font-medium">
-                          <Package className="w-3.5 h-3.5 text-slate-400" />
+                          <Package className="w-3.5 h-3.5 text-slate-500" />
                           {totalItemsQty} {totalItemsQty === 1 ? 'item' : 'items'}
                         </span>
-                        <span className="text-xs text-slate-400 block">
+                        <span className="text-xs text-slate-500 block">
                           ({ret.items.length} {ret.items.length === 1 ? 'sku' : 'skus'})
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-slate-500 text-xs">
+                      <td className="py-4 px-4 text-slate-400 text-xs">
                         <span className="inline-flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <Calendar className="w-3.5 h-3.5 text-slate-500" />
                           {new Date(ret.createdAt).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
@@ -504,12 +504,12 @@ export const AdminReturnsPage: React.FC = () => {
 
                       <td className="py-4 px-4 text-center">
                         {displayPoints != null ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                            <Coins className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            <Coins className="w-3.5 h-3.5 text-amber-400" />
                             {displayPoints.toLocaleString()} pts
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                          <span className="text-xs text-slate-500">—</span>
                         )}
                       </td>
 
@@ -532,7 +532,7 @@ export const AdminReturnsPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleOpenApprove(ret)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-xs"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs"
                                 title="Approve return request"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -541,7 +541,7 @@ export const AdminReturnsPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleOpenReject(ret)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-colors"
                                 title="Reject return request"
                               >
                                 <XCircle className="w-3.5 h-3.5" />
@@ -554,7 +554,7 @@ export const AdminReturnsPage: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenRefund(ret)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition-colors shadow-xs"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 text-white transition-colors shadow-xs"
                                   title="Process points refund to customer wallet"
                                 >
                                   <Coins className="w-3.5 h-3.5" />
@@ -564,7 +564,7 @@ export const AdminReturnsPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleOpenDetail(ret)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 View
@@ -582,27 +582,27 @@ export const AdminReturnsPage: React.FC = () => {
         </div>
 
         {/* ── Pagination ─────────────────────────────────────────────────────── */}
-        <div className="py-3 px-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div className="py-3 px-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between text-xs text-slate-400">
           <div>
-            Showing <span className="font-semibold text-slate-800">{filteredReturns.length}</span> of{' '}
-            <span className="font-semibold text-slate-800">{total}</span> returns
+            Showing <span className="font-semibold text-white">{filteredReturns.length}</span> of{' '}
+            <span className="font-semibold text-white">{total}</span> returns
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-40 transition-colors"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               Previous
             </button>
-            <span className="px-2 font-medium text-slate-700">
+            <span className="px-2 font-medium text-slate-300">
               Page {page} of {pages || 1}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(pages, p + 1))}
               disabled={page >= pages || loading}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-40 transition-colors"
             >
               Next
               <ChevronRight className="w-3.5 h-3.5" />
@@ -613,18 +613,18 @@ export const AdminReturnsPage: React.FC = () => {
 
       {/* ── Detail Modal ────────────────────────────────────────────────────── */}
       {detailModalOpen && selectedReturn && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-slate-700" />
-                <h3 className="text-lg font-bold text-slate-900">
+                <RotateCcw className="w-5 h-5 text-amber-400" />
+                <h3 className="text-lg font-bold text-white">
                   Return Request #{selectedReturn._id.substring(selectedReturn._id.length - 8).toUpperCase()}
                 </h3>
               </div>
               <button
                 onClick={() => setDetailModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -632,7 +632,7 @@ export const AdminReturnsPage: React.FC = () => {
 
             <div className="p-6 space-y-6 overflow-y-auto">
               {/* Status and Points banner */}
-              <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-950/70 border border-slate-800">
                 <div>
                   <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 block mb-1">
                     Status
@@ -654,8 +654,8 @@ export const AdminReturnsPage: React.FC = () => {
                   <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 block mb-1">
                     {selectedReturn.status === 'refunded' ? 'Refunded Points' : 'Estimated Refund Points'}
                   </span>
-                  <div className="inline-flex items-center gap-1.5 text-base font-bold text-amber-800 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200">
-                    <Coins className="w-4 h-4 text-amber-600" />
+                  <div className="inline-flex items-center gap-1.5 text-base font-bold text-amber-400 bg-amber-500/15 px-3 py-1 rounded-lg border border-amber-500/30">
+                    <Coins className="w-4 h-4 text-amber-400" />
                     {(
                       selectedReturn.status === 'refunded'
                         ? selectedReturn.refundPoints
@@ -669,7 +669,7 @@ export const AdminReturnsPage: React.FC = () => {
                   <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 block mb-1">
                     Submitted Date
                   </span>
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-slate-200">
                     {new Date(selectedReturn.createdAt).toLocaleString()}
                   </span>
                 </div>
@@ -677,11 +677,11 @@ export const AdminReturnsPage: React.FC = () => {
 
               {/* Rejection notice if rejected */}
               {selectedReturn.status === 'rejected' && selectedReturn.rejectionReason && (
-                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-sm text-rose-900">
-                  <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-sm text-rose-200">
+                  <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-rose-800 mb-0.5">Rejection Reason:</p>
-                    <p className="text-rose-700">{selectedReturn.rejectionReason}</p>
+                    <p className="font-semibold text-rose-300 mb-0.5">Rejection Reason:</p>
+                    <p className="text-rose-200">{selectedReturn.rejectionReason}</p>
                   </div>
                 </div>
               )}
@@ -691,25 +691,25 @@ export const AdminReturnsPage: React.FC = () => {
                 <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
                   Order Details
                 </h4>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
-                  <p className="text-slate-700">
-                    <span className="text-slate-400 font-medium">Order ID: </span>
-                    <span className="font-mono">
+                <div className="p-3 bg-slate-950/70 rounded-xl border border-slate-800 text-xs space-y-1">
+                  <p className="text-slate-300">
+                    <span className="text-slate-500 font-medium">Order ID: </span>
+                    <span className="font-mono text-white">
                       {typeof selectedReturn.order === 'object' && selectedReturn.order?._id
                         ? selectedReturn.order._id
                         : String(selectedReturn.order)}
                     </span>
                   </p>
                   {typeof selectedReturn.order === 'object' && selectedReturn.order?.total != null && (
-                    <p className="text-slate-700">
-                      <span className="text-slate-400 font-medium">Order Total: </span>
-                      <span className="font-semibold">Rs. {selectedReturn.order.total.toFixed(2)}</span>
+                    <p className="text-slate-300">
+                      <span className="text-slate-500 font-medium">Order Total: </span>
+                      <span className="font-semibold text-white">Rs. {selectedReturn.order.total.toFixed(2)}</span>
                     </p>
                   )}
                   {typeof selectedReturn.user === 'object' && selectedReturn.user && (
-                    <p className="text-slate-700">
-                      <span className="text-slate-400 font-medium">Customer: </span>
-                      <span>
+                    <p className="text-slate-300">
+                      <span className="text-slate-500 font-medium">Customer: </span>
+                      <span className="text-slate-200">
                         {selectedReturn.user.name} ({selectedReturn.user.email})
                       </span>
                     </p>
@@ -722,21 +722,21 @@ export const AdminReturnsPage: React.FC = () => {
                 <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
                   Items to Return ({selectedReturn.items.length})
                 </h4>
-                <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white">
+                <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/60">
                   {selectedReturn.items.map((it, idx) => (
                     <div key={idx} className="p-4 flex items-start justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
+                          <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-slate-800 text-slate-200 rounded">
                             SKU: {it.sku || `Ref #${it.orderItemRef}`}
                           </span>
-                          <span className="text-xs font-medium text-slate-500">
-                            Qty: <strong className="text-slate-800">{it.qty}</strong>
+                          <span className="text-xs font-medium text-slate-400">
+                            Qty: <strong className="text-white">{it.qty}</strong>
                           </span>
                         </div>
-                        <p className="text-sm text-slate-700 mt-1">
-                          <span className="text-xs text-slate-400 font-medium block">Reason for return:</span>
-                          <span className="italic text-slate-800">"{it.reason}"</span>
+                        <p className="text-sm text-slate-300 mt-1">
+                          <span className="text-xs text-slate-500 font-medium block">Reason for return:</span>
+                          <span className="italic text-slate-200">"{it.reason}"</span>
                         </p>
                       </div>
                     </div>
@@ -751,7 +751,7 @@ export const AdminReturnsPage: React.FC = () => {
                     <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
                       Attached Photos ({selectedReturn.images.length})
                     </h4>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-500">
                       Click to inspect full size
                     </span>
                   </div>
@@ -761,7 +761,7 @@ export const AdminReturnsPage: React.FC = () => {
                       return (
                         <div
                           key={idx}
-                          className="group relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 cursor-pointer hover:border-slate-400 transition-all shadow-2xs"
+                          className="group relative border border-slate-800 rounded-xl overflow-hidden bg-slate-950 cursor-pointer hover:border-slate-700 transition-all shadow-2xs"
                           onClick={() => setLightboxImageUrl(fullUrl)}
                         >
                           <img
@@ -772,11 +772,11 @@ export const AdminReturnsPage: React.FC = () => {
                               (e.target as HTMLElement).style.display = 'none';
                             }}
                           />
-                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+                          <div className="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
                             <Eye className="w-4 h-4" />
                             <span>Enlarge</span>
                           </div>
-                          <div className="p-1.5 bg-white/95 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                          <div className="p-1.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
                             <span className="truncate max-w-[110px] font-mono text-[10px]">
                               {img.filename}
                             </span>
@@ -785,7 +785,7 @@ export const AdminReturnsPage: React.FC = () => {
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="text-slate-400 hover:text-slate-800 p-0.5"
+                              className="text-slate-400 hover:text-white p-0.5"
                               title="Open original in new tab"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -799,7 +799,7 @@ export const AdminReturnsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {(selectedReturn.status === 'requested' || selectedReturn.status === 'under_review') && (
                   <>
@@ -809,7 +809,7 @@ export const AdminReturnsPage: React.FC = () => {
                         setDetailModalOpen(false);
                         handleOpenApprove(selectedReturn);
                       }}
-                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-xs"
+                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       Approve Return
@@ -820,7 +820,7 @@ export const AdminReturnsPage: React.FC = () => {
                         setDetailModalOpen(false);
                         handleOpenReject(selectedReturn);
                       }}
-                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors"
+                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-colors"
                     >
                       <XCircle className="w-4 h-4" />
                       Reject Return
@@ -834,7 +834,7 @@ export const AdminReturnsPage: React.FC = () => {
                       setDetailModalOpen(false);
                       handleOpenRefund(selectedReturn);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-teal-600 hover:bg-teal-500 text-white transition-colors shadow-xs"
                   >
                     <Coins className="w-4 h-4" />
                     Process Wallet Refund
@@ -843,7 +843,7 @@ export const AdminReturnsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setDetailModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
               >
                 Close
               </button>
@@ -854,43 +854,43 @@ export const AdminReturnsPage: React.FC = () => {
 
       {/* ── Approve Modal ──────────────────────────────────────────────────── */}
       {approveModalOpen && activeActionReturn && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 w-full max-w-md overflow-hidden">
             <div className="p-6 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Approve Return Request</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <h3 className="text-lg font-bold text-white">Approve Return Request</h3>
+                <p className="text-xs text-slate-400 mt-1">
                   Request #{activeActionReturn._id.substring(activeActionReturn._id.length - 8).toUpperCase()}
                 </p>
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left">
-                <p className="text-xs text-amber-700 font-medium">Estimated Refund Points</p>
-                <p className="text-xl font-bold text-amber-900 flex items-center gap-1.5 mt-0.5">
-                  <Coins className="w-5 h-5 text-amber-500" />
+              <div className="p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-left">
+                <p className="text-xs text-amber-400 font-medium">Estimated Refund Points</p>
+                <p className="text-xl font-bold text-amber-300 flex items-center gap-1.5 mt-0.5">
+                  <Coins className="w-5 h-5 text-amber-400" />
                   {activeActionReturn.estimatedRefundPoints?.toLocaleString() ?? 0} pts
                 </p>
-                <p className="text-[11px] text-amber-600 mt-1">
+                <p className="text-[11px] text-amber-400/80 mt-1">
                   Points will be credited to the customer wallet once items are received and processed.
                 </p>
               </div>
 
               {actionError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 text-left">
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-400 text-left">
                   {actionError}
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-end gap-2">
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 disabled={submittingAction}
                 onClick={() => setApproveModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -898,7 +898,7 @@ export const AdminReturnsPage: React.FC = () => {
                 type="button"
                 disabled={submittingAction}
                 onClick={handleConfirmApprove}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-xs disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs disabled:opacity-50"
               >
                 {submittingAction && <RefreshCw className="w-4 h-4 animate-spin" />}
                 Confirm Approval
@@ -910,35 +910,35 @@ export const AdminReturnsPage: React.FC = () => {
 
       {/* ── Reject Modal ───────────────────────────────────────────────────── */}
       {rejectModalOpen && activeActionReturn && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 w-full max-w-md overflow-hidden">
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
                   <XCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Reject Return Request</h3>
-                  <p className="text-xs text-slate-500">
+                  <h3 className="text-lg font-bold text-white">Reject Return Request</h3>
+                  <p className="text-xs text-slate-400">
                     Request #{activeActionReturn._id.substring(activeActionReturn._id.length - 8).toUpperCase()}
                   </p>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-300">
                 Please provide a reason for rejecting this return. This explanation will be recorded and visible to the customer.
               </p>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 block mb-1.5">
-                  Rejection Reason <span className="text-rose-500">*</span>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1.5">
+                  Rejection Reason <span className="text-rose-400">*</span>
                 </label>
                 <textarea
                   rows={4}
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="State clear reasons (e.g., return period expired, item worn or tags missing)..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all placeholder:text-slate-400"
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition-all placeholder:text-slate-500"
                 />
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
                   <span>Minimum 5 characters required</span>
@@ -947,18 +947,18 @@ export const AdminReturnsPage: React.FC = () => {
               </div>
 
               {actionError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-400">
                   {actionError}
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-end gap-2">
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 disabled={submittingAction}
                 onClick={() => setRejectModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -966,7 +966,7 @@ export const AdminReturnsPage: React.FC = () => {
                 type="button"
                 disabled={submittingAction || rejectionReason.trim().length < 5}
                 onClick={handleConfirmReject}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition-colors shadow-xs disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-colors shadow-xs disabled:opacity-50"
               >
                 {submittingAction && <RefreshCw className="w-4 h-4 animate-spin" />}
                 Confirm Rejection
@@ -978,51 +978,51 @@ export const AdminReturnsPage: React.FC = () => {
 
       {/* ── Refund Modal ────────────────────────────────────────────────────── */}
       {refundModalOpen && activeRefundReturn && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-700">
+                <div className="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400">
                   <Coins className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900">Process Wallet Refund</h3>
+                <h3 className="text-base font-bold text-white">Process Wallet Refund</h3>
               </div>
               <button
                 onClick={() => setRefundModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-300">
                 Are you sure you want to issue a wallet reward points refund for return request{' '}
-                <strong className="font-mono text-slate-900">
+                <strong className="font-mono text-white">
                   #{activeRefundReturn._id.substring(activeRefundReturn._id.length - 8).toUpperCase()}
                 </strong>
                 ?
               </p>
 
-              <div className="p-4 rounded-xl bg-teal-50/70 border border-teal-200 space-y-2">
+              <div className="p-4 rounded-xl bg-teal-500/10 border border-teal-500/25 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-wider font-semibold text-teal-800">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-teal-400">
                     Wallet Credit Amount
                   </span>
-                  <div className="inline-flex items-center gap-1 font-bold text-teal-900 text-base">
-                    <Coins className="w-4 h-4 text-teal-600" />
+                  <div className="inline-flex items-center gap-1 font-bold text-teal-300 text-base">
+                    <Coins className="w-4 h-4 text-teal-400" />
                     {(activeRefundReturn.estimatedRefundPoints || 0).toLocaleString()} pts
                   </div>
                 </div>
-                <p className="text-xs text-teal-700">
+                <p className="text-xs text-teal-400/80">
                   Points will be credited directly to the customer's wallet account balance with an immutable ledger entry.
                 </p>
               </div>
 
-              <div className="text-xs text-slate-500 space-y-1">
+              <div className="text-xs text-slate-400 space-y-1">
                 <p>
                   • Customer:{' '}
-                  <strong className="text-slate-700">
+                  <strong className="text-slate-200">
                     {typeof activeRefundReturn.user === 'object' && activeRefundReturn.user !== null
                       ? activeRefundReturn.user.name || activeRefundReturn.user.email
                       : 'Customer'}
@@ -1030,19 +1030,19 @@ export const AdminReturnsPage: React.FC = () => {
                 </p>
                 <p>
                   • Items Returned:{' '}
-                  <strong className="text-slate-700">
+                  <strong className="text-slate-200">
                     {activeRefundReturn.items.reduce((acc, it) => acc + it.qty, 0)} items
                   </strong>
                 </p>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-end gap-2">
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 disabled={submittingRefund}
                 onClick={() => setRefundModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -1050,7 +1050,7 @@ export const AdminReturnsPage: React.FC = () => {
                 type="button"
                 disabled={submittingRefund}
                 onClick={handleConfirmRefund}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors shadow-xs disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-teal-600 hover:bg-teal-500 text-white transition-colors shadow-xs disabled:opacity-50"
               >
                 {submittingRefund && <RefreshCw className="w-4 h-4 animate-spin" />}
                 Confirm & Issue Refund
@@ -1063,15 +1063,15 @@ export const AdminReturnsPage: React.FC = () => {
       {/* ── Return Photo Lightbox Modal ────────────────────────────────────── */}
       {lightboxImageUrl && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in"
           onClick={() => setLightboxImageUrl(null)}
         >
           <div
-            className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+            className="relative max-w-4xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-5 py-3 bg-slate-900 text-white flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+            <div className="px-5 py-3 bg-slate-950 border-b border-slate-800 text-white flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2 text-amber-400">
                 <RotateCcw className="w-4 h-4" />
                 Return Evidence Photo Inspection
               </span>
