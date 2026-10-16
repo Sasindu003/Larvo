@@ -18,6 +18,14 @@
     "brace-expansion": "^1.1.21",
     "source-map-js": "^1.2.2",
     "esbuild": "^0.25.0",
-    "postcss-selector-parser": "^7.1.6"
+    "vite": {
+      "esbuild": "^0.25.0"
+    },
+    "tailwindcss": {
+      "postcss-selector-parser": "^7.1.6"
+    },
+    "postcss-nested": {
+      "postcss-selector-parser": "^7.1.6"
+    }
   }
 }
