@@ -12,7 +12,7 @@
     "@hookform/resolvers": "^3.4.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "axios": "^1.6.8",
+    "axios": "^1.20.0",
     "lucide-react": "^0.378.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -35,5 +35,10 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.62.4"
+  },
+  "overrides": {
+    "source-map-js": "^1.2.2",
+    "esbuild": "^0.25.0",
+    "postcss-selector-parser": "^7.1.6"
   }
 }
