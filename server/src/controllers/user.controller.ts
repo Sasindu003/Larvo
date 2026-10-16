@@ -86,6 +86,12 @@ export const addAddress = asyncHandler(async (req: Request, res: Response) => {
       throw new AppError('Phone number must contain only numbers and be 10 to 13 digits long', 400);
     }
     addressData.phone = cleanPhone;
+  } else {
+    delete addressData.phone;
+  }
+
+  if (addressData.line2 === null || addressData.line2 === '' || addressData.line2 === undefined) {
+    delete addressData.line2;
   }
 
   const isFirstAddress = user.addresses.length === 0;
@@ -139,6 +145,14 @@ export const updateAddress = asyncHandler(async (req: Request, res: Response) =>
       throw new AppError('Phone number must contain only numbers and be 10 to 13 digits long', 400);
     }
     updateData.phone = cleanPhone;
+  } else if ('phone' in updateData) {
+    delete updateData.phone;
+    (user.addresses[addressIndex] as any).phone = undefined;
+  }
+
+  if ('line2' in updateData && (updateData.line2 === null || updateData.line2 === '' || updateData.line2 === undefined)) {
+    delete updateData.line2;
+    (user.addresses[addressIndex] as any).line2 = undefined;
   }
 
   // If setting this one to default, unset all others

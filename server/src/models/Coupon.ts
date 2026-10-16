@@ -7,11 +7,11 @@ export interface ICoupon extends Document {
   discountType: DiscountType;
   discountValue: number;
   minOrderAmount: number;
-  maxDiscountAmount: number | null;
+  maxDiscountAmount?: number | null;
   validFrom: Date;
   validUntil: Date;
-  usageLimit: number | null;
-  perCustomerLimit: number | null;
+  usageLimit?: number | null;
+  perCustomerLimit?: number | null;
   usedCount: number;
   active: boolean;
   createdAt: Date;
@@ -48,7 +48,6 @@ const couponSchema = new Schema<ICoupon>(
     },
     maxDiscountAmount: {
       type: Number,
-      default: null,
     },
     validFrom: {
       type: Date,
@@ -60,11 +59,9 @@ const couponSchema = new Schema<ICoupon>(
     },
     usageLimit: {
       type: Number,
-      default: null,
     },
     perCustomerLimit: {
       type: Number,
-      default: null,
     },
     usedCount: {
       type: Number,

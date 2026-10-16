@@ -4,7 +4,7 @@ export interface ICategory extends Document {
   name: string;
   slug: string;
   image: string;
-  parent: Types.ObjectId | null;
+  parent?: Types.ObjectId | null;
   department: Types.ObjectId;
   active: boolean;
   createdAt: Date;
@@ -33,7 +33,6 @@ const categorySchema = new Schema<ICategory>(
     parent: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
-      default: null,
     },
     department: {
       type: Schema.Types.ObjectId,

@@ -36,19 +36,15 @@ const paymentSchema = new Schema<IPayment>(
     },
     slipImageUrl: {
       type: String,
-      default: null,
     },
     transactionId: {
       type: String,
-      default: null,
     },
     maskedCardLast4: {
       type: String,
-      default: null,
     },
     gatewayResponseCode: {
       type: String,
-      default: null,
     },
     amount: {
       type: Number,
@@ -62,26 +58,21 @@ const paymentSchema = new Schema<IPayment>(
     },
     pointsUsed: {
       type: Number,
-      default: null,
       min: [0, 'Points used cannot be negative'],
     },
     walletTransaction: {
       type: Schema.Types.ObjectId,
       ref: 'PointsTransaction',
-      default: null,
     },
     reviewedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      default: null,
     },
     reviewedAt: {
       type: Date,
-      default: null,
     },
     reviewNote: {
       type: String,
-      default: null,
     },
   },
   { timestamps: true }
@@ -89,8 +80,8 @@ const paymentSchema = new Schema<IPayment>(
 
 paymentSchema.pre('validate', function (next) {
   if (this.method !== 'reward_points') {
-    this.pointsUsed = null;
-    this.walletTransaction = null;
+    this.pointsUsed = undefined;
+    this.walletTransaction = undefined;
   }
   next();
 });
@@ -100,15 +91,15 @@ paymentSchema.pre('findOneAndUpdate', function (next) {
   if (update) {
     const method = update.method || update.$set?.method;
     if (method && method !== 'reward_points') {
-      if (update.pointsUsed !== undefined) update.pointsUsed = null;
-      if (update.walletTransaction !== undefined) update.walletTransaction = null;
+      if (update.pointsUsed !== undefined) delete update.pointsUsed;
+      if (update.walletTransaction !== undefined) delete update.walletTransaction;
       if (update.$set) {
-        update.$set.pointsUsed = null;
-        update.$set.walletTransaction = null;
-      } else {
-        update.pointsUsed = null;
-        update.walletTransaction = null;
+        delete update.$set.pointsUsed;
+        delete update.$set.walletTransaction;
       }
+      update.$unset = update.$unset || {};
+      update.$unset.pointsUsed = 1;
+      update.$unset.walletTransaction = 1;
     }
     this.setUpdate(update);
   }

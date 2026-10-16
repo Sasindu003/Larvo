@@ -67,7 +67,7 @@ const UserSchema = new Schema<IUser>(
       enum:    ['customer', 'staff', 'admin', 'owner', 'delivery_manager', 'supplier'],
       default: 'customer',
     },
-    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', default: null, index: true },
+    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', index: true },
     addresses: { type: [AddressSchema], default: [] },
     wishlist:  [{ type: Schema.Types.ObjectId, ref: 'Product' }],
   },

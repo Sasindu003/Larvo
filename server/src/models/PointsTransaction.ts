@@ -68,11 +68,9 @@ const pointsTransactionSchema = new Schema<IPointsTransaction>(
     order: {
       type: Schema.Types.ObjectId,
       ref: 'Order',
-      default: null,
     },
     returnRequest: {
       type: Schema.Types.ObjectId,
-      default: null,
     },
     idempotencyKey: {
       type: String,
@@ -82,13 +80,11 @@ const pointsTransactionSchema = new Schema<IPointsTransaction>(
     },
     note: {
       type: String,
-      default: null,
       trim: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      default: null,
     },
   },
   {

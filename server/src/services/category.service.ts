@@ -61,7 +61,7 @@ export class CategoryService {
       slug,
       image: input.image,
       department: input.department,
-      parent: input.parent || null,
+      ...(input.parent ? { parent: input.parent } : {}),
       active: input.active !== undefined ? input.active : true,
     });
 
@@ -107,7 +107,7 @@ export class CategoryService {
     }
 
     if (input.parent !== undefined) {
-      category.parent = input.parent as any;
+      category.parent = input.parent ? (input.parent as any) : undefined;
     }
 
     if (input.active !== undefined) {

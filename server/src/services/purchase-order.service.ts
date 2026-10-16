@@ -138,12 +138,12 @@ export class PurchaseOrderService {
     const po = await PurchaseOrder.create({
       supplier: input.supplier,
       items: input.items,
-      estimatedDeliveryDate: input.estimatedDeliveryDate ?? null,
-      paymentSlipUrl: input.paymentSlipUrl ?? null,
-      paymentReviewNote: input.paymentReviewNote ?? null,
-      declineReason: input.declineReason ?? null,
+      ...(input.estimatedDeliveryDate ? { estimatedDeliveryDate: input.estimatedDeliveryDate } : {}),
+      ...(input.paymentSlipUrl ? { paymentSlipUrl: input.paymentSlipUrl } : {}),
+      ...(input.paymentReviewNote ? { paymentReviewNote: input.paymentReviewNote } : {}),
+      ...(input.declineReason ? { declineReason: input.declineReason } : {}),
       notes: input.notes || '',
-      quotationNotes: input.quotationNotes ?? null,
+      ...(input.quotationNotes ? { quotationNotes: input.quotationNotes } : {}),
       quotationImages: input.quotationImages ?? [],
       status: 'requested',
     });
@@ -195,19 +195,19 @@ export class PurchaseOrderService {
     }
 
     if (input.estimatedDeliveryDate !== undefined) {
-      po.estimatedDeliveryDate = input.estimatedDeliveryDate;
+      po.estimatedDeliveryDate = input.estimatedDeliveryDate ? input.estimatedDeliveryDate : undefined;
     }
 
     if (input.paymentSlipUrl !== undefined) {
-      po.paymentSlipUrl = input.paymentSlipUrl;
+      po.paymentSlipUrl = input.paymentSlipUrl ? input.paymentSlipUrl : undefined;
     }
 
     if (input.paymentReviewNote !== undefined) {
-      po.paymentReviewNote = input.paymentReviewNote;
+      po.paymentReviewNote = input.paymentReviewNote ? input.paymentReviewNote : undefined;
     }
 
     if (input.declineReason !== undefined) {
-      po.declineReason = input.declineReason;
+      po.declineReason = input.declineReason ? input.declineReason : undefined;
     }
 
     if (input.notes !== undefined) {
@@ -215,7 +215,7 @@ export class PurchaseOrderService {
     }
 
     if (input.quotationNotes !== undefined) {
-      po.quotationNotes = input.quotationNotes ? input.quotationNotes.trim() : null;
+      po.quotationNotes = input.quotationNotes ? input.quotationNotes.trim() : undefined;
     }
 
     if (input.quotationImages !== undefined) {
@@ -454,10 +454,10 @@ export class PurchaseOrderService {
 
     po.status = 'quoted';
     if (input.estimatedDeliveryDate !== undefined) {
-      po.estimatedDeliveryDate = input.estimatedDeliveryDate;
+      po.estimatedDeliveryDate = input.estimatedDeliveryDate ? input.estimatedDeliveryDate : undefined;
     }
     if (input.quotationNotes !== undefined) {
-      po.quotationNotes = input.quotationNotes ? input.quotationNotes.trim() : null;
+      po.quotationNotes = input.quotationNotes ? input.quotationNotes.trim() : undefined;
     }
     if (input.quotationImages !== undefined) {
       po.quotationImages = input.quotationImages;
@@ -688,7 +688,7 @@ export class PurchaseOrderService {
 
     po.status = targetStatus;
     if (input.note !== undefined) {
-      po.paymentReviewNote = input.note;
+      po.paymentReviewNote = input.note ? input.note : undefined;
     }
     await po.save();
 

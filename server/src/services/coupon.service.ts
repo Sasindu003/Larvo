@@ -89,10 +89,21 @@ export const couponService = {
       throw new AppError(`Coupon code '${codeUpper}' already exists`, 409);
     }
 
-    const coupon = new Coupon({
+    const couponData: any = {
       ...input,
       code: codeUpper,
-    });
+    };
+    if (couponData.maxDiscountAmount === null || couponData.maxDiscountAmount === undefined) {
+      delete couponData.maxDiscountAmount;
+    }
+    if (couponData.usageLimit === null || couponData.usageLimit === undefined) {
+      delete couponData.usageLimit;
+    }
+    if (couponData.perCustomerLimit === null || couponData.perCustomerLimit === undefined) {
+      delete couponData.perCustomerLimit;
+    }
+
+    const coupon = new Coupon(couponData);
 
     await coupon.save();
     return coupon;
@@ -121,11 +132,26 @@ export const couponService = {
     if (input.discountType !== undefined) coupon.discountType = input.discountType;
     if (input.discountValue !== undefined) coupon.discountValue = input.discountValue;
     if (input.minOrderAmount !== undefined) coupon.minOrderAmount = input.minOrderAmount;
-    if (input.maxDiscountAmount !== undefined) coupon.maxDiscountAmount = input.maxDiscountAmount;
+    if (input.maxDiscountAmount !== undefined) {
+      coupon.maxDiscountAmount =
+        input.maxDiscountAmount !== null && input.maxDiscountAmount !== undefined
+          ? input.maxDiscountAmount
+          : undefined;
+    }
     if (input.validFrom !== undefined) coupon.validFrom = input.validFrom;
     if (input.validUntil !== undefined) coupon.validUntil = input.validUntil;
-    if (input.usageLimit !== undefined) coupon.usageLimit = input.usageLimit;
-    if (input.perCustomerLimit !== undefined) coupon.perCustomerLimit = input.perCustomerLimit;
+    if (input.usageLimit !== undefined) {
+      coupon.usageLimit =
+        input.usageLimit !== null && input.usageLimit !== undefined
+          ? input.usageLimit
+          : undefined;
+    }
+    if (input.perCustomerLimit !== undefined) {
+      coupon.perCustomerLimit =
+        input.perCustomerLimit !== null && input.perCustomerLimit !== undefined
+          ? input.perCustomerLimit
+          : undefined;
+    }
     if (input.active !== undefined) coupon.active = input.active;
 
     await coupon.save();

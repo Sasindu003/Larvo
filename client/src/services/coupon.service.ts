@@ -8,11 +8,11 @@ export interface Coupon {
   discountType: DiscountType;
   discountValue: number;
   minOrderAmount: number;
-  maxDiscountAmount: number | null;
+  maxDiscountAmount?: number | null;
   validFrom: string;
   validUntil: string;
-  usageLimit: number | null;
-  perCustomerLimit: number | null;
+  usageLimit?: number | null;
+  perCustomerLimit?: number | null;
   usedCount: number;
   active: boolean;
   createdAt?: string;

@@ -19,7 +19,7 @@ export interface Product {
   category: Category | string;
   images: string[];
   basePrice: number;
-  discountPrice: number | null;
+  discountPrice?: number | null;
   ratingAvg: number;
   ratingCount: number;
   variants: ProductVariant[];

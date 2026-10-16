@@ -87,8 +87,8 @@ export class ReturnService {
 
     const defaultAddress = order.shippingAddress
       ? `${order.shippingAddress.line1}, ${order.shippingAddress.city}`
-      : null;
-    const primaryReason = preparedItems[0]?.reason || null;
+      : undefined;
+    const primaryReason = preparedItems[0]?.reason || undefined;
 
     const returnRequest = await ReturnRequest.create({
       order: order._id,
@@ -103,13 +103,8 @@ export class ReturnService {
           note: primaryReason ? `Return requested: ${primaryReason}` : 'Return requested by customer',
         },
       ],
-      pickup: defaultAddress ? { address: defaultAddress } : null,
-      reason: primaryReason,
-      refundAmount: null,
-      rejectionReason: null,
-      refundPoints: null,
-      refundMethod: null,
-      refundedAt: null,
+      ...(defaultAddress ? { pickup: { address: defaultAddress } } : {}),
+      ...(primaryReason ? { reason: primaryReason } : {}),
     });
 
     return returnRequest;
@@ -308,8 +303,8 @@ export class ReturnService {
 
       returnRequest.status = 'rejected';
       returnRequest.rejectionReason = reason;
-      returnRequest.estimatedRefundPoints = null;
-      returnRequest.refundAmount = null;
+      returnRequest.estimatedRefundPoints = undefined;
+      returnRequest.refundAmount = undefined;
       returnRequest.statusHistory.push({
         status: 'rejected',
         at: new Date(),
@@ -360,7 +355,7 @@ export class ReturnService {
       );
 
       returnRequest.status = 'pickup_scheduled';
-      returnRequest.rejectionReason = null;
+      returnRequest.rejectionReason = undefined;
       returnRequest.estimatedRefundPoints = estimatedPoints;
       returnRequest.refundAmount = refundAmount;
 
@@ -629,10 +624,17 @@ export class ReturnService {
       returnRequest.rejectionReason = options.rejectionReason;
     }
     if (options?.pickup) {
-      returnRequest.pickup = {
-        ...(returnRequest.pickup || {}),
-        ...options.pickup,
-      };
+      const existingPickup = returnRequest.pickup
+        ? ((returnRequest.pickup as any).toObject?.() || returnRequest.pickup)
+        : {};
+      const merged = { ...existingPickup, ...options.pickup };
+      const cleaned: any = {};
+      for (const [k, v] of Object.entries(merged)) {
+        if (v !== null && v !== undefined && v !== '') {
+          cleaned[k] = v;
+        }
+      }
+      returnRequest.pickup = Object.keys(cleaned).length > 0 ? cleaned : undefined;
     }
 
     returnRequest.statusHistory.push({

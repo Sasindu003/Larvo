@@ -62,9 +62,9 @@ export const orderService = {
     }
 
     const shippingAddressSnapshot: IAddressSnapshot = {
-      label: address.label,
+      ...(address.label ? { label: address.label } : {}),
       line1: address.line1,
-      line2: address.line2,
+      ...(address.line2 ? { line2: address.line2 } : {}),
       city: address.city,
       province: address.province,
       postalCode: address.postalCode,
@@ -145,7 +145,7 @@ export const orderService = {
 
       // 5. Coupon validation & discount computation
       let discountAmount = 0;
-      let appliedCouponCode: string | null = null;
+      let appliedCouponCode: string | undefined = undefined;
       let couponWarning: string | null = null;
 
       if (input.couponCode && input.couponCode.trim()) {
@@ -184,7 +184,7 @@ export const orderService = {
             user: userObjId,
             items: orderItems,
             shippingAddress: shippingAddressSnapshot,
-            couponCode: appliedCouponCode,
+            ...(appliedCouponCode ? { couponCode: appliedCouponCode } : {}),
             discountAmount,
             subtotal,
             shippingFee,
@@ -294,12 +294,14 @@ export const orderService = {
             status: 'approved',
             pointsUsed: pointsRequired,
             walletTransaction: transaction._id,
-            reviewedBy: null,
-            reviewedAt: null,
-            slipImageUrl: null,
-            transactionId: null,
-            maskedCardLast4: null,
-            gatewayResponseCode: null,
+          },
+          $unset: {
+            reviewedBy: 1,
+            reviewedAt: 1,
+            slipImageUrl: 1,
+            transactionId: 1,
+            maskedCardLast4: 1,
+            gatewayResponseCode: 1,
           },
         },
         { new: true, upsert: true, session, runValidators: true }
@@ -380,14 +382,16 @@ export const orderService = {
           status: 'submitted',
           slipImageUrl,
           amount: order.total,
-          pointsUsed: null,
-          walletTransaction: null,
-          reviewedBy: null,
-          reviewedAt: null,
-          reviewNote: null,
-          transactionId: null,
-          maskedCardLast4: null,
-          gatewayResponseCode: null,
+        },
+        $unset: {
+          pointsUsed: 1,
+          walletTransaction: 1,
+          reviewedBy: 1,
+          reviewedAt: 1,
+          reviewNote: 1,
+          transactionId: 1,
+          maskedCardLast4: 1,
+          gatewayResponseCode: 1,
         },
       },
       { new: true, upsert: true, runValidators: true }
@@ -478,11 +482,15 @@ export const orderService = {
           transactionId,
           maskedCardLast4,
           gatewayResponseCode,
-          pointsUsed: null,
-          walletTransaction: null,
-          slipImageUrl: null,
-          reviewedBy: null,
-          reviewedAt: approved ? new Date() : null,
+          ...(approved ? { reviewedAt: new Date() } : {}),
+        },
+        $unset: {
+          pointsUsed: 1,
+          walletTransaction: 1,
+          slipImageUrl: 1,
+          reviewedBy: 1,
+          reviewNote: 1,
+          ...(!approved ? { reviewedAt: 1 } : {}),
         },
       },
       { new: true, upsert: true, runValidators: true }
@@ -570,7 +578,7 @@ export const orderService = {
           reviewedBy: user._id,
           reviewedAt: new Date(),
         };
-        if (extra?.reviewNote !== undefined) {
+        if (extra?.reviewNote) {
           updateSet.reviewNote = extra.reviewNote;
         }
         await Payment.findOneAndUpdate(
@@ -587,7 +595,7 @@ export const orderService = {
           reviewedBy: user._id,
           reviewedAt: new Date(),
         };
-        if (extra?.reviewNote !== undefined) {
+        if (extra?.reviewNote) {
           updateSet.reviewNote = extra.reviewNote;
         }
         await Payment.findOneAndUpdate(
@@ -605,10 +613,9 @@ export const orderService = {
       // 5. If tracking number provided, record it (customers cannot set tracking)
       if (
         user.role !== 'customer' &&
-        extra?.trackingNumber !== undefined &&
-        extra.trackingNumber !== null
+        extra?.trackingNumber !== undefined
       ) {
-        order.trackingNumber = extra.trackingNumber;
+        order.trackingNumber = extra.trackingNumber ? extra.trackingNumber : undefined;
       }
 
       order.status = targetStatus;

@@ -66,7 +66,7 @@ const invoiceSnapshotSchema = new Schema<IInvoiceSnapshot>(
     total: { type: Number, required: true, min: 0 },
     paymentStatus: { type: String, required: true },
     paymentMethod: { type: String, required: true },
-    pointsUsed: { type: Number, default: null },
+    pointsUsed: { type: Number },
   },
   { _id: false }
 );

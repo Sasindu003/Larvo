@@ -26,20 +26,28 @@ export const invoiceService = {
     const paymentMethod = resolvedPayment?.method || 'bank_transfer';
     const paymentStatus = resolvedPayment?.status || 'approved';
     const pointsUsed =
-      paymentMethod === 'reward_points'
-        ? (resolvedPayment?.pointsUsed ?? order.pointsPaid ?? null)
-        : null;
+      paymentMethod === 'reward_points' && (resolvedPayment?.pointsUsed || order.pointsPaid)
+        ? (resolvedPayment?.pointsUsed || order.pointsPaid)
+        : undefined;
 
     const snapshot: IInvoiceSnapshot = {
       items: order.items,
-      shippingAddress: order.shippingAddress,
+      shippingAddress: {
+        ...(order.shippingAddress?.label ? { label: order.shippingAddress.label } : {}),
+        line1: order.shippingAddress?.line1,
+        ...(order.shippingAddress?.line2 ? { line2: order.shippingAddress.line2 } : {}),
+        city: order.shippingAddress?.city,
+        province: order.shippingAddress?.province,
+        postalCode: order.shippingAddress?.postalCode,
+        country: order.shippingAddress?.country,
+      },
       subtotal: order.subtotal,
       discountAmount: order.discountAmount || 0,
       shippingFee: order.shippingFee,
       total: order.total,
       paymentStatus,
       paymentMethod,
-      pointsUsed,
+      ...(pointsUsed !== undefined && pointsUsed !== null ? { pointsUsed } : {}),
     };
 
     try {

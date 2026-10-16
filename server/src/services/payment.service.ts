@@ -41,7 +41,7 @@ export const paymentService = {
     }
 
     const targetOrderStatus = decision === 'approved' ? 'confirmed' : 'pending_payment';
-    const trimmedNote = note ? note.trim() : null;
+    const trimmedNote = note && note.trim() ? note.trim() : undefined;
 
     // Transition order status and update payment atomically
     const updatedOrder = await orderService.transitionStatus(

@@ -101,7 +101,7 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
     category,
     images,
     basePrice,
-    discountPrice: discountPrice ?? null,
+    discountPrice: discountPrice !== undefined && discountPrice !== null ? discountPrice : undefined,
     variants,
     status,
   });
@@ -120,18 +120,24 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
  */
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, description, category, images, basePrice, discountPrice, variants, status } = req.body;
+  const allowedFields = [
+    'name',
+    'description',
+    'category',
+    'images',
+    'basePrice',
+    'discountPrice',
+    'variants',
+    'status',
+  ];
+  const updateInput: any = {};
+  for (const field of allowedFields) {
+    if (field in req.body) {
+      updateInput[field] = req.body[field];
+    }
+  }
 
-  const product = await productService.updateProduct(id, {
-    name,
-    description,
-    category,
-    images,
-    basePrice,
-    discountPrice,
-    variants,
-    status,
-  });
+  const product = await productService.updateProduct(id, updateInput);
 
   res.status(200).json({
     success: true,

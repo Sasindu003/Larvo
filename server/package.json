@@ -14,7 +14,9 @@
     "test:p09": "ts-node src/seed/product.check.ts",
     "test:order": "ts-node src/tests/order-transition.test.ts",
     "test:return": "ts-node src/tests/return-transition.test.ts",
-    "test:all": "ts-node src/seed/product.check.ts && ts-node src/tests/order-transition.test.ts && ts-node src/tests/return-transition.test.ts"
+    "test:null": "ts-node src/tests/null-omission.test.ts",
+    "test:all": "ts-node src/seed/product.check.ts && ts-node src/tests/order-transition.test.ts && ts-node src/tests/return-transition.test.ts && ts-node src/tests/null-omission.test.ts",
+    "migrate:unset-nulls": "ts-node src/migrations/2026_unset_null_fields.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

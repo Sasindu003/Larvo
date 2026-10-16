@@ -36,7 +36,7 @@ export const CreatePurchaseOrderSchema = z.object({
     .datetime({ message: 'Invalid date format' })
     .optional()
     .nullable()
-    .transform((val) => (val ? new Date(val) : null)),
+    .transform((val) => (val ? new Date(val) : undefined)),
   paymentSlipUrl: z.string().optional().nullable(),
   paymentReviewNote: z.string().trim().max(2000).optional().nullable(),
   declineReason: z.string().trim().max(2000).optional().nullable(),
@@ -55,7 +55,7 @@ export const UpdatePurchaseOrderSchema = z.object({
     .datetime({ message: 'Invalid date format' })
     .optional()
     .nullable()
-    .transform((val) => (val ? new Date(val) : null)),
+    .transform((val) => (val ? new Date(val) : undefined)),
   paymentSlipUrl: z.string().optional().nullable(),
   paymentReviewNote: z.string().trim().max(2000).optional().nullable(),
   declineReason: z.string().trim().max(2000).optional().nullable(),
@@ -121,7 +121,7 @@ export const SubmitQuoteSchema = z.object({
     .datetime({ message: 'Invalid date format' })
     .optional()
     .nullable()
-    .transform((val) => (val ? new Date(val) : null)),
+    .transform((val) => (val ? new Date(val) : undefined)),
   quotationNotes: z
     .string()
     .trim()

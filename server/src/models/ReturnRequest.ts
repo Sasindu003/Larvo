@@ -50,11 +50,11 @@ export interface IReturnRequest extends Document {
   pickup?: IReturnPickup | null;
   reason?: string | null;
   refundAmount?: number | null;
-  rejectionReason: string | null;
+  rejectionReason?: string | null;
   estimatedRefundPoints?: number | null;
-  refundPoints: number | null;
-  refundMethod: 'wallet_points' | null;
-  refundedAt: Date | null;
+  refundPoints?: number | null;
+  refundMethod?: 'wallet_points' | null;
+  refundedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -80,11 +80,11 @@ const returnStatusHistorySchema = new Schema<IReturnStatusHistory>(
 
 const returnPickupSchema = new Schema<IReturnPickup>(
   {
-    courier: { type: String, default: null, trim: true },
-    waybill: { type: String, default: null, trim: true },
-    scheduledDate: { type: Date, default: null },
-    timeWindow: { type: String, default: null, trim: true },
-    address: { type: String, default: null, trim: true },
+    courier: { type: String, trim: true },
+    waybill: { type: String, trim: true },
+    scheduledDate: { type: Date },
+    timeWindow: { type: String, trim: true },
+    address: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -135,15 +135,14 @@ const returnRequestSchema = new Schema<IReturnRequest>(
     },
     pickup: {
       type: returnPickupSchema,
-      default: null,
     },
-    reason: { type: String, default: null, trim: true },
-    refundAmount: { type: Number, default: null, min: 0 },
-    rejectionReason: { type: String, default: null },
-    estimatedRefundPoints: { type: Number, default: null },
-    refundPoints: { type: Number, default: null },
-    refundMethod: { type: String, enum: ['wallet_points', null], default: null },
-    refundedAt: { type: Date, default: null },
+    reason: { type: String, trim: true },
+    refundAmount: { type: Number, min: 0 },
+    rejectionReason: { type: String },
+    estimatedRefundPoints: { type: Number },
+    refundPoints: { type: Number },
+    refundMethod: { type: String, enum: ['wallet_points'] },
+    refundedAt: { type: Date },
   },
   {
     timestamps: true,

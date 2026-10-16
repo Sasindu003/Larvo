@@ -238,9 +238,15 @@ export class ReviewService {
           upvoteCount: 1,
           downvoteCount: 1,
           adminReply: {
-            text: '$adminReply.text',
-            repliedAt: '$adminReply.repliedAt',
-            repliedBy: { $arrayElemAt: ['$adminDetails.name', 0] },
+            $cond: {
+              if: { $ifNull: ['$adminReply.text', false] },
+              then: {
+                text: '$adminReply.text',
+                repliedAt: '$adminReply.repliedAt',
+                repliedBy: { $arrayElemAt: ['$adminDetails.name', 0] },
+              },
+              else: '$$REMOVE',
+            },
           },
           createdAt: 1,
           updatedAt: 1,

@@ -353,15 +353,26 @@ export const productService = {
       slug = `${baseSlug}-${attempt}`;
     }
 
-    const product = await Product.create({
+    const productPayload: any = {
       ...input,
       slug,
-      variants: input.variants.map((v) => ({
-        ...v,
-        sku: v.sku.trim(),
-        supplier: v.supplier && mongoose.isValidObjectId(v.supplier) ? new mongoose.Types.ObjectId(String(v.supplier)) : null,
-      })),
-    });
+      variants: input.variants.map((v) => {
+        const { supplier: vSupplier, ...rest } = v;
+        const mapped: any = {
+          ...rest,
+          sku: v.sku.trim(),
+        };
+        if (vSupplier && mongoose.isValidObjectId(vSupplier)) {
+          mapped.supplier = new mongoose.Types.ObjectId(String(vSupplier));
+        }
+        return mapped;
+      }),
+    };
+    if (productPayload.discountPrice === null || productPayload.discountPrice === undefined) {
+      delete productPayload.discountPrice;
+    }
+
+    const product = await Product.create(productPayload);
 
     return (await Product.findById(product._id)
       .populate('category', 'name slug image')
@@ -438,22 +449,38 @@ export const productService = {
         attempt++;
         slug = `${baseSlug}-${attempt}`;
       }
-      (input as any).slug = slug;
+      existing.slug = slug;
     }
 
-    if (input.variants) {
-      (input as any).variants = input.variants.map((v) => ({
-        ...v,
-        sku: v.sku.trim(),
-        supplier: v.supplier && mongoose.isValidObjectId(v.supplier) ? new mongoose.Types.ObjectId(String(v.supplier)) : null,
-      }));
+    if (input.name !== undefined) existing.name = input.name;
+    if (input.description !== undefined) existing.description = input.description;
+    if (input.category !== undefined) existing.category = new mongoose.Types.ObjectId(input.category) as any;
+    if (input.images !== undefined) existing.images = input.images;
+    if (input.basePrice !== undefined) existing.basePrice = Number(input.basePrice);
+    if (input.discountPrice !== undefined) {
+      existing.discountPrice =
+        input.discountPrice !== null
+          ? Number(input.discountPrice)
+          : undefined;
+    }
+    if (input.status !== undefined) existing.status = input.status;
+    if (input.variants !== undefined) {
+      existing.variants = input.variants.map((v) => {
+        const { supplier: vSupplier, ...rest } = v;
+        const mapped: any = {
+          ...rest,
+          sku: v.sku.trim(),
+        };
+        if (vSupplier && mongoose.isValidObjectId(vSupplier)) {
+          mapped.supplier = new mongoose.Types.ObjectId(String(vSupplier));
+        }
+        return mapped;
+      }) as any;
     }
 
-    const updated = await Product.findByIdAndUpdate(
-      productId,
-      { $set: input },
-      { new: true, runValidators: true }
-    )
+    await existing.save();
+
+    const updated = await Product.findById(productId)
       .populate('category', 'name slug image')
       .populate('variants.supplier', 'name companyName email status');
 

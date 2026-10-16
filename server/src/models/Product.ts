@@ -48,7 +48,6 @@ const variantSchema = new Schema<IVariant>(
     supplier: {
       type: Schema.Types.ObjectId,
       ref: 'Supplier',
-      default: null,
     },
   },
   { _id: true }
@@ -65,7 +64,7 @@ export interface IProduct extends Document {
   category: Types.ObjectId;
   images: string[];
   basePrice: number;
-  discountPrice: number | null;
+  discountPrice?: number | null;
   ratingAvg: number;
   ratingCount: number;
   variants: IVariant[];
@@ -118,7 +117,6 @@ const productSchema = new Schema<IProduct>(
     },
     discountPrice: {
       type: Number,
-      default: null,
       min: [0, 'Discount price cannot be negative'],
       validate: {
         validator(this: any, val: number | null) {

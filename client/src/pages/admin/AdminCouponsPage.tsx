@@ -124,11 +124,11 @@ export const AdminCouponsPage: React.FC = () => {
       discountType: c.discountType,
       discountValue: String(c.discountValue),
       minOrderAmount: String(c.minOrderAmount || 0),
-      maxDiscountAmount: c.maxDiscountAmount !== null ? String(c.maxDiscountAmount) : '',
+      maxDiscountAmount: c.maxDiscountAmount != null ? String(c.maxDiscountAmount) : '',
       validFrom: c.validFrom ? new Date(c.validFrom).toISOString().slice(0, 10) : '',
       validUntil: c.validUntil ? new Date(c.validUntil).toISOString().slice(0, 10) : '',
-      usageLimit: c.usageLimit !== null ? String(c.usageLimit) : '',
-      perCustomerLimit: c.perCustomerLimit !== null ? String(c.perCustomerLimit) : '',
+      usageLimit: c.usageLimit != null ? String(c.usageLimit) : '',
+      perCustomerLimit: c.perCustomerLimit != null ? String(c.perCustomerLimit) : '',
       active: c.active,
     });
     setFormError('');
@@ -372,7 +372,7 @@ export const AdminCouponsPage: React.FC = () => {
                           <Users className="w-3 h-3 text-slate-500" />
                           <span>
                             {c.usedCount}
-                            {c.usageLimit !== null ? ` / ${c.usageLimit}` : ' (Unlimited)'}
+                            {c.usageLimit != null ? ` / ${c.usageLimit}` : ' (Unlimited)'}
                           </span>
                         </div>
                       </td>

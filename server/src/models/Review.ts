@@ -126,7 +126,6 @@ const reviewSchema = new Schema<IReview, IReviewModel>(
     },
     adminReply: {
       type: adminReplySchema,
-      default: null,
     },
   },
   {

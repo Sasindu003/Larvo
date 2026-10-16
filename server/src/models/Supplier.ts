@@ -63,7 +63,6 @@ const supplierSchema = new Schema<ISupplier>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      default: null,
       index: true,
     },
   },

@@ -11,7 +11,7 @@ interface RawProductSeed {
   categorySlug: string;
   description: string;
   basePrice: number;
-  discountPrice: number | null;
+  discountPrice?: number;
   ratingAvg: number;
   ratingCount: number;
   images: string[];
@@ -56,7 +56,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'mens',
     description: 'Crisp 100% organic cotton Oxford shirt featuring button-down collar, buttoned cuffs, and breathable weave.',
     basePrice: 89,
-    discountPrice: null,
     ratingAvg: 4.6,
     ratingCount: 58,
     images: [
@@ -96,7 +95,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'mens',
     description: 'Ultra-fine Italian Merino wool sweater with ribbed cuffs and hem. Lightweight insulation suitable for year-round layering.',
     basePrice: 140,
-    discountPrice: null,
     ratingAvg: 4.5,
     ratingCount: 12,
     images: [
@@ -139,7 +137,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'womens',
     description: 'Luxurious double-faced wool and cashmere long coat with notched lapels and horn buttons. Wide relaxed silhouette.',
     basePrice: 590,
-    discountPrice: null,
     ratingAvg: 4.7,
     ratingCount: 28,
     images: [
@@ -179,7 +176,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'womens',
     description: 'Sculpting stretch-knit bodycon dress with sweetheart neckline and short cap sleeves.',
     basePrice: 110,
-    discountPrice: null,
     ratingAvg: 4.3,
     ratingCount: 9,
     images: [
@@ -219,7 +215,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'kids',
     description: 'Classic unisex denim overalls with adjustable shoulder straps, brass buttons, and reinforced double-layer knees.',
     basePrice: 65,
-    discountPrice: null,
     ratingAvg: 4.6,
     ratingCount: 17,
     images: [
@@ -258,7 +253,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'kids',
     description: 'Flexible French terry joggers with elastic drawstring waistband and ribbed ankle cuffs.',
     basePrice: 40,
-    discountPrice: null,
     ratingAvg: 4.4,
     ratingCount: 14,
     images: [
@@ -279,7 +273,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'streetwear',
     description: '500GSM custom boxy fleece hoodie featuring puff-print typography on chest and drop shoulder silhouette.',
     basePrice: 145,
-    discountPrice: null,
     ratingAvg: 4.8,
     ratingCount: 67,
     images: [
@@ -321,7 +314,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'streetwear',
     description: 'Garment-dyed 260GSM thick cotton tee with wide relaxed sleeve sleeves and distressed hem accents.',
     basePrice: 65,
-    discountPrice: null,
     ratingAvg: 4.5,
     ratingCount: 38,
     images: [
@@ -382,7 +374,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'formal',
     description: 'Handcrafted Goodyear-welted dress shoes with polished full-grain calfskin leather and stacked heel.',
     basePrice: 295,
-    discountPrice: null,
     ratingAvg: 4.8,
     ratingCount: 29,
     images: [
@@ -421,7 +412,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'formal',
     description: 'Formal Marcella bib front dress shirt with French cuffs, removable stud buttons, and spread collar.',
     basePrice: 120,
-    discountPrice: null,
     ratingAvg: 4.7,
     ratingCount: 18,
     images: [
@@ -463,7 +453,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'casual',
     description: 'Textured slub cotton short-sleeve polo shirt with 3-button placket and mother-of-pearl buttons.',
     basePrice: 65,
-    discountPrice: null,
     ratingAvg: 4.4,
     ratingCount: 22,
     images: [
@@ -503,7 +492,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'casual',
     description: 'Comfortable everyday slip-on shoes with durable vulcanized rubber sole and cushioned memory foam footbed.',
     basePrice: 75,
-    discountPrice: null,
     ratingAvg: 4.3,
     ratingCount: 16,
     images: [
@@ -544,7 +532,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'sportswear',
     description: 'Wind-resistant 4-way stretch active jacket with thumbhole cuffs, mesh ventilation back panel, and reflective detailing.',
     basePrice: 110,
-    discountPrice: null,
     ratingAvg: 4.7,
     ratingCount: 30,
     images: [
@@ -584,7 +571,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'sportswear',
     description: 'Maximum support criss-cross racerback sports bra with removable molded cups and breathable underband.',
     basePrice: 50,
-    discountPrice: null,
     ratingAvg: 4.5,
     ratingCount: 33,
     images: [
@@ -626,7 +612,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'seasonal-collections',
     description: 'Chunky hand-knit Baby Alpaca wool sweater with traditional Fair Isle pattern around crew neck yoke.',
     basePrice: 210,
-    discountPrice: null,
     ratingAvg: 4.8,
     ratingCount: 39,
     images: [
@@ -666,7 +651,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'seasonal-collections',
     description: 'Sunray pleated ombre chiffon midi skirt with concealed elastic waistband.',
     basePrice: 130,
-    discountPrice: null,
     ratingAvg: 4.6,
     ratingCount: 14,
     images: [
@@ -707,7 +691,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'accessories',
     description: 'Handcrafted Japanese acetate frames with 100% UV400 protection polarized lenses and 7-barrel hinges.',
     basePrice: 160,
-    discountPrice: null,
     ratingAvg: 4.7,
     ratingCount: 41,
     images: [
@@ -745,7 +728,6 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
     categorySlug: 'accessories',
     description: 'Hand-braided full-grain leather belt finished with polished solid brass buckle.',
     basePrice: 70,
-    discountPrice: null,
     ratingAvg: 4.5,
     ratingCount: 15,
     images: [
@@ -795,14 +777,13 @@ export const seedProducts = async (): Promise<void> => {
 
     const createdDate = new Date(now.getTime() - item.daysAgoCreated * 24 * 60 * 60 * 1000);
 
-    return {
+    const doc: any = {
       name: item.name,
       slug: item.slug,
       description: item.description,
       category: categoryId,
       images: item.images,
       basePrice: item.basePrice,
-      discountPrice: item.discountPrice,
       ratingAvg: item.ratingAvg,
       ratingCount: item.ratingCount,
       variants: item.variants,
@@ -810,6 +791,10 @@ export const seedProducts = async (): Promise<void> => {
       createdAt: createdDate,
       updatedAt: createdDate,
     };
+    if (item.discountPrice !== undefined) {
+      doc.discountPrice = item.discountPrice;
+    }
+    return doc;
   });
 
   const insertedProducts = await Product.insertMany(productsToInsert);
@@ -817,7 +802,7 @@ export const seedProducts = async (): Promise<void> => {
 
   // Validation metrics
   const totalCount = await Product.countDocuments();
-  const discountedCount = await Product.countDocuments({ discountPrice: { $ne: null } });
+  const discountedCount = await Product.countDocuments({ discountPrice: { $exists: true, $ne: null } });
   
   // Count products where all variants stock === 0
   const allProducts = await Product.find();

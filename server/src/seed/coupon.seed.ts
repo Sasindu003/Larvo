@@ -18,7 +18,6 @@ export const SEED_COUPONS = [
     discountType: 'fixed' as const,
     discountValue: 500,
     minOrderAmount: 5000,
-    maxDiscountAmount: null,
     validFrom: new Date('2025-01-01'),
     validUntil: new Date('2030-12-31'),
     usageLimit: 200,
@@ -42,7 +41,6 @@ export const SEED_COUPONS = [
     discountType: 'fixed' as const,
     discountValue: 350,
     minOrderAmount: 3500,
-    maxDiscountAmount: null,
     validFrom: new Date('2025-01-01'),
     validUntil: new Date('2030-12-31'),
     usageLimit: 1000,
@@ -53,22 +51,22 @@ export const SEED_COUPONS = [
 
 export const seedCoupons = async () => {
   for (const c of SEED_COUPONS) {
+    const updateSet: Record<string, any> = {
+      code: c.code,
+      discountType: c.discountType,
+      discountValue: c.discountValue,
+      minOrderAmount: c.minOrderAmount,
+      validFrom: c.validFrom,
+      validUntil: c.validUntil,
+      active: c.active,
+    };
+    if (c.maxDiscountAmount !== undefined) updateSet.maxDiscountAmount = c.maxDiscountAmount;
+    if (c.usageLimit !== undefined) updateSet.usageLimit = c.usageLimit;
+    if (c.perCustomerLimit !== undefined) updateSet.perCustomerLimit = c.perCustomerLimit;
+
     await Coupon.updateOne(
       { code: c.code },
-      {
-        $set: {
-          code: c.code,
-          discountType: c.discountType,
-          discountValue: c.discountValue,
-          minOrderAmount: c.minOrderAmount,
-          maxDiscountAmount: c.maxDiscountAmount,
-          validFrom: c.validFrom,
-          validUntil: c.validUntil,
-          usageLimit: c.usageLimit,
-          perCustomerLimit: c.perCustomerLimit,
-          active: c.active,
-        },
-      },
+      { $set: updateSet },
       { upsert: true }
     );
   }

@@ -55,6 +55,8 @@ export const runAllSeeds = async () => {
   console.log('Step 9: Running Migrations...');
   const { up: runCategoryDepartmentBackfill } = await import('../migrations/2026_category_department_backfill');
   await runCategoryDepartmentBackfill();
+  const { up: runUnsetNullFields } = await import('../migrations/2026_unset_null_fields');
+  await runUnsetNullFields();
   console.log('✔ Migrations Complete.\n');
 
   console.log('==================================================');
