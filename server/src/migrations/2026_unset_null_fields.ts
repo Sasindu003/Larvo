@@ -1,5 +1,12 @@
+import dns from 'dns';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {
+  // ignore if restricted
+}
 
 dotenv.config();
 
@@ -200,7 +207,7 @@ export const up = async (): Promise<{ totalUnset: number; details: Record<string
 
   // 3. Fallback sweep: scan all collections for any remaining literal null properties
   for (const collInfo of collectionsList) {
-    if (collInfo.name.startsWith('system.')) continue;
+    if (collInfo.name.startsWith('system.') || collInfo.name.endsWith('.chunks')) continue;
     const col = db.collection(collInfo.name);
 
     // Find documents with at least one field equal to null (using cursor in batches)
@@ -215,6 +222,14 @@ export const up = async (): Promise<{ totalUnset: number; details: Record<string
 
       const collectNullKeys = (obj: any, prefix = '') => {
         if (!obj || typeof obj !== 'object') return;
+        if (
+          obj instanceof Date ||
+          obj instanceof mongoose.Types.ObjectId ||
+          Buffer.isBuffer(obj) ||
+          (obj && (obj as any)._bsontype)
+        ) {
+          return;
+        }
         for (const [k, v] of Object.entries(obj)) {
           if (k === '_id') continue;
           const fullPath = prefix ? `${prefix}.${k}` : k;
@@ -222,11 +237,11 @@ export const up = async (): Promise<{ totalUnset: number; details: Record<string
             nullFieldsToUnset[fullPath] = '';
           } else if (Array.isArray(v)) {
             v.forEach((item, idx) => {
-              if (item && typeof item === 'object' && !(item instanceof Date)) {
+              if (item && typeof item === 'object') {
                 collectNullKeys(item, `${fullPath}.${idx}`);
               }
             });
-          } else if (typeof v === 'object' && !(v instanceof Date)) {
+          } else if (typeof v === 'object') {
             collectNullKeys(v, fullPath);
           }
         }
