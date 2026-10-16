@@ -59,7 +59,7 @@ export const uploadToGridFS = async (
  */
 export const getFileFromGridFS = async (
   fileIdOrFilename: string
-): Promise<{ stream: NodeJS.ReadableStream; contentType: string; filename: string } | null> => {
+): Promise<{ stream: NodeJS.ReadableStream; fileId: string; contentType: string; filename: string } | null> => {
   const currentBucket = getGridFSBucket();
   let file: any = null;
 
@@ -83,6 +83,7 @@ export const getFileFromGridFS = async (
   const stream = currentBucket.openDownloadStream(file._id);
   return {
     stream,
+    fileId: file._id.toString(),
     contentType: file.contentType || 'application/octet-stream',
     filename: file.filename || 'file',
   };

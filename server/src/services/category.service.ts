@@ -21,19 +21,23 @@ export class CategoryService {
    */
   async getAllCategories(includeInactive: boolean = false): Promise<ICategory[]> {
     const filter = includeInactive ? {} : { active: { $ne: false } };
-    return Category.find(filter)
+    const categories = await Category.find(filter)
       .populate('parent', 'name slug')
       .populate('department', 'name slug image active')
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .lean();
+    return categories as any;
   }
 
   /**
    * Get category by slug
    */
   async getCategoryBySlug(slug: string): Promise<ICategory | null> {
-    return Category.findOne({ slug: slug.toLowerCase(), active: { $ne: false } })
+    const category = await Category.findOne({ slug: slug.toLowerCase(), active: { $ne: false } })
       .populate('parent', 'name slug')
-      .populate('department', 'name slug image active');
+      .populate('department', 'name slug image active')
+      .lean();
+    return category as any;
   }
 
   /**

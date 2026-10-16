@@ -19,7 +19,8 @@ export class DepartmentService {
    */
   async getAllDepartments(includeInactive: boolean = false): Promise<IDepartment[]> {
     const filter = includeInactive ? {} : { active: true };
-    return Department.find(filter).sort({ createdAt: 1 });
+    const departments = await Department.find(filter).sort({ createdAt: 1 }).lean();
+    return departments as any;
   }
 
   /**
@@ -33,7 +34,8 @@ export class DepartmentService {
    * Get single department by slug
    */
   async getDepartmentBySlug(slug: string): Promise<IDepartment | null> {
-    return Department.findOne({ slug: slug.toLowerCase() });
+    const department = await Department.findOne({ slug: slug.toLowerCase() }).lean();
+    return department as any;
   }
 
   /**

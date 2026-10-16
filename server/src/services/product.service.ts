@@ -205,13 +205,14 @@ export const productService = {
         .populate('category', 'name slug image')
         .sort(sortOptions)
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
     ]);
 
     const pages = Math.ceil(total / limit) || 1;
 
     return {
-      items,
+      items: items as any,
       results: items.length,
       total,
       page,
@@ -236,25 +237,25 @@ export const productService = {
     const suggestions = await Product.find(filter)
       .select('_id name slug images basePrice discountPrice category ratingAvg')
       .populate('category', 'name slug')
-      .limit(5);
+      .limit(5)
+      .lean();
 
-    return suggestions;
+    return suggestions as any;
   },
 
   /**
    * Fetch single product by slug (with populated category)
    */
   async getProductBySlug(slug: string): Promise<IProduct> {
-    const product = await Product.findOne({ slug, status: 'active' }).populate(
-      'category',
-      'name slug image'
-    );
+    const product = await Product.findOne({ slug, status: 'active' })
+      .populate('category', 'name slug image')
+      .lean();
 
     if (!product) {
       throw new AppError(`Product with slug '${slug}' not found`, 404);
     }
 
-    return product;
+    return product as any;
   },
 
   /**
@@ -305,11 +306,12 @@ export const productService = {
         .populate('variants.supplier', 'name companyName email status')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
     ]);
 
     return {
-      items,
+      items: items as any,
       results: items.length,
       total,
       page,

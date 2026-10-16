@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
-const handleFileStream = async (fileIdentifier: string, res: Response): Promise<void> => {
+const handleFileStream = async (fileIdentifier: string, req: Request, res: Response): Promise<void> => {
   try {
     const fileData = await getFileFromGridFS(fileIdentifier);
 
@@ -17,8 +17,16 @@ const handleFileStream = async (fileIdentifier: string, res: Response): Promise<
       return;
     }
 
-    res.setHeader('Content-Type', fileData.contentType);
+    const etag = `"${fileData.fileId || fileIdentifier}"`;
+    res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
+    if (req.headers['if-none-match'] === etag) {
+      res.status(304).end();
+      return;
+    }
+
+    res.setHeader('Content-Type', fileData.contentType);
     res.setHeader(
       'Content-Disposition',
       `inline; filename="${encodeURIComponent(fileData.filename)}"`
@@ -95,11 +103,11 @@ router.post(
  * @access  Public
  */
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
-  await handleFileStream(req.params.id, res);
+  await handleFileStream(req.params.id, req, res);
 });
 
 router.get('/payment-slips/:id', async (req: Request, res: Response): Promise<void> => {
-  await handleFileStream(req.params.id, res);
+  await handleFileStream(req.params.id, req, res);
 });
 
 export default router;

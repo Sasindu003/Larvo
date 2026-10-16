@@ -26,6 +26,11 @@ export const getCategories = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const categories = await categoryService.getAllCategories(includeInactive);
+
+  if (!includeInactive) {
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+  }
+
   res.status(200).json({
     success: true,
     data: categories,

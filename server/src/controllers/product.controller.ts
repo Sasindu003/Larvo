@@ -26,6 +26,8 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
     inStock: inStock as string,
   });
 
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+
   res.status(200).json({
     success: true,
     data: result,
@@ -42,6 +44,8 @@ export const getProductSuggestions = asyncHandler(async (req: Request, res: Resp
 
   const suggestions = await productService.getSuggestions(q as string);
 
+  res.setHeader('Cache-Control', 'public, s-maxage=180, stale-while-revalidate=600');
+
   res.status(200).json({
     success: true,
     data: suggestions,
@@ -57,6 +61,8 @@ export const getProductBySlug = asyncHandler(async (req: Request, res: Response)
   const { slug } = req.params;
 
   const product = await productService.getProductBySlug(slug);
+
+  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
 
   res.status(200).json({
     success: true,

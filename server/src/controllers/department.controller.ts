@@ -27,6 +27,10 @@ export const getDepartments = asyncHandler(async (req: Request, res: Response) =
 
   const departments = await departmentService.getAllDepartments(includeInactive);
 
+  if (!includeInactive) {
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+  }
+
   res.status(200).json({
     success: true,
     data: departments,
@@ -52,6 +56,8 @@ export const getDepartmentBySlug = asyncHandler(async (req: Request, res: Respon
     if (!isAuthorized) {
       throw new AppError('Department not found', 404);
     }
+  } else {
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
   }
 
   res.status(200).json({
