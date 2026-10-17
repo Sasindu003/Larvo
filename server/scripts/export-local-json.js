@@ -3,7 +3,7 @@ const path = require('path');
 const { MongoClient } = require('mongoose').mongo;
 
 const LOCAL_URI = process.env.LOCAL_MONGO_URI || 'mongodb://localhost:27017/shop';
-const OUTPUT_FILE = path.resolve(__dirname, '../../local-data.json');
+const OUTPUT_FILE = path.resolve(__dirname, '../.local/local-data.json');
 
 async function exportToJson() {
   console.log('Connecting to Local MongoDB...');
@@ -24,6 +24,11 @@ async function exportToJson() {
     const docs = await db.collection(colName).find({}).toArray();
     exportData[colName] = docs;
     stats.push({ collection: colName, count: docs.length });
+  }
+
+  const outputDir = path.dirname(OUTPUT_FILE);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
   }
 
   const jsonContent = JSON.stringify(exportData, null, 2);

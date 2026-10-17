@@ -16,7 +16,10 @@
     "test:return": "ts-node src/tests/return-transition.test.ts",
     "test:null": "ts-node src/tests/null-omission.test.ts",
     "test:all": "ts-node src/seed/product.check.ts && ts-node src/tests/order-transition.test.ts && ts-node src/tests/return-transition.test.ts && ts-node src/tests/null-omission.test.ts",
-    "migrate:unset-nulls": "ts-node src/migrations/2026_unset_null_fields.ts"
+    "migrate:unset-nulls": "ts-node src/migrations/2026_unset_null_fields.ts",
+    "export:local": "node scripts/export-local-json.js",
+    "import:local": "node scripts/import-local-json.js",
+    "sync:atlas": "node scripts/sync-atlas.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

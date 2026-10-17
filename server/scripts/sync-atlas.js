@@ -1,18 +1,55 @@
+const fs = require('fs');
+const path = require('path');
 const dns = require('dns');
 // Set public DNS servers to prevent Windows querySrv ECONNREFUSED issues on mongodb+srv
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-const { MongoClient } = require('mongoose').mongo;
+const { MongoClient, ObjectId } = require('mongoose').mongo;
 
-const LOCAL_URI = process.env.LOCAL_MONGO_URI || 'mongodb://localhost:27017/shop';
 const ATLAS_URI = process.env.ATLAS_MONGO_URI || 'mongodb+srv://Vercel-Admin-Larvo_Atlas:b9IrzLjehE2ECZfw@larvo-atlas.ykppr9b.mongodb.net/shop?retryWrites=true&w=majority';
+const INPUT_FILE = path.resolve(__dirname, '../.local/local-data.json');
+
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+
+// Recursively convert strings back to native BSON types (ObjectId and Date)
+function restoreBsonTypes(value, key = '') {
+  if (value === null || value === undefined) return value;
+
+  if (Array.isArray(value)) {
+    return value.map(item => restoreBsonTypes(item, key));
+  }
+
+  if (typeof value === 'object') {
+    const res = {};
+    for (const [k, v] of Object.entries(value)) {
+      res[k] = restoreBsonTypes(v, k);
+    }
+    return res;
+  }
+
+  if (typeof value === 'string') {
+    if (ISO_DATE_REGEX.test(value)) {
+      return new Date(value);
+    }
+    if (
+      (key === '_id' || key.endsWith('Id') || ['category', 'user', 'order', 'wallet', 'supplier', 'department', 'invoice'].includes(key)) &&
+      OBJECT_ID_REGEX.test(value)
+    ) {
+      return new ObjectId(value);
+    }
+  }
+
+  return value;
+}
 
 async function migrate() {
-  console.log('Connecting to Local MongoDB...');
-  const localClient = new MongoClient(LOCAL_URI);
-  await localClient.connect();
-  const localDb = localClient.db();
-  console.log(`Connected to Local DB: ${localDb.databaseName}`);
+  if (!fs.existsSync(INPUT_FILE)) {
+    throw new Error(`Data file not found at: ${INPUT_FILE}. Run 'npm run export:local' first to generate it locally, or see README.md.`);
+  }
+
+  console.log(`Reading data from: ${INPUT_FILE}`);
+  const rawData = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
 
   console.log('Connecting to MongoDB Atlas...');
   const atlasClient = new MongoClient(ATLAS_URI);
@@ -36,58 +73,27 @@ async function migrate() {
   }
   console.log('Existing Atlas collections cleared successfully.');
 
-  // Step 2: Get all local collections
-  const localCollections = await localDb.listCollections().toArray();
-  const filteredCollections = localCollections
-    .map(c => c.name)
-    .filter(name => !name.startsWith('system.'));
-
-  console.log(`\nFound ${filteredCollections.length} collections to migrate: ${filteredCollections.join(', ')}\n`);
+  // Step 2: Migrate collections from local JSON export
+  const collectionNames = Object.keys(rawData).filter(name => !name.startsWith('system.'));
+  console.log(`\nFound ${collectionNames.length} collections to migrate: ${collectionNames.join(', ')}\n`);
 
   const summary = [];
 
-  for (const colName of filteredCollections) {
+  for (const colName of collectionNames) {
     console.log(`Migrating collection: ${colName}...`);
-    const localCol = localDb.collection(colName);
+    const docs = rawData[colName] || [];
     const atlasCol = atlasDb.collection(colName);
 
-    // Fetch documents
-    const docs = await localCol.find({}).toArray();
-
     if (docs.length > 0) {
-      await atlasCol.insertMany(docs, { ordered: true });
-    }
-
-    // Recreate indexes
-    const indexes = await localCol.indexes();
-    const customIndexes = indexes
-      .filter(idx => idx.name !== '_id_')
-      .map(idx => {
-        const { v, ns, ...rest } = idx;
-        return rest;
-      });
-
-    if (customIndexes.length > 0) {
-      try {
-        await atlasCol.createIndexes(customIndexes);
-      } catch (idxErr) {
-        console.warn(`Warning: failed to batch create indexes for ${colName}, attempting individually: ${idxErr.message}`);
-        for (const singleIdx of customIndexes) {
-          try {
-            await atlasCol.createIndex(singleIdx.key, singleIdx);
-          } catch (singleErr) {
-            console.warn(`  Could not create index ${singleIdx.name}: ${singleErr.message}`);
-          }
-        }
-      }
+      const parsedDocs = docs.map(d => restoreBsonTypes(d));
+      await atlasCol.insertMany(parsedDocs, { ordered: true });
     }
 
     const atlasCount = await atlasCol.countDocuments();
     summary.push({
       collection: colName,
-      localCount: docs.length,
+      exportedCount: docs.length,
       atlasCount: atlasCount,
-      indexes: customIndexes.length,
       status: docs.length === atlasCount ? 'OK' : 'MISMATCH',
     });
   }
@@ -95,7 +101,6 @@ async function migrate() {
   console.log('\n================ MIGRATION SUMMARY ================');
   console.table(summary);
 
-  await localClient.close();
   await atlasClient.close();
   console.log('\nMigration completed successfully.');
 }

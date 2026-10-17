@@ -4,3 +4,9 @@ dist/
 uploads/
 .agents/
 larvo_backup/
+
+# Local data exports and backups (never commit)
+local-data.json
+local-data*.json
+server/.local/
+docs/

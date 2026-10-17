@@ -4,7 +4,7 @@ const { MongoClient, ObjectId } = require('mongoose').mongo;
 
 // Default target: shop_new or passed via CLI argument / environment variable
 const TARGET_URI = process.argv[2] || process.env.TARGET_MONGO_URI || 'mongodb://localhost:27017/shop_new';
-const INPUT_FILE = path.resolve(__dirname, '../../local-data.json');
+const INPUT_FILE = path.resolve(__dirname, '../.local/local-data.json');
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
@@ -42,7 +42,7 @@ function restoreBsonTypes(value, key = '') {
 
 async function importFromJson() {
   if (!fs.existsSync(INPUT_FILE)) {
-    throw new Error(`Data file not found at: ${INPUT_FILE}`);
+    throw new Error(`Data file not found at: ${INPUT_FILE}. Run 'npm run export:local' first to generate it locally, or see README.md.`);
   }
 
   console.log(`Reading data from: ${INPUT_FILE}`);

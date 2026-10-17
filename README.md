@@ -239,7 +239,13 @@ Visit **Frontend**: [http://localhost:5173](http://localhost:5173) | **Backend**
 | `npm run dev` | `client/` | Starts Vite HMR local dev server |
 | `npm run build` | `root` | Concurrently compiles both backend TypeScript and client assets |
 | `npm run seed` | `server/` | Populates database with departments, categories, and initial products |
+| `npm run export:local` | `server/` | Exports local MongoDB snapshot to `server/.local/local-data.json` |
+| `npm run import:local` | `server/` | Restores local MongoDB snapshot from `server/.local/local-data.json` |
+| `npm run sync:atlas` | `server/` | Syncs local export snapshot into MongoDB Atlas |
 | `npm run test:all` | `server/` | Runs comprehensive verification check scripts across core modules |
+
+> [!WARNING]
+> Database export snapshots (`server/.local/local-data.json` and `local-data*.json`) are strictly local development files and must never be committed to Git.
 
 ---
 
