@@ -161,14 +161,23 @@ npm install
 ```
 
 ### 2. Configure Environment Variables
-Create `.env` files in both the `server` and `client` directories.
+Copy `.env.example` templates in both `server` and `client` directories to create your local `.env` files:
+```bash
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+```
+
+Generate a secure cryptographic key for `JWT_SECRET` (minimum 32 characters):
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
 
 #### In `server/.env`:
 ```env
 PORT=5000
 NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/larvo-shop
-JWT_SECRET=your_super_secret_jwt_key
+MONGO_URI=mongodb://localhost:27017/shop
+JWT_SECRET=CHANGE_ME_generate_with_crypto_randomBytes
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 ```

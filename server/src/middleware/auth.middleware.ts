@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env';
 import User, { IUser } from '../models/User';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from './error.middleware';
@@ -27,7 +28,7 @@ export const protect = asyncHandler(async (req: Request, _res: Response, next: N
     throw new AppError('Not authenticated — please log in', 401);
   }
 
-  const secret = process.env.JWT_SECRET;
+  const secret = env.JWT_SECRET;
   if (!secret) {
     throw new Error('JWT_SECRET is not configured');
   }
@@ -80,7 +81,7 @@ export const optionalAuth = asyncHandler(async (req: Request, _res: Response, ne
     return next();
   }
 
-  const secret = process.env.JWT_SECRET;
+  const secret = env.JWT_SECRET;
   if (!secret) return next();
 
   try {

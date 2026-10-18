@@ -1,14 +1,12 @@
 import dns from 'dns';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { env } from '../config/env';
 
 try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch {
   // ignore if restricted
 }
-
-dotenv.config();
 
 interface MigrationTarget {
   collectionName: string;
@@ -132,7 +130,7 @@ export const up = async (): Promise<{ totalUnset: number; details: Record<string
   console.log('Running Migration: 2026_unset_null_fields...');
 
   if (mongoose.connection.readyState === 0) {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
+    const mongoUri = env.MONGO_URI;
     await mongoose.connect(mongoUri);
   }
 

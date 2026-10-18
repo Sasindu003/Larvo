@@ -1,11 +1,9 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { env } from '../config/env';
 
 async function seedAdmin() {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
+  const mongoUri = env.MONGO_URI;
   await mongoose.connect(mongoUri);
   const hash = await bcrypt.hash('Password123!', 10);
   await mongoose.connection.collection('users').updateOne(

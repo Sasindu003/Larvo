@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { ZodError } from 'zod';
+import { env } from '../config/env';
 import User from '../models/User';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../middleware/error.middleware';
@@ -9,10 +10,10 @@ import { OAuth2Client } from 'google-auth-library';
 
 // ── Helper: sign JWT and set httpOnly cookie ────────────────────────────────
 function signTokenAndSetCookie(user: any, res: Response) {
-  const secret = process.env.JWT_SECRET;
+  const secret = env.JWT_SECRET;
   if (!secret) throw new Error('JWT_SECRET is not configured');
 
-  const expiresIn = (process.env.JWT_EXPIRES_IN || '7d') as any;
+  const expiresIn = env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'];
 
   const token = jwt.sign(
     { sub: user._id, role: user.role },
@@ -21,15 +22,15 @@ function signTokenAndSetCookie(user: any, res: Response) {
   );
 
   // Parse expiresIn to milliseconds for cookie maxAge
-  const daysMatch = expiresIn.match(/^(\d+)d$/);
+  const daysMatch = typeof expiresIn === 'string' ? expiresIn.match(/^(\d+)d$/) : null;
   const maxAge = daysMatch
     ? parseInt(daysMatch[1], 10) * 24 * 60 * 60 * 1000
     : 7 * 24 * 60 * 60 * 1000; // default 7 days
 
   res.cookie('slt', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge,
     path: '/',
   });
@@ -121,8 +122,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.cookie('slt', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     expires: new Date(0),
     path: '/',
   });
@@ -157,7 +158,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
     throw new AppError('Google credential token is required', 400);
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientId = env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     throw new AppError('Google authentication is not configured', 500);
   }

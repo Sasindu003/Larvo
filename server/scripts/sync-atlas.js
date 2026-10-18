@@ -6,7 +6,7 @@ dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const { MongoClient, ObjectId } = require('mongoose').mongo;
 
-const ATLAS_URI = process.env.ATLAS_MONGO_URI || 'mongodb+srv://Vercel-Admin-Larvo_Atlas:b9IrzLjehE2ECZfw@larvo-atlas.ykppr9b.mongodb.net/shop?retryWrites=true&w=majority';
+const ATLAS_URI = process.env.ATLAS_MONGO_URI || 'mongodb+srv://CHANGE_ME_username:CHANGE_ME_password@CHANGE_ME_cluster.mongodb.net/shop?retryWrites=true&w=majority';
 const INPUT_FILE = path.resolve(__dirname, '../.local/local-data.json');
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;

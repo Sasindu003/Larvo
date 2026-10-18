@@ -5,15 +5,13 @@
  * 3. Confirms invalid size enum is rejected
  * 4. Lists indexes including text + compound
  */
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { env } from '../config/env';
 import { Product } from '../models/Product';
 import { Category } from '../models/Category';
 
-dotenv.config();
-
 const run = async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shop');
+  await mongoose.connect(env.MONGO_URI);
   console.log('Connected.\n');
 
   // Resolve a real category _id

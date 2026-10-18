@@ -1,8 +1,6 @@
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { env } from '../config/env';
 import { Category } from '../models/Category';
-
-dotenv.config();
 
 export const CATEGORIES_SEED_DATA = [
   {
@@ -53,7 +51,7 @@ export const CATEGORIES_SEED_DATA = [
 ];
 
 export const seedCategories = async (): Promise<void> => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
+  const mongoUri = env.MONGO_URI;
   console.log(`Connecting to MongoDB at ${mongoUri}...`);
 
   await mongoose.connect(mongoUri);

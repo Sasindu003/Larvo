@@ -1,9 +1,7 @@
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { env } from '../config/env';
 import { Category } from '../models/Category';
 import { Product, ProductSize } from '../models/Product';
-
-dotenv.config();
 
 interface RawProductSeed {
   name: string;
@@ -744,7 +742,7 @@ export const PRODUCTS_SEED_DATA: RawProductSeed[] = [
 ];
 
 export const seedProducts = async (): Promise<void> => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
+  const mongoUri = env.MONGO_URI;
 
   if (mongoose.connection.readyState === 0) {
     console.log(`Connecting to MongoDB at ${mongoUri}...`);

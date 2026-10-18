@@ -1,5 +1,5 @@
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { env } from '../config/env';
 import { seedDepartments } from './department.seed';
 import { seedCategories } from './category.seed';
 import { seedProducts } from './product.seed';
@@ -9,10 +9,8 @@ import { seedSettings } from './setting.seed';
 import { seedCoupons } from './coupon.seed';
 import { seedWallets } from './wallet.seed';
 
-dotenv.config();
-
 export const runAllSeeds = async () => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/shop';
+  const mongoUri = env.MONGO_URI;
   console.log('==================================================');
   console.log('           STARTING DATABASE SEEDING              ');
   console.log('==================================================');

@@ -1,8 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-key-1234567890';
-
+import { env } from '../config/env';
 import mongoose, { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
 import http from 'http';
@@ -19,7 +15,7 @@ let baseUrl: string;
 function generateToken(userId: Types.ObjectId, role: string): string {
   return jwt.sign(
     { sub: userId.toString(), role },
-    process.env.JWT_SECRET!,
+    env.JWT_SECRET,
     { expiresIn: '1h' }
   );
 }
@@ -66,7 +62,7 @@ async function runTests() {
 
   // 1. Connect MongoDB
   if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shop');
+    await mongoose.connect(env.MONGO_URI);
   }
 
   // 2. Start HTTP Server

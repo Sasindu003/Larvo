@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .env
+.env.local
+.env.*.local
 uploads/
 .agents/
 larvo_backup/
@@ -9,4 +11,4 @@ larvo_backup/
 local-data.json
 local-data*.json
 server/.local/
-docs/
+docs/*

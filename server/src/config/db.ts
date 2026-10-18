@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { env } from './env';
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -16,7 +17,7 @@ if (!global.mongooseCache) {
 }
 
 export const connectDB = async (): Promise<typeof mongoose> => {
-  const mongoUri = process.env.MONGO_URI || '';
+  const mongoUri = env.MONGO_URI;
   if (!mongoUri) {
     throw new Error('MONGO_URI is not defined in environment variables');
   }

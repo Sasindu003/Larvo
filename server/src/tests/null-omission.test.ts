@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
+import { env } from '../config/env';
 import mongoose, { Types } from 'mongoose';
 import fs from 'fs';
 import path from 'path';
@@ -43,7 +41,7 @@ function assert(condition: boolean, msg: string) {
 
 async function run() {
   console.log('--- Starting Null Omission & Schema Hygiene Tests ---');
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shop');
+  await mongoose.connect(env.MONGO_URI);
   const db = mongoose.connection.db!;
 
   // ─────────────────────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import mongoose from 'mongoose';
+import { env } from './config/env';
 import { notFound, errorHandler } from './middleware/error.middleware';
 import { requireAuth } from './middleware/auth.middleware';
 import { requireRole } from './middleware/rbac.middleware';
@@ -30,7 +31,7 @@ import reviewRoutes from './routes/review.routes';
 const app = express();
 
 // CORS configuration: supports comma-separated origins & dynamic *.vercel.app preview URLs
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+const allowedOrigins = (env.CLIENT_ORIGIN || env.CLIENT_URL)
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);

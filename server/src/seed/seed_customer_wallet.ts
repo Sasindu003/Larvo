@@ -1,13 +1,11 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import { env } from '../config/env';
 import { User } from '../models/User';
 import { Wallet } from '../models/Wallet';
 import { walletService } from '../services/wallet.service';
 
-dotenv.config();
-
 async function main() {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shop');
+  await mongoose.connect(env.MONGO_URI);
   const user = await User.findOne({ email: 'customer_test@demo.com' });
   if (!user) {
     console.log('Customer test user not found');
