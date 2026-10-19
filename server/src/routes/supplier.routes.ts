@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/rbac.middleware';
+import { authRateLimit } from '../middleware/rateLimiters';
 import {
   getSupplierMe,
   getSupplierProducts,
@@ -43,6 +44,6 @@ router.patch(
   markPurchaseOrderShipped
 );
 router.get('/products', getSupplierProducts);
-router.patch('/change-password', changeSupplierPassword);
+router.patch('/change-password', authRateLimit, changeSupplierPassword);
 
 export default router;

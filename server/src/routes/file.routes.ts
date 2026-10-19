@@ -5,6 +5,12 @@ import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
+// Ensure GridFS files/images can be embedded and loaded across origins
+router.use((_req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+
 const handleFileStream = async (fileIdentifier: string, req: Request, res: Response): Promise<void> => {
   try {
     const fileData = await getFileFromGridFS(fileIdentifier);
@@ -20,6 +26,7 @@ const handleFileStream = async (fileIdentifier: string, req: Request, res: Respo
     const etag = `"${fileData.fileId || fileIdentifier}"`;
     res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
     if (req.headers['if-none-match'] === etag) {
       res.status(304).end();

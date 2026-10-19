@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/rbac.middleware';
+import { transactionRateLimit } from '../middleware/rateLimiters';
 import {
   getAdminInventory,
   adjustAdminInventoryStock,
@@ -261,6 +262,7 @@ router.post(
   '/wallets/:userId/adjust',
   requireAuth,
   requireRole('admin', 'owner'),
+  transactionRateLimit,
   adminAdjustWallet
 );
 

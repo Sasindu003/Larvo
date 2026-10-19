@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/rbac.middleware';
 import { uploadSlip, handleMulterError } from '../middleware/upload.middleware';
+import { transactionRateLimit } from '../middleware/rateLimiters';
 import {
   createOrder,
   payOrderWithWallet,
@@ -20,14 +21,14 @@ const router = Router();
 // All order endpoints require authentication
 router.use(requireAuth);
 
-router.post('/', createOrder);
+router.post('/', transactionRateLimit, createOrder);
 router.get('/', requireRole('staff', 'admin', 'owner'), getAdminOrders);
 router.get('/me', getMyOrders);
 router.get('/:orderId', getOrderById);
 router.patch('/:orderId/cancel', cancelMyOrder);
-router.post('/:orderId/payment/wallet', payOrderWithWallet);
-router.post('/:orderId/payment/slip', uploadSlip, handleMulterError, uploadPaymentSlip);
-router.post('/:orderId/payment/simulate', simulatePayment);
+router.post('/:orderId/payment/wallet', transactionRateLimit, payOrderWithWallet);
+router.post('/:orderId/payment/slip', transactionRateLimit, uploadSlip, handleMulterError, uploadPaymentSlip);
+router.post('/:orderId/payment/simulate', transactionRateLimit, simulatePayment);
 router.patch(
   '/:orderId/status',
   requireRole('customer', 'staff', 'admin', 'owner', 'delivery_manager'),

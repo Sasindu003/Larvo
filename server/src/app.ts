@@ -28,9 +28,18 @@ import fileRoutes from './routes/file.routes';
 import supplierRoutes from './routes/supplier.routes';
 import reviewRoutes from './routes/review.routes';
 
+import helmet from 'helmet';
 import { csrfGuard, isOriginAllowed } from './middleware/csrfGuard';
 
 const app = express();
+
+if (env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+app.disable('x-powered-by');
+
+// First middleware: Helmet security headers
+app.use(helmet());
 
 // Strict CORS configuration: derived from CLIENT_URL and CLIENT_ORIGIN (plus localhost in dev/test)
 app.use(

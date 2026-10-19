@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
+import { authRateLimit } from '../middleware/rateLimiters';
 import {
   updateProfile,
   updatePassword,
@@ -14,7 +15,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.patch('/me', updateProfile);
-router.patch('/me/password', updatePassword);
+router.patch('/me/password', authRateLimit, updatePassword);
 router.post('/me/addresses', addAddress);
 router.patch('/me/addresses/:id', updateAddress);
 router.delete('/me/addresses/:id', deleteAddress);
