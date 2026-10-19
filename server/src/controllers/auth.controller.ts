@@ -7,6 +7,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../middleware/error.middleware';
 import { RegisterSchema } from '../validators/auth.validator';
 import { OAuth2Client } from 'google-auth-library';
+import { setAuthCookie, clearAuthCookie } from '../utils/authCookie';
 
 // ── Helper: sign JWT and set httpOnly cookie ────────────────────────────────
 function signTokenAndSetCookie(user: any, res: Response) {
@@ -21,19 +22,7 @@ function signTokenAndSetCookie(user: any, res: Response) {
     { expiresIn }
   );
 
-  // Parse expiresIn to milliseconds for cookie maxAge
-  const daysMatch = typeof expiresIn === 'string' ? expiresIn.match(/^(\d+)d$/) : null;
-  const maxAge = daysMatch
-    ? parseInt(daysMatch[1], 10) * 24 * 60 * 60 * 1000
-    : 7 * 24 * 60 * 60 * 1000; // default 7 days
-
-  res.cookie('slt', token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge,
-    path: '/',
-  });
+  setAuthCookie(res, token);
 }
 
 /**
@@ -120,13 +109,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
  * @access  Authenticated
  */
 export const logout = asyncHandler(async (_req: Request, res: Response) => {
-  res.cookie('slt', '', {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
-    expires: new Date(0),
-    path: '/',
-  });
+  clearAuthCookie(res);
 
   res.status(200).json({
     success: true,

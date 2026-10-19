@@ -13,21 +13,15 @@ export interface ApiResponse<T = any> {
   errors?: any;
 }
 
-const isLocal =
-  typeof window !== 'undefined' &&
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
 const baseURL: string =
-  (import.meta as any).env?.VITE_API_URL ||
-  (!isLocal
-    ? 'https://larvo-server.vercel.app/api'
-    : 'http://localhost:5000/api');
+  (import.meta as any).env?.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'X-Requested-With': 'larvo-client',
   },
 });
 
@@ -50,13 +44,9 @@ export const getFileUrl = (url?: string | null): string => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  const isLocalHost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   const base = (
-    (import.meta as any).env?.VITE_API_URL ||
-    (!isLocalHost ? 'https://larvo-server.vercel.app/api' : 'http://localhost:5000/api')
+    (import.meta as any).env?.VITE_API_URL || '/api'
   ).replace(/\/+$/, '');
 
   const path = url.startsWith('/api') ? url.slice(4) : url.startsWith('/') ? url : `/${url}`;

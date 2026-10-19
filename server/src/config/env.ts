@@ -35,19 +35,43 @@ const mongoUriSchema = z
   )
   .default('mongodb://localhost:27017/shop');
 
-export const envSchema = z.object({
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
-  PORT: z.coerce.number().int().positive().default(5000),
-  MONGO_URI: mongoUriSchema,
-  JWT_SECRET: jwtSchema,
-  JWT_EXPIRES_IN: z.string().default('7d'),
-  CLIENT_URL: z.string().url().default('http://localhost:5173'),
-  CLIENT_ORIGIN: z.string().optional(),
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
-});
+export const envSchema = z
+  .object({
+    NODE_ENV: z
+      .enum(['development', 'production', 'test'])
+      .default('development'),
+    PORT: z.coerce.number().int().positive().default(5000),
+    MONGO_URI: mongoUriSchema,
+    JWT_SECRET: jwtSchema,
+    JWT_EXPIRES_IN: z.string().default('7d'),
+    COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+    COOKIE_SECURE: z
+      .preprocess((val) => {
+        if (val === 'true' || val === true) return true;
+        if (val === 'false' || val === false) return false;
+        return undefined;
+      }, z.boolean().optional()),
+    CLIENT_URL: z.string().url().default('http://localhost:5173'),
+    CLIENT_ORIGIN: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const isSecure =
+        data.COOKIE_SECURE ??
+        (data.NODE_ENV === 'production' || data.COOKIE_SAMESITE === 'none');
+      if (data.COOKIE_SAMESITE === 'none' && !isSecure) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        'COOKIE_SAMESITE=none requires secure cookies, but secure cannot be satisfied',
+      path: ['COOKIE_SAMESITE'],
+    }
+  );
 
 const result = envSchema.safeParse(process.env);
 
@@ -63,3 +87,13 @@ if (!result.success) {
 
 export const env = result.data;
 export type Env = z.infer<typeof envSchema>;
+
+// Strict startup guard per R2: Throw at startup if COOKIE_SAMESITE === 'none' and secure cannot be satisfied
+const isSecureSatisfied =
+  env.COOKIE_SECURE ??
+  (env.NODE_ENV === 'production' || env.COOKIE_SAMESITE === 'none');
+if (env.COOKIE_SAMESITE === 'none' && !isSecureSatisfied) {
+  throw new Error(
+    'Startup environment validation failed: COOKIE_SAMESITE=none requires secure cookies, but secure cannot be satisfied.'
+  );
+}

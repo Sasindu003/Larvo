@@ -28,25 +28,22 @@ import fileRoutes from './routes/file.routes';
 import supplierRoutes from './routes/supplier.routes';
 import reviewRoutes from './routes/review.routes';
 
+import { csrfGuard, isOriginAllowed } from './middleware/csrfGuard';
+
 const app = express();
 
-// CORS configuration: supports comma-separated origins & dynamic *.vercel.app preview URLs
-const allowedOrigins = (env.CLIENT_ORIGIN || env.CLIENT_URL)
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-const vercelPreviewRegex = /^https:\/\/[a-zA-Z0-9-_.]+\.vercel\.app$/;
-
+// Strict CORS configuration: derived from CLIENT_URL and CLIENT_ORIGIN (plus localhost in dev/test)
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+      if (!origin || isOriginAllowed(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+      return callback(null, false);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
@@ -54,6 +51,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// CSRF Guard middleware: mounted after CORS and body parsers, before routes
+app.use(csrfGuard);
 
 // Stream files (payment slips, images) directly from MongoDB GridFS & upload files
 app.use(['/uploads', '/api/uploads'], fileRoutes);
