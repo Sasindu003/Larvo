@@ -13,8 +13,18 @@ export interface ApiResponse<T = any> {
   errors?: any;
 }
 
+const isVercelDeployment =
+  typeof window !== 'undefined' &&
+  (window.location.hostname.endsWith('.vercel.app') || window.location.hostname === 'larvo-client.vercel.app');
+
+const configuredApiUrl = (import.meta as any).env?.VITE_API_URL;
+
+// When running on Vercel, prefer same-site relative '/api' (rewritten by client/vercel.json to server)
+// to prevent cross-origin preflight overhead and ensure SameSite=Lax cookies are preserved.
 const baseURL: string =
-  (import.meta as any).env?.VITE_API_URL || '/api';
+  isVercelDeployment && (!configuredApiUrl || configuredApiUrl.includes('larvo-server.vercel.app'))
+    ? '/api'
+    : configuredApiUrl || '/api';
 
 const api = axios.create({
   baseURL,
@@ -45,10 +55,7 @@ export const getFileUrl = (url?: string | null): string => {
     return url;
   }
 
-  const base = (
-    (import.meta as any).env?.VITE_API_URL || '/api'
-  ).replace(/\/+$/, '');
-
+  const base = baseURL.replace(/\/+$/, '');
   const path = url.startsWith('/api') ? url.slice(4) : url.startsWith('/') ? url : `/${url}`;
   return `${base}${path}`;
 };

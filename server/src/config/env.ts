@@ -51,7 +51,14 @@ export const envSchema = z
         if (val === 'false' || val === false) return false;
         return undefined;
       }, z.boolean().optional()),
-    CLIENT_URL: z.string().url().default('http://localhost:5173'),
+    CLIENT_URL: z
+      .string()
+      .url()
+      .default(
+        process.env.NODE_ENV === 'production' || process.env.VERCEL
+          ? 'https://larvo-client.vercel.app'
+          : 'http://localhost:5173'
+      ),
     CLIENT_ORIGIN: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),

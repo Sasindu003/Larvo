@@ -18,12 +18,26 @@ export const normalizeOrigin = (val?: string | null): string | null => {
 };
 
 /**
+ * Known project client domains hosted on Vercel.
+ */
+const LARVO_VERCEL_CLIENT_ORIGINS = [
+  'https://larvo-client.vercel.app',
+  'https://larvo.vercel.app',
+];
+
+const LARVO_VERCEL_PREVIEW_REGEX =
+  /^https:\/\/(larvo-client|larvo)(-[a-zA-Z0-9-_]+)?\.vercel\.app$/i;
+
+/**
  * Builds the strict CORS and CSRF allowlist based on environment configuration.
- * Always includes env.CLIENT_URL and env.CLIENT_ORIGIN.
+ * Always includes env.CLIENT_URL, env.CLIENT_ORIGIN, and official Larvo Vercel domains.
  * In development and test environments, also includes localhost and 127.0.0.1 ports.
  */
 export const getAllowedOrigins = (): string[] => {
   const origins = new Set<string>();
+
+  // Official production and primary Vercel frontend domains
+  LARVO_VERCEL_CLIENT_ORIGINS.forEach((domain) => origins.add(domain));
 
   if (env.CLIENT_URL) {
     const norm = normalizeOrigin(env.CLIENT_URL);
@@ -58,6 +72,11 @@ export const isOriginAllowed = (origin?: string | null): boolean => {
 
   const allowedOrigins = getAllowedOrigins();
   if (allowedOrigins.includes(normalized)) {
+    return true;
+  }
+
+  // Allow project preview deployments on Vercel
+  if (LARVO_VERCEL_PREVIEW_REGEX.test(normalized)) {
     return true;
   }
 
