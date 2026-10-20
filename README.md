@@ -16,6 +16,7 @@
 - [🛠️ Tech Stack](#️-tech-stack)
 - [📂 Directory Structure](#-directory-structure)
 - [🚀 Quick Start](#-quick-start)
+- [🔑 Demo & Seed Accounts](#-demo--seed-accounts)
 - [⚙️ Environment Configuration](#️-environment-configuration)
 - [📦 Core Modules & Features](#-core-modules--features)
 - [🛡️ Security & Validation](#️-security--validation)
@@ -207,6 +208,22 @@ npm run dev
 ```
 
 Visit **Frontend**: [http://localhost:5173](http://localhost:5173) | **Backend**: [http://localhost:5000](http://localhost:5000)
+
+---
+
+## 🔑 Demo & Seed Accounts
+
+Pre-configured accounts for role-based authentication testing (Password: `Password123!`):
+
+| Role | Email | Password | Access / Scope |
+| :--- | :--- | :--- | :--- |
+| **Owner** | `owner@larvo.com` | `Password123!` | Complete system & financial authority |
+| **Admin** | `admin@larvo.com` | `Password123!` | Management suite, analytics, catalog, coupons |
+| **Staff** | `staff@larvo.com` | `Password123!` | Product editing & order review operations |
+| **Delivery Manager** | `delivery@larvo.com` | `Password123!` | Logistics dispatch & delivery stage tracking |
+| **Supplier** | `supplier@larvo.com` | `Password123!` | Supplier portal & purchase order replenishment |
+| **Customer** | `customer@larvo.com` | `Password123!` | Customer storefront with orders & wallet ledger |
+| **Test Customer** | `customer_test@demo.com` | `Password123!` | Clean shopper profile for checkout runs |
 
 ---
 
