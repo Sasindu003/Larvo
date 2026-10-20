@@ -1,13 +1,10 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import path from 'path';
-import mongoose from 'mongoose';
+
 import { env } from './config/env';
 import { notFound } from './middleware/notFound';
 import { errorHandler } from './middleware/errorHandler';
-import { requireAuth } from './middleware/auth.middleware';
-import { requireRole } from './middleware/rbac.middleware';
 
 import categoryRoutes from './routes/category.routes';
 import productRoutes from './routes/product.routes';
@@ -28,8 +25,11 @@ import returnRoutes from './routes/return.routes';
 import fileRoutes from './routes/file.routes';
 import supplierRoutes from './routes/supplier.routes';
 import reviewRoutes from './routes/review.routes';
+import healthRoutes from './routes/health.routes';
 
 import helmet from 'helmet';
+import { requestId } from './middleware/requestId';
+import { httpLogger } from './utils/logger';
 import { csrfGuard, isOriginAllowed } from './middleware/csrfGuard';
 
 const app = express();
@@ -41,6 +41,10 @@ app.disable('x-powered-by');
 
 // First middleware: Helmet security headers
 app.use(helmet());
+
+// Request ID propagation & structured HTTP logging
+app.use(requestId);
+app.use(httpLogger);
 
 // Strict CORS configuration: derived from CLIENT_URL and CLIENT_ORIGIN (plus localhost in dev/test)
 app.use(
@@ -69,7 +73,7 @@ app.use(csrfGuard);
 app.use(['/uploads', '/api/uploads'], fileRoutes);
 app.use('/api/files', fileRoutes);
 
-// Root & health endpoints
+// Root endpoint
 app.get(['/', '/api'], (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
@@ -78,42 +82,8 @@ app.get(['/', '/api'], (_req: Request, res: Response) => {
   });
 });
 
-// Public health check endpoint
-app.get('/api/health', (_req: Request, res: Response) => {
-  const isConnected = mongoose.connection.readyState === 1;
-  const dbStatus = isConnected ? 'connected' : 'disconnected';
-
-  res.status(200).json({
-    success: true,
-    data: {
-      status: 'ok',
-      db: dbStatus,
-    },
-  });
-});
-
-// Detailed diagnostics (internal/admin only)
-app.get(
-  '/api/health/detail',
-  requireAuth,
-  requireRole('admin', 'owner'),
-  (_req: Request, res: Response) => {
-    const isConnected = mongoose.connection.readyState === 1;
-    const dbStatus = isConnected ? 'connected' : 'disconnected';
-
-    res.status(200).json({
-      success: true,
-      data: {
-        status: 'ok',
-        uptime: process.uptime(),
-        db: dbStatus,
-        timestamp: new Date().toISOString(),
-        nodeVersion: process.version,
-        memoryUsage: process.memoryUsage(),
-      },
-    });
-  }
-);
+// Health & diagnostic routes (liveness probe, readiness probe, admin diagnostics)
+app.use('/api/health', healthRoutes);
 
 // API Routes
 app.use('/api/auth', authRoutes);

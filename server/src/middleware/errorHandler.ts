@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env';
 import { AppError } from '../utils/AppError';
+import { logger } from '../utils/logger';
 
 export const errorHandler = (
   err: any,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void => {
@@ -81,6 +82,19 @@ export const errorHandler = (
     if (env.NODE_ENV === 'production') {
       message = 'Internal server error';
     }
+  }
+
+  // Log 500 or non-operational server errors through structured logger (never log body)
+  if (statusCode >= 500 || !(err instanceof AppError)) {
+    logger.error(
+      {
+        err,
+        requestId: (req as any).id,
+        method: req.method,
+        url: req.originalUrl || req.url,
+      },
+      err.message || 'Unhandled server error'
+    );
   }
 
   res.status(statusCode).json({

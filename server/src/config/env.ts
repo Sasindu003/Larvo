@@ -51,6 +51,9 @@ export const envSchema = z
         if (val === 'false' || val === false) return false;
         return undefined;
       }, z.boolean().optional()),
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+      .default('info'),
     CLIENT_URL: z
       .string()
       .url()
