@@ -65,6 +65,7 @@ export const envSchema = z
     CLIENT_ORIGIN: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
+    AUDIT_LOG_TTL_DAYS: z.coerce.number().int().positive().optional(),
   })
   .refine(
     (data) => {
