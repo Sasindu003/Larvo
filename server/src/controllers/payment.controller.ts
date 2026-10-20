@@ -34,7 +34,8 @@ export const reviewPayment = asyncHandler(async (req: Request, res: Response) =>
     req.user,
     paymentId,
     parsed.decision,
-    parsed.note
+    parsed.note,
+    req
   );
 
   const message =

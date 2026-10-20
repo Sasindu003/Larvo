@@ -3,7 +3,9 @@ import { Payment, IPayment } from '../models/Payment';
 import { IOrder } from '../models/Order';
 import { IUser } from '../models/User';
 import { orderService } from './order.service';
+import { Request } from 'express';
 import { AppError } from '../middleware/error.middleware';
+import { audit } from './audit.service';
 
 export const paymentService = {
   /**
@@ -17,7 +19,8 @@ export const paymentService = {
     staffUser: IUser,
     paymentId: string,
     decision: 'approved' | 'rejected',
-    note?: string | null
+    note?: string | null,
+    req?: Request
   ): Promise<{ payment: IPayment; order: IOrder }> {
     if (!Types.ObjectId.isValid(paymentId)) {
       throw new AppError('Invalid payment ID', 400);
@@ -48,13 +51,26 @@ export const paymentService = {
       staffUser,
       payment.order.toString(),
       targetOrderStatus,
-      { reviewNote: trimmedNote }
+      { reviewNote: trimmedNote },
+      req
     );
 
     const updatedPayment = await Payment.findById(paymentId);
     if (!updatedPayment) {
       throw new AppError('Payment not found after update', 404);
     }
+
+    audit(
+      req,
+      'PAYMENT_REVIEW_DECISION',
+      'Payment',
+      payment._id,
+      {
+        orderId: payment.order.toString(),
+        decision,
+      },
+      { _id: staffUser._id, role: staffUser.role }
+    );
 
     return {
       payment: updatedPayment,

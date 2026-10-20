@@ -94,7 +94,7 @@ export async function audit(
 
     // 2. Derive user ID
     let userId: Types.ObjectId | null = null;
-    const actorId = actor?._id || req?.user?._id;
+    const actorId = actor?._id || (req as any)?.user?._id;
     if (actorId) {
       if (actorId instanceof Types.ObjectId) {
         userId = actorId;
@@ -104,7 +104,7 @@ export async function audit(
     }
 
     // 3. Derive role, IP, userAgent, and requestId
-    const role = actor?.role || req?.user?.role || (req ? 'anonymous' : 'system');
+    const role = actor?.role || (req as any)?.user?.role || (req ? 'anonymous' : 'system');
 
     let ip = '';
     if (req) {

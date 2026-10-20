@@ -7,7 +7,9 @@ import {
 } from '../models/PointsTransaction';
 import { User } from '../models/User';
 import { Setting } from '../models/Setting';
+import { Request } from 'express';
 import { AppError } from '../middleware/error.middleware';
+import { audit } from './audit.service';
 import {
   POINT_VALUE,
   REFUND_POINTS_PER_CURRENCY_UNIT,
@@ -28,6 +30,7 @@ export interface CreditPointsParams {
   note?: string | null;
   adminUserId?: string | Types.ObjectId | null;
   session?: ClientSession;
+  req?: Request;
 }
 
 export interface DebitPointsParams {
@@ -39,6 +42,7 @@ export interface DebitPointsParams {
   note?: string | null;
   adminUserId?: string | Types.ObjectId | null;
   session?: ClientSession;
+  req?: Request;
 }
 
 export interface PaginationQuery {
@@ -52,6 +56,30 @@ export interface PaginatedResult<T> {
   total: number;
   page: number;
   pages: number;
+}
+
+function onSessionCommit(session: ClientSession | undefined, fn: () => void) {
+  if (!session || !session.inTransaction()) {
+    fn();
+    return;
+  }
+  const sess = session as any;
+  if (!sess._onCommitHooks) {
+    sess._onCommitHooks = [];
+    const origCommit = sess.commitTransaction.bind(sess);
+    sess.commitTransaction = async function (...args: any[]) {
+      await origCommit(...args);
+      for (const hook of sess._onCommitHooks) {
+        try {
+          hook();
+        } catch {
+          // ignore
+        }
+      }
+      sess._onCommitHooks = [];
+    };
+  }
+  sess._onCommitHooks.push(fn);
 }
 
 export class WalletService {
@@ -147,6 +175,35 @@ export class WalletService {
       params.session ? { session: params.session } : {}
     );
 
+    onSessionCommit(params.session, () => {
+      audit(
+        params.req,
+        'WALLET_CREDIT',
+        'Wallet',
+        updatedWallet._id,
+        {
+          amount: params.points,
+          reason: params.note || params.type,
+          balanceAfter: updatedWallet.balancePoints,
+        },
+        { _id: params.adminUserId || params.userId, role: params.adminUserId ? 'admin' : 'customer' }
+      );
+
+      if (params.type === 'refund_earn') {
+        audit(
+          params.req,
+          'REFUND_ISSUED',
+          'Order',
+          params.orderId,
+          {
+            orderId: params.orderId ? String(params.orderId) : '',
+            amount: params.points,
+          },
+          { _id: params.adminUserId || params.userId, role: params.adminUserId ? 'admin' : 'customer' }
+        );
+      }
+    });
+
     return { wallet: updatedWallet, transaction: tx };
   }
 
@@ -220,6 +277,21 @@ export class WalletService {
       ],
       params.session ? { session: params.session } : {}
     );
+
+    onSessionCommit(params.session, () => {
+      audit(
+        params.req,
+        'WALLET_DEBIT',
+        'Wallet',
+        updatedWallet._id,
+        {
+          amount: params.points,
+          reason: params.note || params.type,
+          balanceAfter: updatedWallet.balancePoints,
+        },
+        { _id: params.adminUserId || params.userId, role: params.adminUserId ? 'admin' : 'customer' }
+      );
+    });
 
     return { wallet: updatedWallet, transaction: tx };
   }
@@ -438,13 +510,16 @@ export class WalletService {
   /**
    * Admin adjust points (credit or debit).
    */
-  async adminAdjustWallet(params: {
-    userId: string | Types.ObjectId;
-    adminUserId: string | Types.ObjectId;
-    direction: 'credit' | 'debit';
-    points: number;
-    reason: string;
-  }): Promise<{ wallet: IWallet; transaction: IPointsTransaction }> {
+  async adminAdjustWallet(
+    params: {
+      userId: string | Types.ObjectId;
+      adminUserId: string | Types.ObjectId;
+      direction: 'credit' | 'debit';
+      points: number;
+      reason: string;
+    },
+    req?: Request
+  ): Promise<{ wallet: IWallet; transaction: IPointsTransaction }> {
     const idempotencyKey = `admin-adjust-${params.userId}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     if (params.direction === 'credit') {
@@ -455,6 +530,7 @@ export class WalletService {
         idempotencyKey,
         note: params.reason,
         adminUserId: params.adminUserId,
+        req,
       });
     } else {
       return this.debit({
@@ -464,6 +540,7 @@ export class WalletService {
         idempotencyKey,
         note: params.reason,
         adminUserId: params.adminUserId,
+        req,
       });
     }
   }

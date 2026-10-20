@@ -12,7 +12,9 @@ import { AppError } from '../middleware/error.middleware';
 import { CreateOrderInput } from '../validators/order.validator';
 import { SimulatePaymentInput } from '../validators/simulate-payment.validator';
 import { assertTransition } from '../config/order-transitions';
+import { Request } from 'express';
 import { invoiceService } from './invoice.service';
+import { audit } from './audit.service';
 
 export const FREE_SHIPPING_THRESHOLD = 1500;
 export const FLAT_SHIPPING_FEE = 60;
@@ -42,7 +44,8 @@ export const orderService = {
    */
   async createOrder(
     userId: string | Types.ObjectId,
-    input: CreateOrderInput
+    input: CreateOrderInput,
+    req?: Request
   ): Promise<CreateOrderResult> {
     const userObjId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
 
@@ -198,6 +201,19 @@ export const orderService = {
 
       await session.commitTransaction();
 
+      audit(
+        req,
+        'ORDER_CREATE',
+        'Order',
+        order._id,
+        {
+          orderId: String(order._id),
+          itemCount: order.items.length,
+          total: order.total,
+        },
+        { _id: userObjId, role: 'customer' }
+      );
+
       return {
         order,
         couponWarning,
@@ -218,7 +234,8 @@ export const orderService = {
    */
   async payWithWallet(
     userId: string | Types.ObjectId,
-    orderId: string | Types.ObjectId
+    orderId: string | Types.ObjectId,
+    req?: Request
   ): Promise<WalletPaymentResult> {
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
@@ -318,6 +335,19 @@ export const orderService = {
 
       await session.commitTransaction();
 
+      audit(
+        req,
+        'ORDER_STATUS_CHANGE',
+        'Order',
+        order._id,
+        {
+          orderId: String(order._id),
+          from: 'pending_payment',
+          to: 'confirmed',
+        },
+        { _id: userObjIdStr, role: 'customer' }
+      );
+
       return {
         order,
         payment: payment!,
@@ -339,7 +369,8 @@ export const orderService = {
   async submitPaymentSlip(
     userId: string | Types.ObjectId,
     orderId: string,
-    slipUrlOrFilename: string
+    slipUrlOrFilename: string,
+    req?: Request
   ): Promise<{ order: IOrder; payment: IPayment }> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
@@ -404,6 +435,19 @@ export const orderService = {
       { new: true }
     );
 
+    audit(
+      req,
+      'ORDER_STATUS_CHANGE',
+      'Order',
+      order._id,
+      {
+        orderId: String(order._id),
+        from: 'pending_payment',
+        to: 'payment_review',
+      },
+      { _id: userObjId, role: 'customer' }
+    );
+
     return {
       order: updatedOrder!,
       payment: payment!,
@@ -420,7 +464,8 @@ export const orderService = {
   async simulatePayment(
     userId: string | Types.ObjectId,
     orderId: string,
-    input: SimulatePaymentInput
+    input: SimulatePaymentInput,
+    req?: Request
   ): Promise<SimulatePaymentResult> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
@@ -509,6 +554,19 @@ export const orderService = {
       }
       // Generate invoice
       await invoiceService.generateInvoice(updatedOrder, payment!);
+
+      audit(
+        req,
+        'ORDER_STATUS_CHANGE',
+        'Order',
+        order._id,
+        {
+          orderId: String(order._id),
+          from: 'pending_payment',
+          to: 'confirmed',
+        },
+        { _id: userObjId, role: 'customer' }
+      );
     }
 
     return {
@@ -526,7 +584,8 @@ export const orderService = {
     user: IUser,
     orderId: string,
     targetStatus: OrderStatus,
-    extra?: { trackingNumber?: string | null; reviewNote?: string | null }
+    extra?: { trackingNumber?: string | null; reviewNote?: string | null },
+    req?: Request
   ): Promise<IOrder> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
@@ -618,6 +677,7 @@ export const orderService = {
         order.trackingNumber = extra.trackingNumber ? extra.trackingNumber : undefined;
       }
 
+      const previousStatus = order.status;
       order.status = targetStatus;
       await order.save({ session });
 
@@ -628,6 +688,20 @@ export const orderService = {
       }
 
       await session.commitTransaction();
+
+      audit(
+        req,
+        'ORDER_STATUS_CHANGE',
+        'Order',
+        order._id,
+        {
+          orderId: String(order._id),
+          from: previousStatus,
+          to: targetStatus,
+        },
+        { _id: user._id, role: user.role }
+      );
+
       return order;
     } catch (error) {
       await session.abortTransaction();

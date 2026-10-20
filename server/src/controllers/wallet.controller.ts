@@ -179,7 +179,7 @@ export const adminAdjustWallet = asyncHandler(async (req: Request, res: Response
     direction: body.direction,
     points: body.points,
     reason: body.reason,
-  });
+  }, req);
 
   res.status(200).json({
     success: true,

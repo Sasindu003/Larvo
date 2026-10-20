@@ -33,7 +33,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     throw err;
   }
 
-  const result = await orderService.createOrder(req.user._id, parsed);
+  const result = await orderService.createOrder(req.user._id, parsed, req);
 
   res.status(201).json({
     success: true,
@@ -58,7 +58,7 @@ export const payOrderWithWallet = asyncHandler(async (req: Request, res: Respons
   }
 
   const { orderId } = req.params;
-  const result = await orderService.payWithWallet(req.user._id, orderId);
+  const result = await orderService.payWithWallet(req.user._id, orderId, req);
 
   res.status(200).json({
     success: true,
@@ -101,7 +101,7 @@ export const uploadPaymentSlip = asyncHandler(async (req: Request, res: Response
     }
   );
 
-  const result = await orderService.submitPaymentSlip(req.user._id, orderId, gridFile.url);
+  const result = await orderService.submitPaymentSlip(req.user._id, orderId, gridFile.url, req);
 
   res.status(200).json({
     success: true,
@@ -138,7 +138,7 @@ export const simulatePayment = asyncHandler(async (req: Request, res: Response) 
   }
 
   const { orderId } = req.params;
-  const result = await orderService.simulatePayment(req.user._id, orderId, parsed);
+  const result = await orderService.simulatePayment(req.user._id, orderId, parsed, req);
 
   res.status(200).json({
     success: true,
@@ -191,7 +191,8 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
     req.user,
     orderId,
     parsed.status,
-    extra
+    extra,
+    req
   );
 
   res.status(200).json({
