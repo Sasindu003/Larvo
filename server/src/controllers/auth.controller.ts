@@ -8,6 +8,7 @@ import { AppError } from '../middleware/error.middleware';
 import { RegisterSchema } from '../validators/auth.validator';
 import { OAuth2Client } from 'google-auth-library';
 import { setAuthCookie, clearAuthCookie } from '../utils/authCookie';
+import { audit } from '../services/audit.service';
 
 // ── Helper: sign JWT and set httpOnly cookie ────────────────────────────────
 function signTokenAndSetCookie(user: any, res: Response) {
@@ -59,6 +60,15 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     role: 'customer',
   });
 
+  audit(
+    req,
+    'AUTH_REGISTER',
+    'User',
+    user._id,
+    undefined,
+    { _id: user._id, role: user.role }
+  );
+
   res.status(201).json({
     success: true,
     message: 'Account created successfully',
@@ -82,19 +92,31 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
 
   if (!user) {
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Invalid credentials', 401);
   }
 
   if (!user.active) {
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Account is deactivated', 403);
   }
 
   if (!user.passwordHash || !(await user.comparePassword(password))) {
     // Generic message to prevent user enumeration
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Invalid credentials', 401);
   }
 
   signTokenAndSetCookie(user, res);
+
+  audit(
+    req,
+    'AUTH_LOGIN_SUCCESS',
+    'User',
+    user._id,
+    { method: 'password' },
+    { _id: user._id, role: user.role }
+  );
 
   res.status(200).json({
     success: true,
@@ -155,21 +177,25 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
       audience: clientId,
     });
   } catch {
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Invalid or expired Google token', 401);
   }
 
   const payload = ticket.getPayload();
   if (!payload) {
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Unable to extract Google user info', 401);
   }
 
   const { sub: googleId, email, email_verified, name } = payload;
 
   if (!email_verified) {
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Google email is not verified', 401);
   }
 
   if (!email) {
+    audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
     throw new AppError('Google account has no email', 401);
   }
 
@@ -185,6 +211,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
     }
 
     if (!user.active) {
+      audit(req, 'AUTH_LOGIN_FAILURE', 'User', undefined, { reason: 'invalid_credentials' });
       throw new AppError('Account is deactivated', 403);
     }
   } else {
@@ -199,6 +226,15 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
   }
 
   signTokenAndSetCookie(user, res);
+
+  audit(
+    req,
+    'AUTH_LOGIN_SUCCESS',
+    'User',
+    user._id,
+    { method: 'google' },
+    { _id: user._id, role: user.role }
+  );
 
   res.status(200).json({
     success: true,

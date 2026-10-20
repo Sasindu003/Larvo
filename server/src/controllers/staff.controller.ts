@@ -4,7 +4,8 @@ import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../middleware/error.middleware';
 import { staffService } from '../services/staff.service';
-import { UserRole } from '../models/User';
+import User, { UserRole } from '../models/User';
+import { audit } from '../services/audit.service';
 import {
   CreateStaffSchema,
   UpdateStaffSchema,
@@ -99,12 +100,26 @@ export const updateStaff = asyncHandler(async (req: Request, res: Response) => {
   const callerId = req.user!._id;
   const callerRole = req.user!.role as UserRole;
 
+  let previousRole: string | undefined;
+  if (parsed.role) {
+    const existing = await User.findById(id).select('role');
+    previousRole = existing?.role;
+  }
+
   const updatedUser = await staffService.updateStaff(
     callerId,
     callerRole,
     id,
     parsed
   );
+
+  if (parsed.role && previousRole && previousRole !== parsed.role) {
+    audit(req, 'USER_ROLE_CHANGE', 'User', id, {
+      from: previousRole,
+      to: parsed.role,
+      targetUserId: id,
+    });
+  }
 
   res.status(200).json({
     success: true,

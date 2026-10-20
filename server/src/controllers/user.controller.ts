@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import User from '../models/User';
 import { AppError } from '../middleware/error.middleware';
+import { audit } from '../services/audit.service';
 
 /**
  * @desc    Update user profile (name only)
@@ -56,6 +57,8 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response) =
 
   user.passwordHash = newPassword;
   await user.save();
+
+  audit(req, 'AUTH_PASSWORD_CHANGE', 'User', user._id);
 
   // Send back user without passwordHash
   const updatedUser = await User.findById(req.user!._id);

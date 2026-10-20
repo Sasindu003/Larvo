@@ -78,13 +78,15 @@ export function sanitizeAndTruncateMeta(meta?: unknown): Record<string, unknown>
  * @param entityType Name of modified domain entity (e.g., 'Order', 'User')
  * @param entityId Identifier of target entity
  * @param meta Optional supplementary metadata
+ * @param actor Optional actor override ({ _id, role }) for endpoints where req.user is unpopulated
  */
 export async function audit(
   req: Request | null | undefined,
   action: AuditAction,
   entityType: string,
   entityId?: string | Types.ObjectId | null,
-  meta?: Record<string, unknown> | null
+  meta?: Record<string, unknown> | null,
+  actor?: { _id?: Types.ObjectId | string; role?: string }
 ): Promise<void> {
   try {
     // 1. Sanitize and size-bound metadata
@@ -92,16 +94,17 @@ export async function audit(
 
     // 2. Derive user ID
     let userId: Types.ObjectId | null = null;
-    if (req?.user?._id) {
-      if (req.user._id instanceof Types.ObjectId) {
-        userId = req.user._id;
-      } else if (Types.ObjectId.isValid(String(req.user._id))) {
-        userId = new Types.ObjectId(String(req.user._id));
+    const actorId = actor?._id || req?.user?._id;
+    if (actorId) {
+      if (actorId instanceof Types.ObjectId) {
+        userId = actorId;
+      } else if (Types.ObjectId.isValid(String(actorId))) {
+        userId = new Types.ObjectId(String(actorId));
       }
     }
 
     // 3. Derive role, IP, userAgent, and requestId
-    const role = req?.user?.role || (req ? 'anonymous' : 'system');
+    const role = actor?.role || req?.user?.role || (req ? 'anonymous' : 'system');
 
     let ip = '';
     if (req) {
