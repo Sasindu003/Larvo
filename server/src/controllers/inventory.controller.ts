@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
+import { AppError } from '../utils/AppError';
 import { inventoryService } from '../services/inventory.service';
 import { z } from 'zod';
 
@@ -14,8 +15,8 @@ export const validateInventory = asyncHandler(async (req: Request, res: Response
   const result = validateInventorySchema.safeParse(req.body);
   
   if (!result.success) {
-    res.status(400);
-    throw new Error('Invalid input: ' + result.error.errors.map(e => e.message).join(', '));
+
+    throw new AppError('Invalid input: ' + result.error.errors.map(e => e.message).join(', '), 400, 'VALIDATION_ERROR', result.error.errors);
   }
   
   const availability = await inventoryService.checkAvailability(result.data);
@@ -76,8 +77,8 @@ export const adjustAdminInventoryStock = asyncHandler(async (req: Request, res: 
   const parseResult = adjustStockSchema.safeParse(req.body);
 
   if (!parseResult.success) {
-    res.status(400);
-    throw new Error('Invalid stock input: ' + parseResult.error.errors.map((e) => e.message).join(', '));
+
+    throw new AppError('Invalid stock input: ' + parseResult.error.errors.map((e) => e.message).join(', '), 400, 'VALIDATION_ERROR', parseResult.error.errors);
   }
 
   const result = await inventoryService.adjustStockBySku(sku, parseResult.data.stock);

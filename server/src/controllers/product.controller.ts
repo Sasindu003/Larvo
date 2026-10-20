@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { productService } from '../services/product.service';
+import { Product } from '../models/Product';
 
 // ── Public Controllers ─────────────────────────────────────────────────────────
 
@@ -60,7 +61,20 @@ export const getProductSuggestions = asyncHandler(async (req: Request, res: Resp
 export const getProductBySlug = asyncHandler(async (req: Request, res: Response) => {
   const { slug } = req.params;
 
-  const product = await productService.getProductBySlug(slug);
+  let product;
+  try {
+    product = await productService.getProductBySlug(slug);
+  } catch (err: any) {
+    if (err.statusCode === 404) {
+      const productById = await Product.findById(slug).populate('category', 'name slug image').lean();
+      if (!productById) {
+        throw err;
+      }
+      product = productById as any;
+    } else {
+      throw err;
+    }
+  }
 
   res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
 

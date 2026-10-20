@@ -4,7 +4,8 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import mongoose from 'mongoose';
 import { env } from './config/env';
-import { notFound, errorHandler } from './middleware/error.middleware';
+import { notFound } from './middleware/notFound';
+import { errorHandler } from './middleware/errorHandler';
 import { requireAuth } from './middleware/auth.middleware';
 import { requireRole } from './middleware/rbac.middleware';
 
