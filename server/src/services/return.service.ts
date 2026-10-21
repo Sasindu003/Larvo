@@ -595,8 +595,12 @@ export class ReturnService {
         .populate('order');
       return populated!;
     } catch (error) {
-      await session.abortTransaction();
-      throw error;
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      throw error instanceof AppError
+        ? error
+        : new AppError((error as Error).message || 'Failed to process refund', 500);
     } finally {
       await session.endSession();
     }

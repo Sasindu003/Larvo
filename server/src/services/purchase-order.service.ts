@@ -367,6 +367,8 @@ export class PurchaseOrderService {
         // Restock the product variant — positive delta = increment
         await inventoryService.adjustStock(item.product.toString(), item.sku, appliedDelta, {
           session,
+          reason: 'purchase_order_receipt',
+          source: `purchase_order:${po._id}`,
         });
       }
 
@@ -383,7 +385,9 @@ export class PurchaseOrderService {
       if (session.inTransaction()) {
         await session.abortTransaction();
       }
-      throw err;
+      throw err instanceof AppError
+        ? err
+        : new AppError((err as Error).message || 'Failed to receive purchase order', 500);
     } finally {
       await session.endSession();
     }

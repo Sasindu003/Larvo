@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
 import { couponService } from '../services/coupon.service';
 import { AppError } from '../middleware/error.middleware';
+import { audit } from '../services/audit.service';
 import {
   CreateCouponSchema,
   UpdateCouponSchema,
@@ -52,6 +53,11 @@ export const createAdminCoupon = asyncHandler(async (req: Request, res: Response
 
   const coupon = await couponService.createCoupon(parsed);
 
+  audit(req, 'COUPON_CREATE', 'Coupon', coupon._id, {
+    couponId: String(coupon._id),
+    code: coupon.code,
+  });
+
   res.status(201).json({
     success: true,
     data: coupon,
@@ -83,6 +89,12 @@ export const updateAdminCoupon = asyncHandler(async (req: Request, res: Response
 
   const coupon = await couponService.updateCoupon(id, parsed);
 
+  audit(req, 'COUPON_UPDATE', 'Coupon', coupon._id, {
+    couponId: String(coupon._id),
+    code: coupon.code,
+    changedFields: Object.keys(parsed),
+  });
+
   res.status(200).json({
     success: true,
     data: coupon,
@@ -99,6 +111,11 @@ export const deactivateAdminCoupon = asyncHandler(async (req: Request, res: Resp
   const { id } = req.params;
 
   const coupon = await couponService.deactivateCoupon(id);
+
+  audit(req, 'COUPON_DELETE', 'Coupon', coupon._id, {
+    couponId: String(coupon._id),
+    code: coupon.code,
+  });
 
   res.status(200).json({
     success: true,

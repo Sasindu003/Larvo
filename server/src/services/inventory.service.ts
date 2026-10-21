@@ -1,6 +1,8 @@
 import mongoose, { ClientSession, Types } from 'mongoose';
+import { Request } from 'express';
 import { Product, IProduct, IVariant } from '../models/Product';
 import { AppError } from '../middleware/error.middleware';
+import { audit } from './audit.service';
 
 /**
  * Low stock threshold constant:
@@ -26,6 +28,34 @@ export interface AvailabilityResult {
 
 export interface AdjustStockOptions {
   session?: ClientSession;
+  reason?: string;
+  source?: string;
+  req?: Request;
+  actor?: { _id?: Types.ObjectId | string; role?: string };
+}
+
+function onSessionCommit(session: ClientSession | undefined, fn: () => void) {
+  if (!session || !session.inTransaction()) {
+    fn();
+    return;
+  }
+  const sess = session as any;
+  if (!sess._onCommitHooks) {
+    sess._onCommitHooks = [];
+    const origCommit = sess.commitTransaction.bind(sess);
+    sess.commitTransaction = async function (...args: any[]) {
+      await origCommit(...args);
+      for (const hook of sess._onCommitHooks) {
+        try {
+          hook();
+        } catch {
+          // ignore
+        }
+      }
+      sess._onCommitHooks = [];
+    };
+  }
+  sess._onCommitHooks.push(fn);
 }
 
 export const inventoryService = {
@@ -115,6 +145,23 @@ export const inventoryService = {
         );
       }
 
+      onSessionCommit(session, () => {
+        audit(
+          options?.req,
+          'STOCK_ADJUST',
+          'Product',
+          productId,
+          {
+            productId: String(productId),
+            variant: normalizedSku,
+            delta,
+            reason: options?.reason,
+            source: options?.source,
+          },
+          options?.actor
+        );
+      });
+
       return updatedProduct;
     } else {
       // delta > 0: Increment/Restock
@@ -135,6 +182,23 @@ export const inventoryService = {
       if (!updatedProduct) {
         throw new AppError(`Product or variant with SKU '${normalizedSku}' not found`, 404);
       }
+
+      onSessionCommit(session, () => {
+        audit(
+          options?.req,
+          'STOCK_ADJUST',
+          'Product',
+          productId,
+          {
+            productId: String(productId),
+            variant: normalizedSku,
+            delta,
+            reason: options?.reason,
+            source: options?.source,
+          },
+          options?.actor
+        );
+      });
 
       return updatedProduct;
     }
@@ -302,7 +366,11 @@ export const inventoryService = {
   /**
    * Adjust stock for a variant identified by SKU, calculating delta and calling adjustStock.
    */
-  async adjustStockBySku(sku: string, targetStock: number) {
+  async adjustStockBySku(
+    sku: string,
+    targetStock: number,
+    options?: { req?: Request; actor?: { _id?: Types.ObjectId | string; role?: string } }
+  ) {
     const normalizedSku = sku.trim();
     if (typeof targetStock !== 'number' || isNaN(targetStock) || targetStock < 0) {
       throw new AppError('Stock must be a non-negative integer', 400);
@@ -321,7 +389,12 @@ export const inventoryService = {
     const currentStock = variant.stock;
     const delta = targetStock - currentStock;
 
-    const updatedProduct = await this.adjustStock(product._id, normalizedSku, delta);
+    const updatedProduct = await this.adjustStock(product._id, normalizedSku, delta, {
+      reason: 'manual_adjustment',
+      source: 'admin_inventory',
+      req: options?.req,
+      actor: options?.actor,
+    });
     const updatedVariant = updatedProduct.variants.find((v) => v.sku === normalizedSku);
     const finalStock = updatedVariant ? updatedVariant.stock : targetStock;
 

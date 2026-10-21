@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../middleware/error.middleware';
 import { returnService } from '../services/return.service';
+import { audit } from '../services/audit.service';
 import { uploadToGridFS } from '../services/gridfs.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
@@ -200,6 +201,12 @@ export const processDecision = asyncHandler(async (req: Request, res: Response) 
   }
 
   const returnRequest = await returnService.processReturnDecision(req.params.id, parsed);
+
+  audit(req, 'RETURN_DECISION', 'ReturnRequest', returnRequest._id, {
+    returnId: String(returnRequest._id),
+    orderId: String((returnRequest.order as any)?._id || returnRequest.order),
+    decision: parsed.decision,
+  });
 
   res.status(200).json({
     success: true,

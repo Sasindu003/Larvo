@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../middleware/error.middleware';
 import { purchaseOrderService } from '../services/purchase-order.service';
+import { audit } from '../services/audit.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
   CreatePurchaseOrderSchema,
@@ -69,6 +70,12 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
   const parsed = parseOrThrow(CreatePurchaseOrderSchema, req.body);
   const po = await purchaseOrderService.createPurchaseOrder(parsed);
 
+  audit(req, 'PURCHASE_ORDER_CREATE', 'PurchaseOrder', po._id, {
+    purchaseOrderId: String(po._id),
+    supplierId: String((po.supplier as any)?._id || po.supplier),
+    itemCount: po.items.length,
+  });
+
   res.status(201).json({
     success: true,
     data: { purchaseOrder: po },
@@ -131,6 +138,12 @@ export const cancelPurchaseOrder = asyncHandler(async (req: Request, res: Respon
 export const receivePurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
   const parsed = parseOrThrow(ReceivePOSchema, req.body);
   const po = await purchaseOrderService.receivePurchaseOrder(req.params.id, parsed);
+
+  audit(req, 'PURCHASE_ORDER_RECEIVE', 'PurchaseOrder', po._id, {
+    purchaseOrderId: String(po._id),
+    supplierId: String((po.supplier as any)?._id || po.supplier),
+    itemCount: po.items.length,
+  });
 
   res.status(200).json({
     success: true,
