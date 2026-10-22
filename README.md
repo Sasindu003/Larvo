@@ -1,6 +1,7 @@
 # <p align="center"><img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=1,12,24,31,43&height=220&section=header&text=LARVO%20E-COMMERCE&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Full-Stack%20Modern%20Fashion%20Retail%20%7C%20Multi-Role%20Commerce%20Ecosystem&descAlignY=58&descSize=18" alt="Larvo Banner" width="100%" /></p>
 
 <p align="center">
+  <a href="https://github.com/Sasindu003/Larvo/actions/workflows/ci.yml"><img src="https://github.com/Sasindu003/Larvo/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
   <a href="#-tech-stack"><img src="https://img.shields.io/badge/Stack-MERN%20+%20TypeScript-6366f1?style=for-the-badge&logo=react&logoColor=white" alt="Stack" /></a>
   <a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-Monorepo%20Workspaces-ec4899?style=for-the-badge&logo=pnpm&logoColor=white" alt="Architecture" /></a>
   <a href="#-database--storage"><img src="https://img.shields.io/badge/Database-MongoDB%20%2B%20GridFS-10b981?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" /></a>

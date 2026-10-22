@@ -9,13 +9,16 @@
   "scripts": {
     "build": "npm run build:server && npm run build:client",
     "build:client": "npm run build --workspace=client",
-    "build:server": "npm run build --workspace=server"
+    "build:server": "npm run build --workspace=server",
+    "lint": "npm run lint --workspace=server && npm run lint --workspace=client",
+    "lint:fix": "npm run lint:fix --workspace=server && npm run lint:fix --workspace=client",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "overrides": {
     "ip-address": "^10.7.4",
     "proxy-addr": "^2.0.8",
     "qs": "^6.16.1",
-    "brace-expansion": "^1.1.21",
     "source-map-js": "^1.2.2",
     "esbuild": "^0.25.0",
     "vite": {
