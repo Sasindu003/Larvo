@@ -1,51 +1,31 @@
 version: 2
 updates:
+  # Monorepo NPM dependencies (covers root, client, and server workspaces)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
     groups:
-      minor-and-patch:
+      dependencies:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Keep types aligned with Node 20 runtime
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
-  - package-ecosystem: "npm"
-    directory: "/client"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    groups:
-      minor-and-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  - package-ecosystem: "npm"
-    directory: "/server"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    groups:
-      minor-and-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
+  # GitHub Actions workflows
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     groups:
-      minor-and-patch:
+      actions:
         patterns:
           - "*"
         update-types:
