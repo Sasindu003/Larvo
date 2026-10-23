@@ -5,7 +5,12 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../middleware/error.middleware';
 import { staffService } from '../services/staff.service';
 import User, { UserRole } from '../models/User';
-import { audit } from '../services/audit.service';
+import { audit, auditPiiRead } from '../services/audit.service';
+import {
+  applyFieldPolicy,
+  checkPiiRateLimit,
+  getAccessedFullPiiFields,
+} from '../utils/fieldAccess';
 import {
   CreateStaffSchema,
   UpdateStaffSchema,
@@ -18,6 +23,13 @@ import {
  * @access  Admin, Owner
  */
 export const getStaff = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?._id) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  if (!(await checkPiiRateLimit(req, res))) {
+    return;
+  }
   let query;
   try {
     query = ListStaffQuerySchema.parse(req.query);
@@ -33,10 +45,21 @@ export const getStaff = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const result = await staffService.listStaff(query);
+  const sanitized = (result.results || []).map((u: any) =>
+    applyFieldPolicy('User', u, req.user!.role, { isOwner: false })
+  );
+
+  const fullPii = getAccessedFullPiiFields('User', req.user!.role, false);
+  if (fullPii.length > 0 && sanitized.length > 0) {
+    auditPiiRead(req, 'User', null, fullPii, req.user!.role);
+  }
 
   res.status(200).json({
     success: true,
-    data: result,
+    data: {
+      ...result,
+      results: sanitized,
+    },
     message: 'Staff directory fetched successfully',
   });
 });

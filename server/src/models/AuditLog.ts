@@ -20,6 +20,7 @@ export const AUDIT_ACTIONS = [
   'RETURN_DECISION',
   'PURCHASE_ORDER_CREATE',
   'PURCHASE_ORDER_RECEIVE',
+  'PII_READ',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

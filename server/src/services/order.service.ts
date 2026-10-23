@@ -772,8 +772,8 @@ export const orderService = {
     const orderUserId = (order.user as any)?._id?.toString() || order.user.toString();
     const isOwner = orderUserId === user._id.toString();
 
-    // Plain customer can only view own orders
-    if (user.role === 'customer' && !isOwner) {
+    // Plain customer can only view own orders; suppliers have no access to customer orders
+    if (user.role === 'supplier' || (user.role === 'customer' && !isOwner)) {
       throw new AppError('You do not have access to this order', 403);
     }
 
@@ -829,6 +829,23 @@ export const orderService = {
       }
     }
 
+    const userDoc = (order.user && (order.user as any).addresses)
+      ? (order.user as any)
+      : await User.findById(orderUserId);
+    const matchingAddr =
+      userDoc?.addresses?.find((a: any) => a.line1 === order.shippingAddress?.line1) ||
+      userDoc?.addresses?.[0];
+    const customerPhone = matchingAddr?.phone || (order.shippingAddress as any)?.phone || '';
+
+    const rawAddr =
+      typeof (order.shippingAddress as any)?.toObject === 'function'
+        ? (order.shippingAddress as any).toObject()
+        : { ...order.shippingAddress };
+    const shippingAddressWithPhone = {
+      ...rawAddr,
+      ...(customerPhone ? { phone: customerPhone } : {}),
+    };
+
     // delivery_manager sees only fields needed for fulfillment:
     // shipping address, items, status, tracking number, deliveredAt, user name
     if (user.role === 'delivery_manager') {
@@ -844,7 +861,7 @@ export const orderService = {
           color: item.color,
           quantity: item.quantity,
         })),
-        shippingAddress: order.shippingAddress,
+        shippingAddress: shippingAddressWithPhone,
         status: order.status,
         trackingNumber: order.trackingNumber,
         deliveredAt: order.deliveredAt,
@@ -856,6 +873,7 @@ export const orderService = {
 
     const payment = await Payment.findOne({ order: order._id });
     const orderObj = order.toObject();
+    (orderObj as any).shippingAddress = shippingAddressWithPhone;
     (orderObj as any).payment = payment || null;
     (orderObj as any).returnRequest = returnRequestDTO;
     return orderObj;

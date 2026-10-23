@@ -4,6 +4,12 @@ import { AppError } from '../middleware/error.middleware';
 import { supplierService } from '../services/supplier.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
+  applyFieldPolicy,
+  checkPiiRateLimit,
+  getAccessedFullPiiFields,
+} from '../utils/fieldAccess';
+import { auditPiiRead } from '../services/audit.service';
+import {
   CreateSupplierSchema,
   GetSuppliersQuerySchema,
   UpdateSupplierSchema,
@@ -15,6 +21,13 @@ import {
  * @access  Private (staff, admin, owner)
  */
 export const getSuppliers = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?._id) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  if (!(await checkPiiRateLimit(req, res))) {
+    return;
+  }
   let query;
   try {
     query = GetSuppliersQuerySchema.parse(req.query);
@@ -30,10 +43,22 @@ export const getSuppliers = asyncHandler(async (req: Request, res: Response) => 
   }
 
   const result = await supplierService.getSuppliers(query);
+  const sanitized = (result.results || []).map((s: any) =>
+    applyFieldPolicy('Supplier', s, req.user!.role, { isOwner: false })
+  );
+
+  const fullPii = getAccessedFullPiiFields('Supplier', req.user!.role, false);
+  if (fullPii.length > 0 && sanitized.length > 0) {
+    auditPiiRead(req, 'Supplier', null, fullPii, req.user!.role);
+  }
 
   res.status(200).json({
     success: true,
-    data: result,
+
+    data: {
+      ...result,
+      results: sanitized,
+    },
     message: 'Suppliers retrieved successfully',
   });
 });
@@ -45,10 +70,16 @@ export const getSuppliers = asyncHandler(async (req: Request, res: Response) => 
  */
 export const getSupplierById = asyncHandler(async (req: Request, res: Response) => {
   const supplier = await supplierService.getSupplierById(req.params.id);
+  const sanitized = applyFieldPolicy('Supplier', supplier, req.user!.role, { isOwner: false });
+
+  const fullPii = getAccessedFullPiiFields('Supplier', req.user!.role, false);
+  if (fullPii.length > 0) {
+    auditPiiRead(req, 'Supplier', supplier._id, fullPii, req.user!.role);
+  }
 
   res.status(200).json({
     success: true,
-    data: { supplier },
+    data: { supplier: sanitized },
     message: 'Supplier retrieved successfully',
   });
 });
@@ -105,6 +136,7 @@ export const createSupplierAccount = asyncHandler(async (req: Request, res: Resp
 
   res.status(201).json({
     success: true,
+
     data: result,
     message: 'Portal account created successfully',
   });

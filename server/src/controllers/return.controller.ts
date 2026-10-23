@@ -2,7 +2,13 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../middleware/error.middleware';
 import { returnService } from '../services/return.service';
-import { audit } from '../services/audit.service';
+import { audit, auditPiiRead } from '../services/audit.service';
+import {
+  applyFieldPolicy,
+  checkPiiRateLimit,
+  getAccessedFullPiiFields,
+} from '../utils/fieldAccess';
+import { ACTIVE_RETURN_PICKUP_STATUSES } from '../config/field-access';
 import { uploadToGridFS } from '../services/gridfs.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
@@ -112,9 +118,24 @@ export const getReturnById = asyncHandler(async (req: Request, res: Response) =>
     role: req.user.role,
   });
 
+  const returnUserId = (returnRequest as any).user?._id?.toString() || (returnRequest as any).user?.toString() || '';
+  const isOwner = Boolean(returnUserId && returnUserId === req.user._id.toString());
+
+  const sanitized = applyFieldPolicy('ReturnRequest', returnRequest, req.user.role, {
+    isOwner,
+    status: returnRequest.status,
+  });
+
+  if (!isOwner) {
+    const fullPii = getAccessedFullPiiFields('ReturnRequest', req.user.role, isOwner, returnRequest.status);
+    if (fullPii.length > 0) {
+      auditPiiRead(req, 'ReturnRequest', returnRequest._id, fullPii, req.user.role);
+    }
+  }
+
   res.status(200).json({
     success: true,
-    data: { returnRequest },
+    data: { returnRequest: sanitized },
     message: 'Return request details retrieved successfully',
   });
 });
@@ -134,9 +155,33 @@ export const getReturnByOrderId = asyncHandler(async (req: Request, res: Respons
     role: req.user.role,
   });
 
+  if (!returnRequest) {
+    res.status(200).json({
+      success: true,
+      data: { returnRequest: null },
+      message: 'Return request retrieved successfully',
+    });
+    return;
+  }
+
+  const returnUserId = (returnRequest as any).user?._id?.toString() || (returnRequest as any).user?.toString() || '';
+  const isOwner = Boolean(returnUserId && returnUserId === req.user._id.toString());
+
+  const sanitized = applyFieldPolicy('ReturnRequest', returnRequest, req.user.role, {
+    isOwner,
+    status: returnRequest.status,
+  });
+
+  if (!isOwner) {
+    const fullPii = getAccessedFullPiiFields('ReturnRequest', req.user.role, isOwner, returnRequest.status);
+    if (fullPii.length > 0) {
+      auditPiiRead(req, 'ReturnRequest', returnRequest._id, fullPii, req.user.role);
+    }
+  }
+
   res.status(200).json({
     success: true,
-    data: { returnRequest },
+    data: { returnRequest: sanitized },
     message: 'Return request retrieved successfully',
   });
 });
@@ -147,6 +192,14 @@ export const getReturnByOrderId = asyncHandler(async (req: Request, res: Respons
  * @access  Private (staff, admin, owner)
  */
 export const getAdminReturns = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?._id) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  if (!(await checkPiiRateLimit(req, res))) {
+    return;
+  }
+
   let query;
   try {
     query = GetAdminReturnsQuerySchema.parse(req.query);
@@ -162,10 +215,21 @@ export const getAdminReturns = asyncHandler(async (req: Request, res: Response) 
   }
 
   const result = await returnService.getAdminReturns(query);
+  const sanitized = (result.results || []).map((r: any) =>
+    applyFieldPolicy('ReturnRequest', r, req.user!.role, { isOwner: false, status: r.status })
+  );
+
+  const fullPii = getAccessedFullPiiFields('ReturnRequest', req.user.role, false);
+  if (fullPii.length > 0 && sanitized.length > 0) {
+    auditPiiRead(req, 'ReturnRequest', null, fullPii, req.user.role);
+  }
 
   res.status(200).json({
     success: true,
-    data: result,
+    data: {
+      ...result,
+      results: sanitized,
+    },
     message: 'Admin return requests retrieved successfully',
   });
 });
@@ -243,6 +307,14 @@ export const markUnderReview = asyncHandler(async (req: Request, res: Response) 
  * @access  Private (delivery_manager, admin, owner)
  */
 export const getDeliveryReturns = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?._id) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  if (!(await checkPiiRateLimit(req, res))) {
+    return;
+  }
+
   let query;
   try {
     query = GetDeliveryReturnsQuerySchema.parse(req.query);
@@ -258,10 +330,31 @@ export const getDeliveryReturns = asyncHandler(async (req: Request, res: Respons
   }
 
   const result = await returnService.getDeliveryReturns(query);
+  const sanitized = (result.results || []).map((r: any) =>
+    applyFieldPolicy('ReturnRequest', r, req.user!.role, { isOwner: false, status: r.status })
+  );
+
+  const hasActivePickup = sanitized.some((r: any) =>
+    (ACTIVE_RETURN_PICKUP_STATUSES as readonly string[]).includes(r.status)
+  );
+  if (sanitized.length > 0 && (hasActivePickup || req.user.role === 'admin' || req.user.role === 'owner')) {
+    const fullPii = getAccessedFullPiiFields(
+      'ReturnRequest',
+      req.user.role,
+      false,
+      hasActivePickup ? 'picked_up' : undefined
+    );
+    if (fullPii.length > 0) {
+      auditPiiRead(req, 'ReturnRequest', null, fullPii, req.user.role);
+    }
+  }
 
   res.status(200).json({
     success: true,
-    data: result,
+    data: {
+      ...result,
+      results: sanitized,
+    },
     message: 'Delivery return pickups retrieved successfully',
   });
 });
@@ -319,4 +412,3 @@ export const processRefund = asyncHandler(async (req: Request, res: Response) =>
     message: 'Return refund processed successfully',
   });
 });
-

@@ -9,6 +9,12 @@ import { SimulatePaymentSchema } from '../validators/simulate-payment.validator'
 import { UpdateOrderStatusSchema } from '../validators/update-status.validator';
 import { UpdateTrackingSchema } from '../validators/update-tracking.validator';
 import { uploadToGridFS } from '../services/gridfs.service';
+import {
+  applyFieldPolicy,
+  checkPiiRateLimit,
+  getAccessedFullPiiFields,
+} from '../utils/fieldAccess';
+import { auditPiiRead } from '../services/audit.service';
 
 /**
  * @desc    Create a new order in pending_payment status
@@ -322,10 +328,25 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
   const { orderId } = req.params;
   const order = await orderService.getOrderById(req.user, orderId);
 
+  const orderUserId = (order.user as any)?._id?.toString() || order.user?.toString() || '';
+  const isOwner = Boolean(orderUserId && orderUserId === req.user._id.toString());
+
+  const sanitizedOrder = applyFieldPolicy('Order', order, req.user.role, {
+    isOwner,
+    status: order.status,
+  });
+
+  if (!isOwner) {
+    const fullPiiFields = getAccessedFullPiiFields('Order', req.user.role, isOwner, order.status);
+    if (fullPiiFields.length > 0) {
+      auditPiiRead(req, 'Order', order._id || orderId, fullPiiFields, req.user.role);
+    }
+  }
+
   res.status(200).json({
     success: true,
     data: {
-      order,
+      order: sanitizedOrder,
     },
   });
 });
@@ -362,6 +383,10 @@ export const getAdminOrders = asyncHandler(async (req: Request, res: Response) =
     throw new AppError('Authentication required', 401);
   }
 
+  if (!(await checkPiiRateLimit(req, res))) {
+    return;
+  }
+
   const { page, limit, status, search } = req.query;
   const result = await orderService.getAdminOrders({
     page: page as string,
@@ -370,9 +395,21 @@ export const getAdminOrders = asyncHandler(async (req: Request, res: Response) =
     search: search as string,
   });
 
+  const sanitizedOrders = (result.orders || []).map((o: any) =>
+    applyFieldPolicy('Order', o, req.user!.role, { isOwner: false, status: o.status })
+  );
+
+  const fullPiiFields = getAccessedFullPiiFields('Order', req.user.role, false);
+  if (fullPiiFields.length > 0 && sanitizedOrders.length > 0) {
+    auditPiiRead(req, 'Order', null, fullPiiFields, req.user.role);
+  }
+
   res.status(200).json({
     success: true,
-    data: result,
+    data: {
+      ...result,
+      orders: sanitizedOrders,
+    },
   });
 });
 

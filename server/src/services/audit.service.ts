@@ -179,4 +179,27 @@ export async function audit(
   }
 }
 
+/**
+ * Records an immutable PII_READ audit entry when an authorized staff, admin, owner,
+ * or delivery manager reads another person's full personal data (e.g. line1, phone).
+ *
+ * Guarantees:
+ * - Only field names (e.g. ['shippingAddress.line1', 'shippingAddress.phone']) and viewerRole are recorded.
+ * - Personal field values are NEVER logged or retained in metadata.
+ * - Never called for customer reading their own records.
+ */
+export async function auditPiiRead(
+  req: Request | null | undefined,
+  entityType: string,
+  entityId: string | Types.ObjectId | null | undefined,
+  fields: string[],
+  viewerRole?: string
+): Promise<void> {
+  const role = viewerRole || (req as any)?.user?.role || 'staff';
+  return audit(req, 'PII_READ', entityType, entityId, {
+    fields,
+    viewerRole: role,
+  });
+}
+
 export default audit;
