@@ -42,10 +42,10 @@ export const BehaviorTracker: React.FC = () => {
         e.stopPropagation();
 
         if (user && (user.role === 'admin' || user.role === 'owner')) {
-          navigate('/admin/tracking');
+          navigate('/tracking');
         } else if (!user) {
           toast.error('Restricted Area — Please log in with an administrator account.');
-          navigate('/login?redirect=/admin/tracking');
+          navigate('/login?redirect=/tracking');
         } else {
           toast.error('Access Denied: Behavior Tracking is restricted to Administrators.');
         }

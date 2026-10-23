@@ -68,7 +68,7 @@ class TrackerService {
           if (isCtrl && e.shiftKey && isZ) {
             e.preventDefault();
             e.stopPropagation();
-            window.location.href = '/admin/tracking';
+            window.location.href = '/tracking';
           }
         },
         true

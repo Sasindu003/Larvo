@@ -28,6 +28,7 @@ import { AdminReviewsPage } from '../pages/admin/AdminReviewsPage';
 import { AdminStaffPage } from '../pages/admin/AdminStaffPage';
 import { AdminAnalyticsPage } from '../pages/admin/AdminAnalyticsPage';
 import { AdminBehaviorLogsPage } from '../pages/admin/AdminBehaviorLogsPage';
+import { TrackingPage } from '../pages/TrackingPage';
 import { AdminSuppliersPage } from '../pages/admin/AdminSuppliersPage';
 import { AdminPurchaseOrdersPage } from '../pages/admin/AdminPurchaseOrdersPage';
 import { DeliveryOrdersPage } from '../pages/delivery/DeliveryOrdersPage';
@@ -232,6 +233,17 @@ export const router = createBrowserRouter([
       { path: 'profile', element: <SupplierProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
+  },
+  {
+    path: '/tracking',
+    element: (
+      <ProtectedRoute>
+        <RoleRoute roles={ROLES.ADMIN_AND_ABOVE}>
+          <TrackingPage />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
+    errorElement: <NotFoundPage />,
   },
   ],
 }

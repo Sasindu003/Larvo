@@ -170,7 +170,7 @@ export const AdminLayout: React.FC = () => {
           {/* Quick link to Behavior Tracking Logs */}
           {(user.role === 'admin' || user.role === 'owner') && (
             <Link
-              to="/admin/tracking"
+              to="/tracking"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 hover:text-white hover:bg-amber-950/60 rounded-lg border border-amber-800/60 transition-colors"
               title="User Behavior Tracking Log (Ctrl+Shift+Z)"
             >
