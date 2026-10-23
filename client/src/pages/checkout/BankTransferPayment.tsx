@@ -84,7 +84,7 @@ export const BankTransferPayment: React.FC<BankTransferPaymentProps> = ({
           <input
             id="slip-file-input"
             type="file"
-            accept="image/*,application/pdf"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
             onChange={handleFileChange}
             disabled={uploadState === 'uploading' || uploadState === 'success'}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
@@ -99,7 +99,7 @@ export const BankTransferPayment: React.FC<BankTransferPaymentProps> = ({
                 Click to select or drag and drop your slip
               </div>
               <div className="text-[11px] text-ink-500">
-                JPEG, PNG, WebP, GIF, or PDF (Max 5MB)
+                JPEG, PNG, WebP, or PDF (Max 5MB)
               </div>
             </div>
           ) : (

@@ -191,6 +191,7 @@ export const AdminOrdersPage: React.FC = () => {
 
   // ── Slip Lightbox Modal ────────────────────────────────────────────────────
   const [lightboxSlipUrl, setLightboxSlipUrl] = useState<string | null>(null);
+  const [slipImageError, setSlipImageError] = useState(false);
 
   // ── Fetch Orders ───────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async () => {
@@ -225,6 +226,7 @@ export const AdminOrdersPage: React.FC = () => {
   // ── Open Drawer & Sync Selected Order ──────────────────────────────────────
   const handleOpenDrawer = async (order: AdminOrder) => {
     setSelectedOrder(order);
+    setSlipImageError(false);
     setTargetStatus('');
     setTrackingNumberInput(order.trackingNumber || '');
     setRejectionNote('');
@@ -1115,27 +1117,31 @@ export const AdminOrdersPage: React.FC = () => {
                         </a>
                       </div>
 
-                      <div
-                        onClick={() =>
-                          setLightboxSlipUrl(
-                            resolveSlipUrl(selectedOrder.payment?.slipImageUrl)
-                          )
-                        }
-                        className="relative group cursor-pointer border border-slate-800 rounded-xl overflow-hidden max-w-sm bg-slate-950 hover:border-indigo-500 transition-colors"
-                      >
-                        <img
-                          src={resolveSlipUrl(selectedOrder.payment.slipImageUrl)}
-                          alt="Bank Payment Slip"
-                          className="w-full h-48 object-cover object-top"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-medium text-xs gap-1.5">
-                          <Eye className="w-4 h-4" />
-                          Click to enlarge
+                      {slipImageError ? (
+                        <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-xs text-slate-400">
+                          Payment slip unavailable
                         </div>
-                      </div>
+                      ) : (
+                        <div
+                          onClick={() =>
+                            setLightboxSlipUrl(
+                              resolveSlipUrl(selectedOrder.payment?.slipImageUrl)
+                            )
+                          }
+                          className="relative group cursor-pointer border border-slate-800 rounded-xl overflow-hidden max-w-sm bg-slate-950 hover:border-indigo-500 transition-colors"
+                        >
+                          <img
+                            src={resolveSlipUrl(selectedOrder.payment.slipImageUrl)}
+                            alt="Bank Payment Slip"
+                            className="w-full h-48 object-cover object-top"
+                            onError={() => setSlipImageError(true)}
+                          />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-medium text-xs gap-1.5">
+                            <Eye className="w-4 h-4" />
+                            Click to enlarge
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

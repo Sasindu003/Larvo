@@ -402,8 +402,10 @@ export const orderService = {
     }
 
     const slipImageUrl = slipUrlOrFilename.startsWith('/')
-      ? slipUrlOrFilename
-      : `/api/files/${slipUrlOrFilename}`;
+      ? (slipUrlOrFilename.startsWith('/api/files/payment-slips/')
+          ? slipUrlOrFilename
+          : slipUrlOrFilename.replace('/api/files/', '/api/files/payment-slips/'))
+      : `/api/files/payment-slips/${slipUrlOrFilename}`;
 
     const payment = await Payment.findOneAndUpdate(
       { order: order._id },

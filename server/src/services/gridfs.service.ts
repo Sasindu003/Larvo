@@ -54,12 +54,21 @@ export const uploadToGridFS = async (
   });
 };
 
+export interface GridFSFileMetadata {
+  fileId: string;
+  filename: string;
+  contentType: string;
+  length: number;
+  uploadDate: Date;
+  metadata?: Record<string, any>;
+}
+
 /**
- * Retrieves a file stream and metadata from GridFS by ObjectId or filename.
+ * Retrieves file metadata from GridFS without opening a download stream.
  */
-export const getFileFromGridFS = async (
+export const getFileMetadata = async (
   fileIdOrFilename: string
-): Promise<{ stream: NodeJS.ReadableStream; fileId: string; contentType: string; filename: string } | null> => {
+): Promise<GridFSFileMetadata | null> => {
   const currentBucket = getGridFSBucket();
   let file: any = null;
 
@@ -80,11 +89,33 @@ export const getFileFromGridFS = async (
 
   if (!file) return null;
 
-  const stream = currentBucket.openDownloadStream(file._id);
+  return {
+    fileId: file._id.toString(),
+    filename: file.filename || 'file',
+    contentType: file.contentType || 'application/octet-stream',
+    length: file.length || 0,
+    uploadDate: file.uploadDate || new Date(),
+    metadata: file.metadata,
+  };
+};
+
+/**
+ * Retrieves a file stream and metadata from GridFS by ObjectId or filename.
+ */
+export const getFileFromGridFS = async (
+  fileIdOrFilename: string
+): Promise<{ stream: NodeJS.ReadableStream; fileId: string; contentType: string; filename: string; metadata?: Record<string, any> } | null> => {
+  const fileMeta = await getFileMetadata(fileIdOrFilename);
+  if (!fileMeta) return null;
+
+  const currentBucket = getGridFSBucket();
+  const stream = currentBucket.openDownloadStream(new mongoose.Types.ObjectId(fileMeta.fileId));
+
   return {
     stream,
-    fileId: file._id.toString(),
-    contentType: file.contentType || 'application/octet-stream',
-    filename: file.filename || 'file',
+    fileId: fileMeta.fileId,
+    contentType: fileMeta.contentType,
+    filename: fileMeta.filename,
+    metadata: fileMeta.metadata,
   };
 };
