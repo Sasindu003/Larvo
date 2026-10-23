@@ -92,17 +92,17 @@ export function parseUserAgent(uaString: string = ''): ParsedClientInfo {
     osVersion = '7';
   } else if (/Windows/i.test(ua)) {
     osName = 'Windows';
-  } else if (/Android (\d+(\.\d+)?)/i.test(ua)) {
-    const match = ua.match(/Android (\d+(\.\d+)?)/i);
+  } else if (/Android (\d+(?:\.\d+)*)/i.test(ua)) {
+    const match = ua.match(/Android (\d+(?:\.\d+)*)/i);
     osName = 'Android';
     osVersion = match ? match[1] : '';
   } else if (/iPhone|iPad|iPod/i.test(ua)) {
     osName = 'iOS';
-    const match = ua.match(/OS (\d+[_.]\d+)/i);
+    const match = ua.match(/OS (\d+(?:[_.]\d+)+)/i);
     osVersion = match ? match[1].replace(/_/g, '.') : '';
-  } else if (/Mac OS X (\d+[_.]\d+)/i.test(ua)) {
+  } else if (/Mac OS X (\d+(?:[_.]\d+)+)/i.test(ua)) {
     osName = 'macOS';
-    const match = ua.match(/Mac OS X (\d+[_.]\d+)/i);
+    const match = ua.match(/Mac OS X (\d+(?:[_.]\d+)+)/i);
     osVersion = match ? match[1].replace(/_/g, '.') : '';
   } else if (/CrOS/i.test(ua)) {
     osName = 'ChromeOS';
@@ -114,9 +114,9 @@ export function parseUserAgent(uaString: string = ''): ParsedClientInfo {
   let browserName = 'Unknown';
   let browserVersion = '';
 
-  if (/Edg\/(\d+(\.\d+)?)/i.test(ua)) {
+  if (/(?:Edg|EdgA|EdgiOS)\/(\d+(\.\d+)?)/i.test(ua)) {
     browserName = 'Edge';
-    const m = ua.match(/Edg\/(\d+(\.\d+)?)/i);
+    const m = ua.match(/(?:Edg|EdgA|EdgiOS)\/(\d+(\.\d+)?)/i);
     browserVersion = m ? m[1] : '';
   } else if (/OPR\/(\d+(\.\d+)?)/i.test(ua) || /Opera/i.test(ua)) {
     browserName = 'Opera';
