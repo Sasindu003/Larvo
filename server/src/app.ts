@@ -26,6 +26,7 @@ import fileRoutes from './routes/file.routes';
 import supplierRoutes from './routes/supplier.routes';
 import reviewRoutes from './routes/review.routes';
 import healthRoutes from './routes/health.routes';
+import behaviorLogRoutes from './routes/behaviorLog.routes';
 
 import helmet from 'helmet';
 import { requestId } from './middleware/requestId';
@@ -104,6 +105,7 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/returns', returnRoutes);
 app.use('/api/supplier', supplierRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/tracking', behaviorLogRoutes);
 
 // 404 & Centralized Error Handlers
 app.use(notFound);

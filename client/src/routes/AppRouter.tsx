@@ -1,4 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { BehaviorTracker } from '../components/tracking/BehaviorTracker';
 import { RootLayout } from '../components/layout/RootLayout';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { DeliveryLayout } from '../components/layout/DeliveryLayout';
@@ -26,6 +27,7 @@ import { AdminReturnsPage } from '../pages/admin/AdminReturnsPage';
 import { AdminReviewsPage } from '../pages/admin/AdminReviewsPage';
 import { AdminStaffPage } from '../pages/admin/AdminStaffPage';
 import { AdminAnalyticsPage } from '../pages/admin/AdminAnalyticsPage';
+import { AdminBehaviorLogsPage } from '../pages/admin/AdminBehaviorLogsPage';
 import { AdminSuppliersPage } from '../pages/admin/AdminSuppliersPage';
 import { AdminPurchaseOrdersPage } from '../pages/admin/AdminPurchaseOrdersPage';
 import { DeliveryOrdersPage } from '../pages/delivery/DeliveryOrdersPage';
@@ -41,7 +43,17 @@ import { ComponentPreviewPage } from '../pages/dev/ComponentPreviewPage';
 import { ProtectedRoute, RoleRoute } from '../components/auth/ProtectedRoute';
 import { ROLES } from '../config/roles';
 
+const RootTrackerWrapper = () => (
+  <>
+    <BehaviorTracker />
+    <Outlet />
+  </>
+);
+
 export const router = createBrowserRouter([
+  {
+    element: <RootTrackerWrapper />,
+    children: [
   {
     path: '/',
     element: <RootLayout />,
@@ -175,6 +187,14 @@ export const router = createBrowserRouter([
           </RoleRoute>
         ),
       },
+      {
+        path: 'tracking',
+        element: (
+          <RoleRoute roles={ROLES.ADMIN_AND_ABOVE}>
+            <AdminBehaviorLogsPage />
+          </RoleRoute>
+        ),
+      },
       { path: '*', element: <AdminPlaceholderPage /> },
     ],
   },
@@ -213,4 +233,6 @@ export const router = createBrowserRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  ],
+}
 ]);
