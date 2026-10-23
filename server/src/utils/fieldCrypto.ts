@@ -232,9 +232,11 @@ export function decryptField(stored: string, context?: string): string {
     const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
     return decrypted.toString('utf8');
   } catch (err) {
-    throw new Error('Decryption failed: authentication tag mismatch or corrupted ciphertext.', {
-      cause: err,
-    });
+    type ErrorWithCause = new (message?: string, options?: { cause?: unknown }) => Error;
+    throw new (Error as unknown as ErrorWithCause)(
+      'Decryption failed: authentication tag mismatch or corrupted ciphertext.',
+      { cause: err }
+    );
   }
 }
 
