@@ -55,6 +55,17 @@ export const router = createBrowserRouter([
   {
     element: <RootTrackerWrapper />,
     children: [
+      {
+        path: '/tracking',
+        element: (
+          <ProtectedRoute>
+            <RoleRoute roles={ROLES.ADMIN_AND_ABOVE}>
+              <TrackingPage />
+            </RoleRoute>
+          </ProtectedRoute>
+        ),
+        errorElement: <NotFoundPage />,
+      },
   {
     path: '/',
     element: <RootLayout />,
@@ -133,6 +144,16 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'dev/components', element: <ComponentPreviewPage /> },
+      {
+        path: 'tracking',
+        element: (
+          <ProtectedRoute>
+            <RoleRoute roles={ROLES.ADMIN_AND_ABOVE}>
+              <TrackingPage />
+            </RoleRoute>
+          </ProtectedRoute>
+        ),
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
@@ -233,17 +254,6 @@ export const router = createBrowserRouter([
       { path: 'profile', element: <SupplierProfilePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
-  },
-  {
-    path: '/tracking',
-    element: (
-      <ProtectedRoute>
-        <RoleRoute roles={ROLES.ADMIN_AND_ABOVE}>
-          <TrackingPage />
-        </RoleRoute>
-      </ProtectedRoute>
-    ),
-    errorElement: <NotFoundPage />,
   },
   ],
 }
