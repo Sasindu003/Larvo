@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { encryptedFieldsPlugin } from './plugins/encryptedFields';
 
 export type OrderStatus =
   | 'pending_payment'
@@ -122,6 +123,10 @@ const orderSchema = new Schema<IOrder>(
     toObject: { virtuals: true },
   }
 );
+
+orderSchema.plugin(encryptedFieldsPlugin, {
+  fields: ['shippingAddress.line1', 'shippingAddress.line2'],
+});
 
 orderSchema.virtual('discountTotal').get(function (this: IOrder) {
   return this.discountAmount ?? 0;

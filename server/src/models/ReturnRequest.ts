@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { encryptedFieldsPlugin } from './plugins/encryptedFields';
 
 export type ReturnStatus =
   | 'requested'
@@ -148,6 +149,10 @@ const returnRequestSchema = new Schema<IReturnRequest>(
     timestamps: true,
   }
 );
+
+returnRequestSchema.plugin(encryptedFieldsPlugin, {
+  fields: ['pickup.address', 'address'],
+});
 
 returnRequestSchema.index({ order: 1 });
 returnRequestSchema.index({ user: 1, createdAt: -1 });

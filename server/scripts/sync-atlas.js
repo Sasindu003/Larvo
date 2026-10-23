@@ -5,6 +5,8 @@ const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const { MongoClient, ObjectId } = require('mongoose').mongo;
+require('ts-node/register');
+const { encryptField, isEncrypted } = require('../src/utils/fieldCrypto');
 
 const ATLAS_URI = process.env.ATLAS_MONGO_URI || 'mongodb+srv://CHANGE_ME_username:CHANGE_ME_password@CHANGE_ME_cluster.mongodb.net/shop?retryWrites=true&w=majority';
 const INPUT_FILE = path.resolve(__dirname, '../.local/local-data.json');
@@ -41,6 +43,57 @@ function restoreBsonTypes(value, key = '') {
   }
 
   return value;
+}
+
+/**
+ * Re-encrypts sensitive personal data fields prior to inserting into Atlas.
+ */
+function encryptCollectionDocs(colName, docs) {
+  if (!Array.isArray(docs)) return docs;
+
+  for (const doc of docs) {
+    if (!doc || typeof doc !== 'object') continue;
+
+    if (colName === 'users' && Array.isArray(doc.addresses)) {
+      for (const addr of doc.addresses) {
+        if (addr.line1 && !isEncrypted(addr.line1)) addr.line1 = encryptField(addr.line1, 'User.addresses.line1');
+        if (addr.line2 && !isEncrypted(addr.line2)) addr.line2 = encryptField(addr.line2, 'User.addresses.line2');
+        if (addr.phone && !isEncrypted(addr.phone)) addr.phone = encryptField(addr.phone, 'User.addresses.phone');
+      }
+    } else if (colName === 'orders' && doc.shippingAddress) {
+      if (doc.shippingAddress.line1 && !isEncrypted(doc.shippingAddress.line1)) {
+        doc.shippingAddress.line1 = encryptField(doc.shippingAddress.line1, 'Order.shippingAddress.line1');
+      }
+      if (doc.shippingAddress.line2 && !isEncrypted(doc.shippingAddress.line2)) {
+        doc.shippingAddress.line2 = encryptField(doc.shippingAddress.line2, 'Order.shippingAddress.line2');
+      }
+    } else if (colName === 'invoices' && doc.snapshot && doc.snapshot.shippingAddress) {
+      if (doc.snapshot.shippingAddress.line1 && !isEncrypted(doc.snapshot.shippingAddress.line1)) {
+        doc.snapshot.shippingAddress.line1 = encryptField(
+          doc.snapshot.shippingAddress.line1,
+          'Invoice.snapshot.shippingAddress.line1'
+        );
+      }
+      if (doc.snapshot.shippingAddress.line2 && !isEncrypted(doc.snapshot.shippingAddress.line2)) {
+        doc.snapshot.shippingAddress.line2 = encryptField(
+          doc.snapshot.shippingAddress.line2,
+          'Invoice.snapshot.shippingAddress.line2'
+        );
+      }
+    } else if (colName === 'suppliers') {
+      if (doc.phone && !isEncrypted(doc.phone)) doc.phone = encryptField(doc.phone, 'Supplier.phone');
+      if (doc.address && !isEncrypted(doc.address)) doc.address = encryptField(doc.address, 'Supplier.address');
+    } else if (colName === 'returnrequests') {
+      if (doc.pickup && doc.pickup.address && !isEncrypted(doc.pickup.address)) {
+        doc.pickup.address = encryptField(doc.pickup.address, 'ReturnRequest.pickup.address');
+      }
+      if (doc.address && !isEncrypted(doc.address)) {
+        doc.address = encryptField(doc.address, 'ReturnRequest.address');
+      }
+    }
+  }
+
+  return docs;
 }
 
 async function migrate() {
@@ -85,7 +138,8 @@ async function migrate() {
     const atlasCol = atlasDb.collection(colName);
 
     if (docs.length > 0) {
-      const parsedDocs = docs.map(d => restoreBsonTypes(d));
+      const encryptedDocs = encryptCollectionDocs(colName, docs);
+      const parsedDocs = encryptedDocs.map(d => restoreBsonTypes(d));
       await atlasCol.insertMany(parsedDocs, { ordered: true });
     }
 

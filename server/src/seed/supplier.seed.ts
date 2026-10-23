@@ -45,25 +45,25 @@ export const seedSuppliers = async () => {
 
   for (const s of SEED_SUPPLIERS) {
     const isLinkedUser = s.email === 'supplier@larvo.com' && supplierUser;
-    const updateDoc: any = {
-      name: s.name,
-      companyName: s.companyName,
-      email: s.email,
-      phone: s.phone,
-      address: s.address,
-      status: s.status,
-      notes: s.notes,
-    };
+    let supplierDoc = await Supplier.findOne({ email: s.email });
 
-    if (isLinkedUser) {
-      updateDoc.userId = supplierUser._id;
+    if (supplierDoc) {
+      supplierDoc.name = s.name;
+      supplierDoc.companyName = s.companyName;
+      supplierDoc.phone = s.phone;
+      supplierDoc.address = s.address;
+      supplierDoc.status = s.status;
+      supplierDoc.notes = s.notes;
+      if (isLinkedUser) {
+        supplierDoc.userId = supplierUser._id;
+      }
+      await supplierDoc.save();
+    } else {
+      supplierDoc = await Supplier.create({
+        ...s,
+        userId: isLinkedUser ? supplierUser._id : undefined,
+      });
     }
-
-    const supplierDoc = await Supplier.findOneAndUpdate(
-      { email: s.email },
-      { $set: updateDoc },
-      { upsert: true, new: true }
-    );
 
     if (isLinkedUser && supplierUser && !supplierUser.supplierId) {
       supplierUser.supplierId = supplierDoc._id;

@@ -154,21 +154,20 @@ export const seedUsers = async () => {
   const passwordHash = await bcrypt.hash('Password123!', 10);
 
   for (const u of SEED_USERS) {
-    await User.updateOne(
-      { email: u.email },
-      {
-        $set: {
-          name: u.name,
-          email: u.email,
-          passwordHash,
-          password: passwordHash,
-          role: u.role,
-          active: u.active,
-          authProvider: u.authProvider,
-          addresses: u.addresses,
-        },
-      },
-      { upsert: true }
-    );
+    let user = await User.findOne({ email: u.email });
+    if (user) {
+      user.name = u.name;
+      user.role = u.role as any;
+      user.active = u.active;
+      user.authProvider = u.authProvider as any;
+      user.addresses = u.addresses as any;
+      user.passwordHash = passwordHash;
+      await user.save();
+    } else {
+      await User.create({
+        ...u,
+        passwordHash,
+      });
+    }
   }
 };

@@ -1,5 +1,7 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { encryptedFieldsPlugin } from './plugins/encryptedFields';
+import { isEncrypted } from '../utils/fieldCrypto';
 
 export type UserRole = 'customer' | 'staff' | 'admin' | 'owner' | 'delivery_manager' | 'supplier';
 
@@ -45,7 +47,7 @@ const AddressSchema = new Schema<IAddress>(
       type: String,
       trim: true,
       validate: {
-        validator: (v: string) => !v || /^\d{10,13}$/.test(v),
+        validator: (v: string) => !v || isEncrypted(v) || /^\d{10,13}$/.test(v),
         message: 'Phone number must contain only numbers and be 10 to 13 digits long',
       },
     },
@@ -73,6 +75,10 @@ const UserSchema = new Schema<IUser>(
   },
   { timestamps: true }
 );
+
+UserSchema.plugin(encryptedFieldsPlugin, {
+  fields: ['addresses.line1', 'addresses.line2', 'addresses.phone'],
+});
 
 // ── Pre-save: hash password only when it is new/modified ────────────────────
 UserSchema.pre<IUser>('save', async function (next) {

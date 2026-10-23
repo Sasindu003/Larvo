@@ -131,8 +131,8 @@ export class ReturnService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('order', 'total status deliveredAt createdAt items')
-        .lean(),
+        .populate('order', 'total status deliveredAt createdAt items'),
+
       ReturnRequest.countDocuments(query),
     ]);
 
@@ -223,8 +223,8 @@ export class ReturnService {
         .skip(skip)
         .limit(limit)
         .populate('user', 'name email role')
-        .populate('order', 'total status deliveredAt createdAt items subtotal discountAmount')
-        .lean(),
+        .populate('order', 'total status deliveredAt createdAt items subtotal discountAmount'),
+
       ReturnRequest.countDocuments(query),
     ]);
 
@@ -429,8 +429,8 @@ export class ReturnService {
         .skip(skip)
         .limit(limit)
         .populate('user', 'name email phone')
-        .populate('order', 'orderNumber shippingAddress contactPhone items totalAmount createdAt')
-        .lean(),
+        .populate('order', 'orderNumber shippingAddress contactPhone items totalAmount createdAt'),
+
       ReturnRequest.countDocuments(filter),
     ]);
 

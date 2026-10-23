@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { encryptedFieldsPlugin } from './plugins/encryptedFields';
 import { IOrderItem, IAddressSnapshot } from './Order';
 import { PaymentMethod, PaymentStatus } from './Payment';
 
@@ -102,6 +103,10 @@ const invoiceSchema = new Schema<IInvoice>(
   },
   { timestamps: true }
 );
+
+invoiceSchema.plugin(encryptedFieldsPlugin, {
+  fields: ['snapshot.shippingAddress.line1', 'snapshot.shippingAddress.line2'],
+});
 
 invoiceSchema.index({ user: 1, createdAt: -1 });
 

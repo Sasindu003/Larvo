@@ -1005,7 +1005,6 @@ export const orderService = {
       const regex = { $regex: term, $options: 'i' };
       conditions.push({ trackingNumber: regex });
       conditions.push({ 'shippingAddress.city': regex });
-      conditions.push({ 'shippingAddress.line1': regex });
 
       const matchingUsers = await User.find({
         $or: [{ name: regex }, { email: regex }],

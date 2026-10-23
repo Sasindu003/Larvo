@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import path from 'path';
 import { z } from 'zod';
+import { parseKeyRing, normalizeVersion } from '../utils/fieldCrypto';
 
 // Determine if the current process is executing an automated test suite.
 // Use exact script filename check rather than searching arbitrary process.argv paths
@@ -77,7 +78,64 @@ export const envSchema = z
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     AUDIT_LOG_TTL_DAYS: z.coerce.number().int().positive().optional(),
     TRACKING_PASSKEY: z.string().default('admin123'),
+    FIELD_ENCRYPTION_KEYS: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true;
+          const keyMap = parseKeyRing(val);
+          return keyMap.size > 0;
+        },
+        'FIELD_ENCRYPTION_KEYS must contain valid 32-byte base64 keys'
+      ),
+    FIELD_ENCRYPTION_ACTIVE_VERSION: z.string().default('v1'),
   })
+  .refine(
+    (data) => {
+      if (data.NODE_ENV === 'production') {
+        return typeof data.FIELD_ENCRYPTION_KEYS === 'string' && data.FIELD_ENCRYPTION_KEYS.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'FIELD_ENCRYPTION_KEYS is required in production',
+      path: ['FIELD_ENCRYPTION_KEYS'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.NODE_ENV === 'production') {
+        return (
+          typeof data.FIELD_ENCRYPTION_ACTIVE_VERSION === 'string' &&
+          data.FIELD_ENCRYPTION_ACTIVE_VERSION.trim().length > 0
+        );
+      }
+      return true;
+    },
+    {
+      message: 'FIELD_ENCRYPTION_ACTIVE_VERSION is required in production',
+      path: ['FIELD_ENCRYPTION_ACTIVE_VERSION'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.NODE_ENV === 'production' &&
+        data.FIELD_ENCRYPTION_KEYS &&
+        data.FIELD_ENCRYPTION_ACTIVE_VERSION
+      ) {
+        const keyMap = parseKeyRing(data.FIELD_ENCRYPTION_KEYS);
+        const norm = normalizeVersion(data.FIELD_ENCRYPTION_ACTIVE_VERSION);
+        return keyMap.has(norm) || keyMap.has(`v${norm}`);
+      }
+      return true;
+    },
+    {
+      message: 'FIELD_ENCRYPTION_ACTIVE_VERSION must match a key defined in FIELD_ENCRYPTION_KEYS',
+      path: ['FIELD_ENCRYPTION_ACTIVE_VERSION'],
+    }
+  )
   .refine(
     (data) => {
       const isSecure =

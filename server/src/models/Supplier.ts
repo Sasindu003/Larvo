@@ -1,4 +1,6 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { encryptedFieldsPlugin } from './plugins/encryptedFields';
+import { isEncrypted } from '../utils/fieldCrypto';
 
 export type SupplierStatus = 'active' | 'inactive';
 
@@ -40,7 +42,7 @@ const supplierSchema = new Schema<ISupplier>(
       required: [true, 'Phone number is required'],
       trim: true,
       validate: {
-        validator: (v: string) => /^\d{10,13}$/.test(v),
+        validator: (v: string) => !v || isEncrypted(v) || /^\d{10,13}$/.test(v),
         message: 'Phone number must contain only numbers and be 10 to 13 digits long',
       },
     },
@@ -70,6 +72,10 @@ const supplierSchema = new Schema<ISupplier>(
     timestamps: true,
   }
 );
+
+supplierSchema.plugin(encryptedFieldsPlugin, {
+  fields: ['phone', 'address'],
+});
 
 supplierSchema.index({ companyName: 'text', name: 'text', email: 'text' });
 supplierSchema.index({ status: 1, createdAt: -1 });

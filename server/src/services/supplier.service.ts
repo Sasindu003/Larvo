@@ -44,7 +44,7 @@ export class SupplierService {
     }
 
     const [results, total] = await Promise.all([
-      Supplier.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Supplier.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
       Supplier.countDocuments(filter),
     ]);
 
