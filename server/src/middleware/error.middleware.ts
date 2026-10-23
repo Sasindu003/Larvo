@@ -43,8 +43,8 @@ export const errorHandler = (
     const field = Object.keys(keyValue)[0] || 'field';
     res.status(409).json({
       success: false,
-      message: `Duplicate value entered for ${field}: '${keyValue[field]}'.`,
-      errors: keyValue,
+      message: `Duplicate value for ${field}`,
+      errors: { [field]: 'Duplicate value' },
     });
     return;
   }

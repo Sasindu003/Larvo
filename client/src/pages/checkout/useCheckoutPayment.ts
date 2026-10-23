@@ -27,31 +27,24 @@ export function useCheckoutPayment(
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>('bank_transfer');
 
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('step') === '5') {
-        const saved = sessionStorage.getItem('larvo_completed_order');
-        if (saved) {
-          try {
-            return JSON.parse(saved);
-          } catch {}
-        }
-      }
-    }
-    return null;
-  });
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
+      // Purge legacy sensitive sessionStorage keys
+      try {
+        sessionStorage.removeItem('larvo_completed_order');
+        sessionStorage.removeItem('larvo_completed_payment');
+      } catch {}
+
       const params = new URLSearchParams(window.location.search);
       if (params.get('step') === '5') {
         const orderIdParam = params.get('orderId');
         if (orderIdParam) return orderIdParam;
-        const saved = sessionStorage.getItem('larvo_completed_order');
+        const saved = sessionStorage.getItem('larvo_completed_order_summary');
         if (saved) {
           try {
-            return JSON.parse(saved)?._id || null;
+            return JSON.parse(saved)?.orderId || null;
           } catch {}
         }
       }
@@ -69,20 +62,7 @@ export function useCheckoutPayment(
   });
   const [payingWithPoints, setPayingWithPoints] = useState<boolean>(false);
 
-  const [submittedPayment, setSubmittedPayment] = useState<Payment | null>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('step') === '5') {
-        const saved = sessionStorage.getItem('larvo_completed_payment');
-        if (saved) {
-          try {
-            return JSON.parse(saved);
-          } catch {}
-        }
-      }
-    }
-    return null;
-  });
+  const [submittedPayment, setSubmittedPayment] = useState<Payment | null>(null);
 
   const createOrderForCheckout = useCallback(async (): Promise<string | null> => {
     if (createdOrderId || isCreatingOrder) return createdOrderId;
@@ -158,30 +138,60 @@ export function useCheckoutPayment(
     }
   }, [currentStep, createdOrderId, createOrderForCheckout, loadWalletBalance]);
 
-  // Step 5 Confirmation: Clear cart on entry and cache completed order in sessionStorage
+  // Step 5 Confirmation: Clear cart on entry, store minimal non-sensitive summary, and refetch on reload
   useEffect(() => {
     if (currentStep === 5) {
       if (items.length > 0) {
         clearCart();
       }
+
       if (createdOrder) {
         try {
-          sessionStorage.setItem('larvo_completed_order', JSON.stringify(createdOrder));
-          if (submittedPayment) {
-            sessionStorage.setItem('larvo_completed_payment', JSON.stringify(submittedPayment));
-          }
+          // Minimal non-sensitive summary: orderId, status, total, maskedCardLast4 only
+          sessionStorage.setItem(
+            'larvo_completed_order_summary',
+            JSON.stringify({
+              orderId: createdOrder._id,
+              status: createdOrder.status,
+              total: createdOrder.total,
+              maskedCardLast4:
+                submittedPayment?.maskedCardLast4 || createdOrder.payment?.maskedCardLast4,
+            })
+          );
+          // Purge any legacy sensitive sessionStorage items
+          sessionStorage.removeItem('larvo_completed_order');
+          sessionStorage.removeItem('larvo_completed_payment');
+
           const url = new URL(window.location.href);
-          if (url.searchParams.get('step') !== '5' || url.searchParams.get('orderId') !== createdOrder._id) {
+          if (
+            url.searchParams.get('step') !== '5' ||
+            url.searchParams.get('orderId') !== createdOrder._id
+          ) {
             url.searchParams.set('step', '5');
             url.searchParams.set('orderId', createdOrder._id);
             window.history.replaceState({}, '', url.toString());
           }
         } catch (err) {
-          console.error('Failed to cache completed order:', err);
+          console.error('Failed to cache completed order summary:', err);
         }
+      } else if (createdOrderId) {
+        // Refetch order from API on page refresh
+        orderService
+          .getOrderById(createdOrderId)
+          .then((res) => {
+            if (res?.order) {
+              setCreatedOrder(res.order);
+              if (res.order.payment) {
+                setSubmittedPayment(res.order.payment);
+              }
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to refetch order on step 5 refresh:', err);
+          });
       }
     }
-  }, [currentStep, items.length, clearCart, createdOrder, submittedPayment]);
+  }, [currentStep, items.length, clearCart, createdOrder, createdOrderId, submittedPayment]);
 
   const handlePayWithWallet = async () => {
     if (!createdOrderId) {

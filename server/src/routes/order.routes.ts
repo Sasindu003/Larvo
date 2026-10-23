@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/rbac.middleware';
 import { uploadSlip, handleMulterError } from '../middleware/upload.middleware';
 import { transactionRateLimit } from '../middleware/rateLimiters';
+import { noStore } from '../middleware/noStore';
 import {
   createOrder,
   payOrderWithWallet,
@@ -18,7 +19,8 @@ import {
 
 const router = Router();
 
-// All order endpoints require authentication
+// All order endpoints require authentication and must not be cached
+router.use(noStore);
 router.use(requireAuth);
 
 router.post('/', transactionRateLimit, createOrder);

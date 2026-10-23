@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
+import { noStore } from '../middleware/noStore';
 import {
   getMyWallet,
   getMyTransactions,
@@ -7,6 +8,9 @@ import {
 } from '../controllers/wallet.controller';
 
 const router = Router();
+
+// Wallet and point balances must not be cached by browsers or intermediaries
+router.use(noStore);
 
 /**
  * @desc    Get points conversion value per Rs. 1

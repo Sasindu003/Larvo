@@ -5,7 +5,7 @@ import { logger } from '../utils/logger';
 
 export { AuditAction, AUDIT_ACTIONS };
 
-const SENSITIVE_KEY_REGEX = /password|token|secret|cookie|authorization|card|slip/i;
+const SENSITIVE_KEY_REGEX = /password|token|secret|cookie|authorization|card|slip|pan|cvv|cvc|iban|account/i;
 const MAX_META_BYTES = 16384; // 16 KB metadata threshold
 
 /**

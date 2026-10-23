@@ -2,6 +2,20 @@ import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { env } from '../config/env';
 
+/**
+ * Defensive error serializer that logs err.name, err.message, err.code, and err.stack only,
+ * explicitly omitting err.config, err.request, err.response, or any attached body.
+ */
+export const errorSerializer = (err: any) => {
+  if (!err) return err;
+  return {
+    type: err.name || 'Error',
+    message: err.message,
+    stack: err.stack,
+    ...(err.code ? { code: err.code } : {}),
+  };
+};
+
 export const logger = pino({
   level: env.LOG_LEVEL || 'info',
   redact: {
@@ -18,8 +32,25 @@ export const logger = pino({
       'password',
       'passwordHash',
       'token',
+      'req.body',
+      'body.cardNumber',
+      'body.cvv',
+      'body.cvc',
+      'body.expiry',
+      'body.cardholderName',
+      'body.token',
+      '*.cardNumber',
+      '*.cvv',
+      '*.cvc',
+      '*.expiry',
+      '*.cardholderName',
+      '*.slipImageUrl',
     ],
     censor: '[Redacted]',
+  },
+  serializers: {
+    err: errorSerializer,
+    error: errorSerializer,
   },
   timestamp: pino.stdTimeFunctions.isoTime,
 });
@@ -40,6 +71,7 @@ export const httpLogger = pinoHttp({
         headers: req.headers,
       };
     },
+    err: errorSerializer,
   },
 });
 

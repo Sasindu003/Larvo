@@ -28,16 +28,24 @@ export const errorHandler = (
   // 2. Mongoose CastError (invalid ObjectId format)
   else if (err.name === 'CastError') {
     statusCode = 400;
-    message = `Invalid ${err.path || 'ID'} format: '${err.value}'`;
+    message = `Invalid ${err.path || 'ID'}`;
     code = 'INVALID_ID';
   }
 
   // 3. Mongoose ValidationError
   else if (err.name === 'ValidationError') {
     statusCode = 400;
-    message = err.message || 'Validation error';
+    message = 'Validation failed';
     code = 'VALIDATION_ERROR';
-    errors = err.errors;
+    if (err.errors && typeof err.errors === 'object') {
+      const sanitizedErrors: Record<string, string> = {};
+      for (const [key, val] of Object.entries(err.errors)) {
+        sanitizedErrors[key] = (val as any)?.message || 'Invalid value';
+      }
+      errors = sanitizedErrors;
+    } else {
+      errors = err.errors;
+    }
   }
 
   // 4. Mongo duplicate key error (code 11000)
@@ -53,8 +61,8 @@ export const errorHandler = (
       errors = { sku: conflictingSku };
     } else {
       const field = Object.keys(keyValue)[0] || 'field';
-      message = `Duplicate value entered for ${field}: '${keyValue[field]}'.`;
-      errors = keyValue;
+      message = `Duplicate value for ${field}`;
+      errors = { [field]: 'Duplicate value' };
     }
   }
 

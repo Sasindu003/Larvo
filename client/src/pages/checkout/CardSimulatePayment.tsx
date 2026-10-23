@@ -25,6 +25,7 @@ export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
   simulateState,
   setSimulateState,
   cardError,
+  setCardError,
   submittedPayment,
   handleSimulatePayment,
 }) => {
@@ -52,7 +53,10 @@ export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
           <Button
             id="btn-simulate-approve"
             type="button"
-            onClick={() => handleSimulatePayment('tok_test_success')}
+            onClick={() => {
+              setCardError(null);
+              handleSimulatePayment('tok_test_success');
+            }}
             disabled={isProcessing || isApproved}
             className="flex items-center justify-center gap-2 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-medium"
           >
@@ -78,7 +82,10 @@ export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
             id="btn-simulate-decline"
             type="button"
             variant="secondary"
-            onClick={() => handleSimulatePayment('tok_test_decline')}
+            onClick={() => {
+              setCardError(null);
+              handleSimulatePayment('tok_test_decline');
+            }}
             disabled={isProcessing || isApproved}
             className="flex items-center justify-center gap-2 py-2.5 border-rose-300 text-rose-700 hover:bg-rose-50 font-medium"
           >
