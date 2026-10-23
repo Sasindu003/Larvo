@@ -26,6 +26,11 @@ import {
   Check,
   Radio,
   ExternalLink,
+  Trash2,
+  Calendar,
+  AlertTriangle,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { trackingService, BehaviorLogItem, GetBehaviorLogsParams } from '../../services/tracking.service';
@@ -50,12 +55,20 @@ export const AdminBehaviorLogsPage: React.FC = () => {
   const [limit, setLimit] = useState(25);
   const [pages, setPages] = useState(1);
 
+  // Sorting: Date, Hour and Minute
   const [sortBy, setSortBy] = useState<GetBehaviorLogsParams['sortBy']>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [eventTypeFilter, setEventTypeFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterHour, setFilterHour] = useState<string>('all');
   const [liveRefresh, setLiveRefresh] = useState(false);
+
+  // Multi-select state for log deletion
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   // Drawer detail state
   const [selectedLog, setSelectedLog] = useState<BehaviorLogItem | null>(null);
@@ -76,19 +89,23 @@ export const AdminBehaviorLogsPage: React.FC = () => {
         eventType: eventTypeFilter !== 'all' ? eventTypeFilter : undefined,
         userRole: roleFilter !== 'all' ? roleFilter : undefined,
         search: searchQuery.trim() || undefined,
+        date: filterDate || undefined,
+        hour: filterHour !== 'all' ? Number(filterHour) : undefined,
       });
 
       if (res.success && res.data) {
         setLogs(res.data.results || []);
         setTotal(res.data.total || 0);
         setPages(res.data.pages || 1);
+        // Clear selections if deleted or page changes
+        setSelectedIds((prev) => prev.filter((id) => (res.data?.results || []).some((l) => l._id === id)));
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to fetch behavior logs');
     } finally {
       setLoading(false);
     }
-  }, [unlocked, page, limit, sortBy, sortOrder, eventTypeFilter, roleFilter, searchQuery]);
+  }, [unlocked, page, limit, sortBy, sortOrder, eventTypeFilter, roleFilter, searchQuery, filterDate, filterHour]);
 
   // Initial and trigger load
   useEffect(() => {
@@ -133,6 +150,7 @@ export const AdminBehaviorLogsPage: React.FC = () => {
     setUnlocked(false);
     setPasskeyInput('');
     setSelectedLog(null);
+    setSelectedIds([]);
     toast.success('Console Locked');
   };
 
@@ -151,6 +169,68 @@ export const AdminBehaviorLogsPage: React.FC = () => {
     setCopiedKey(label);
     toast.success(`Copied ${label}`);
     setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  // ── Selection Handlers ───────────────────────────────────────────────────
+  const toggleSelectLog = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAllPage = () => {
+    const pageIds = logs.map((l) => l._id);
+    const allSelected = pageIds.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  // Delete Selected Logs
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to permanently delete ${selectedIds.length} selected log(s)?`)) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const res = await trackingService.deleteLogs(selectedIds);
+      if (res.success) {
+        toast.success(res.message || `Deleted ${selectedIds.length} logs`);
+        setSelectedIds([]);
+        if (selectedLog && selectedIds.includes(selectedLog._id)) {
+          setSelectedLog(null);
+        }
+        await fetchLogs();
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete selected logs');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Clear All Logs
+  const handleClearAll = async () => {
+    setDeleting(true);
+    try {
+      const res = await trackingService.clearAllLogs({
+        date: filterDate || undefined,
+      });
+      if (res.success) {
+        toast.success(res.message || 'Cleared tracking logs');
+        setConfirmClearAll(false);
+        setSelectedIds([]);
+        setSelectedLog(null);
+        await fetchLogs();
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to clear logs');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   // ── 1. Passkey Gate Screen ────────────────────────────────────────────────
@@ -209,12 +289,14 @@ export const AdminBehaviorLogsPage: React.FC = () => {
 
           <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-center gap-2 text-xs text-stone-400">
             <Shield className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Immutable Forensic Audit Logging Enabled</span>
+            <span>Forensic User Behavior & Clickstream Auditing</span>
           </div>
         </div>
       </div>
     );
   }
+
+  const isAllPageSelected = logs.length > 0 && logs.every((l) => selectedIds.includes(l._id));
 
   // ── 2. Full Behavior Logs Console ───────────────────────────────────────────
   return (
@@ -228,11 +310,14 @@ export const AdminBehaviorLogsPage: React.FC = () => {
                 <Shield className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <h1 className="text-xl font-serif font-bold text-stone-900">
-                  User Behavior Tracking Log
+                <h1 className="text-xl font-serif font-bold text-stone-900 flex items-center gap-2">
+                  <span>User Behavior Tracking Log</span>
+                  <span className="text-xs font-mono font-normal bg-stone-100 text-stone-600 px-2 py-0.5 rounded border border-stone-200">
+                    Ctrl + Shift + Z
+                  </span>
                 </h1>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  Real-time clickstream, route navigations, and client telemetry across all store visitors.
+                  Real-time clickstream, route navigations, and client telemetry with granular Date, Hour & Minute sorting.
                 </p>
               </div>
             </div>
@@ -274,9 +359,9 @@ export const AdminBehaviorLogsPage: React.FC = () => {
         </div>
 
         {/* Filter and Sort Toolbar */}
-        <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-1 md:grid-cols-12 gap-3">
+        <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search bar */}
-          <div className="md:col-span-4 relative">
+          <div className="lg:col-span-3 relative">
             <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
             <input
               type="text"
@@ -285,13 +370,46 @@ export const AdminBehaviorLogsPage: React.FC = () => {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search IP, User email, Path, or Target..."
+              placeholder="Search IP, User email, Path, Target..."
               className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
             />
           </div>
 
+          {/* Date Filter (Specific Day) */}
+          <div className="lg:col-span-2 relative">
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => {
+                setFilterDate(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-2.5 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              title="Filter by specific date"
+            />
+          </div>
+
+          {/* Hour Filter (00 to 23) */}
+          <div className="lg:col-span-2">
+            <select
+              value={filterHour}
+              onChange={(e) => {
+                setFilterHour(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            >
+              <option value="all">All Hours</option>
+              {Array.from({ length: 24 }).map((_, i) => (
+                <option key={i} value={i}>
+                  {String(i).padStart(2, '0')}:00 - {String(i).padStart(2, '0')}:59
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Event Type Filter */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <select
               value={eventTypeFilter}
               onChange={(e) => {
@@ -302,33 +420,33 @@ export const AdminBehaviorLogsPage: React.FC = () => {
             >
               <option value="all">All Events</option>
               <option value="click">Clicks Only</option>
-              <option value="page_view">Page Views Only</option>
-              <option value="navigation">Navigations Only</option>
+              <option value="page_view">Page Views</option>
+              <option value="navigation">Navigations</option>
               <option value="form_submit">Form Submits</option>
             </select>
           </div>
 
           {/* User Role Filter */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-1">
             <select
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400"
             >
-              <option value="all">All Roles</option>
-              <option value="guest">Guests</option>
-              <option value="customer">Customers</option>
+              <option value="all">Role</option>
+              <option value="guest">Guest</option>
+              <option value="customer">Customer</option>
               <option value="staff">Staff</option>
-              <option value="admin">Admins</option>
-              <option value="owner">Owners</option>
+              <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
             </select>
           </div>
 
-          {/* Sort Option Dropdown */}
-          <div className="md:col-span-3 flex items-center gap-2">
+          {/* Sort Dropdown: Date, Hour, Minute */}
+          <div className="lg:col-span-2 flex items-center gap-1.5">
             <div className="flex-grow">
               <select
                 value={sortBy}
@@ -336,30 +454,123 @@ export const AdminBehaviorLogsPage: React.FC = () => {
                   setSortBy(e.target.value as any);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400"
+                className="w-full px-2.5 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-800 font-medium focus:outline-none focus:ring-2 focus:ring-stone-400"
               >
-                <option value="createdAt">Sort by: Timestamp</option>
-                <option value="eventType">Sort by: Event Type</option>
-                <option value="userRole">Sort by: User Role</option>
-                <option value="ip">Sort by: IP Address</option>
-                <option value="path">Sort by: Page Path</option>
+                <option value="createdAt">Date, Hour, Minute</option>
+                <option value="eventType">Event Type</option>
+                <option value="userRole">User Role</option>
+                <option value="ip">IP Address</option>
+                <option value="path">Page Path</option>
               </select>
             </div>
             <button
               onClick={() => setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
               title={`Sort direction: ${sortOrder === 'desc' ? 'Descending (Newest first)' : 'Ascending (Oldest first)'}`}
-              className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg border border-stone-200 text-xs flex items-center justify-center transition-colors"
+              className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg border border-stone-200 text-xs flex items-center justify-center transition-colors flex-shrink-0"
             >
-              {sortOrder === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
+              {sortOrder === 'desc' ? <ArrowDown className="w-4 h-4 text-amber-700" /> : <ArrowUp className="w-4 h-4 text-amber-700" />}
             </button>
           </div>
+        </div>
 
-          {/* Quick Stats Pill */}
-          <div className="md:col-span-1 flex items-center justify-end">
-            <span className="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-1 rounded">
-              {total.toLocaleString()} total
-            </span>
+        {/* Active Filters Bar & Reset */}
+        {(filterDate || filterHour !== 'all' || eventTypeFilter !== 'all' || roleFilter !== 'all' || searchQuery) && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 text-xs">
+            <span className="text-stone-400 font-medium">Active filters:</span>
+            {filterDate && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[11px]">
+                Date: {filterDate}
+                <button onClick={() => setFilterDate('')} className="hover:text-amber-950">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filterHour !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[11px]">
+                Hour: {filterHour.padStart(2, '0')}:00
+                <button onClick={() => setFilterHour('all')} className="hover:text-amber-950">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {eventTypeFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200 text-[11px]">
+                Event: {eventTypeFilter}
+                <button onClick={() => setEventTypeFilter('all')} className="hover:text-stone-900">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {roleFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200 text-[11px]">
+                Role: {roleFilter}
+                <button onClick={() => setRoleFilter('all')} className="hover:text-stone-900">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setFilterDate('');
+                setFilterHour('all');
+                setEventTypeFilter('all');
+                setRoleFilter('all');
+                setSearchQuery('');
+                setPage(1);
+              }}
+              className="text-stone-500 hover:text-stone-800 underline text-[11px]"
+            >
+              Reset all filters
+            </button>
           </div>
+        )}
+      </div>
+
+      {/* Selectable Log Clear Action Bar */}
+      <div className="bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleSelectAllPage}
+            className="flex items-center gap-1.5 text-xs font-semibold text-stone-700 hover:text-stone-900"
+          >
+            {isAllPageSelected ? (
+              <CheckSquare className="w-4 h-4 text-amber-600" />
+            ) : (
+              <Square className="w-4 h-4 text-stone-400" />
+            )}
+            <span>Select Page ({logs.length})</span>
+          </button>
+
+          {selectedIds.length > 0 && (
+            <span className="bg-amber-100 text-amber-800 font-semibold px-2.5 py-0.5 rounded-full text-xs">
+              {selectedIds.length} selected
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Delete Selected Button */}
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium shadow-xs transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear Selected ({selectedIds.length})</span>
+            </button>
+          )}
+
+          {/* Clear All Logs Button */}
+          <button
+            onClick={() => setConfirmClearAll(true)}
+            disabled={deleting || total === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-200 hover:bg-red-100 hover:text-red-700 text-stone-700 rounded-lg text-xs font-medium transition-colors border border-stone-300 disabled:opacity-50"
+            title="Purge logs matching current filter or all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear Logs...</span>
+          </button>
         </div>
       </div>
 
@@ -369,15 +580,28 @@ export const AdminBehaviorLogsPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-stone-50/80 border-b border-stone-200 text-stone-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="py-3 px-3 w-10 text-center">
+                  <button
+                    onClick={toggleSelectAllPage}
+                    className="text-stone-400 hover:text-stone-700 flex items-center justify-center mx-auto"
+                    title="Select all on this page"
+                  >
+                    {isAllPageSelected ? (
+                      <CheckSquare className="w-4 h-4 text-amber-600" />
+                    ) : (
+                      <Square className="w-4 h-4 text-stone-400" />
+                    )}
+                  </button>
+                </th>
                 <th
                   onClick={() => toggleSort('createdAt')}
                   className="py-3 px-4 cursor-pointer hover:bg-stone-100 transition-colors select-none"
                 >
                   <div className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-stone-400" />
-                    <span>Timestamp</span>
+                    <span>Date, Hour & Minute</span>
                     {sortBy === 'createdAt' && (
-                      sortOrder === 'desc' ? <ArrowDown className="w-3 h-3 text-stone-700" /> : <ArrowUp className="w-3 h-3 text-stone-700" />
+                      sortOrder === 'desc' ? <ArrowDown className="w-3 h-3 text-amber-700" /> : <ArrowUp className="w-3 h-3 text-amber-700" />
                     )}
                   </div>
                 </th>
@@ -436,42 +660,65 @@ export const AdminBehaviorLogsPage: React.FC = () => {
             <tbody className="divide-y divide-stone-100">
               {loading && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-stone-400">
+                  <td colSpan={8} className="py-12 text-center text-stone-400">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-stone-300" />
                     Loading tracking events...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-stone-400">
+                  <td colSpan={8} className="py-12 text-center text-stone-400">
                     No behavior events found matching the selected criteria.
                   </td>
                 </tr>
               ) : (
                 logs.map((log) => {
+                  const isSelected = selectedIds.includes(log._id);
                   const dateObj = new Date(log.createdAt);
-                  const formattedTime = dateObj.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                  });
-                  const formattedDate = dateObj.toLocaleDateString([], {
-                    month: 'short',
-                    day: 'numeric',
-                  });
+
+                  const hours = String(dateObj.getHours()).padStart(2, '0');
+                  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+                  const timeFormatted = `${hours}:${minutes}:${seconds}`;
+
+                  const year = dateObj.getFullYear();
+                  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                  const day = String(dateObj.getDate()).padStart(2, '0');
+                  const dateFormatted = `${year}-${month}-${day}`;
 
                   return (
                     <tr
                       key={log._id}
                       onClick={() => setSelectedLog(log)}
                       className={`hover:bg-amber-50/40 cursor-pointer transition-colors ${
-                        selectedLog?._id === log._id ? 'bg-amber-50/70' : ''
+                        isSelected ? 'bg-amber-100/50' : selectedLog?._id === log._id ? 'bg-amber-50/70' : ''
                       }`}
                     >
-                      {/* Timestamp */}
-                      <td className="py-3 px-4 whitespace-nowrap font-mono text-stone-600">
-                        <div className="font-medium text-stone-900">{formattedTime}</div>
-                        <div className="text-[10px] text-stone-400">{formattedDate}</div>
+                      {/* Selection Checkbox */}
+                      <td className="py-3 px-3 text-center" onClick={(e) => toggleSelectLog(log._id, e)}>
+                        <button
+                          type="button"
+                          className="text-stone-400 hover:text-stone-800 flex items-center justify-center mx-auto"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="w-4 h-4 text-amber-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-stone-300 hover:text-stone-500" />
+                          )}
+                        </button>
+                      </td>
+
+                      {/* Date, Hour & Minute */}
+                      <td className="py-3 px-4 whitespace-nowrap font-mono text-stone-700">
+                        <div className="flex items-center gap-1.5 font-bold text-stone-900">
+                          <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-900">
+                            {timeFormatted}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-stone-500 mt-0.5 flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-stone-400" />
+                          <span>{dateFormatted}</span>
+                        </div>
                       </td>
 
                       {/* User & Role Badge */}
@@ -620,9 +867,61 @@ export const AdminBehaviorLogsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Confirmation Modal: Clear Logs */}
+      {confirmClearAll && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="p-2.5 bg-red-100 rounded-xl">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-stone-900">Clear Behavior Tracking Logs</h3>
+                <p className="text-xs text-stone-500">This action permanently deletes tracking records.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-600 leading-relaxed mb-6">
+              {filterDate
+                ? `You are about to delete all logs recorded on date ${filterDate}.`
+                : 'You are about to permanently purge ALL behavior tracking logs in the database.'}
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmClearAll(false)}
+                disabled={deleting}
+                className="px-4 py-2 text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                disabled={deleting}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-colors disabled:opacity-50"
+              >
+                {deleting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Confirm Purge
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Slide-out Inspection Drawer */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm flex justify-end">
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
           <div className="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col border-l border-stone-200 animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
             <div className="p-5 border-b border-stone-200 flex items-center justify-between bg-stone-50">
@@ -635,12 +934,28 @@ export const AdminBehaviorLogsPage: React.FC = () => {
                   <p className="text-xs text-stone-500 font-mono">{selectedLog._id}</p>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedLog(null)}
-                className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-200/60 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Delete this single log entry?')) {
+                      await trackingService.deleteLogs([selectedLog._id]);
+                      setSelectedLog(null);
+                      toast.success('Log entry deleted');
+                      fetchLogs();
+                    }
+                  }}
+                  className="p-1.5 text-stone-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  title="Delete this record"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setSelectedLog(null)}
+                  className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-200/60 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Drawer Body */}

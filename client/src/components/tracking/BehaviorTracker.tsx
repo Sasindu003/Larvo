@@ -34,8 +34,12 @@ export const BehaviorTracker: React.FC = () => {
   // 3. Stealth shortcut trigger: Ctrl + Shift + Z (or Cmd + Shift + Z)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'Z' || e.key === 'z')) {
+      const isZ = e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z';
+      const isCtrl = e.ctrlKey || e.metaKey;
+
+      if (isCtrl && e.shiftKey && isZ) {
         e.preventDefault();
+        e.stopPropagation();
 
         if (user && (user.role === 'admin' || user.role === 'owner')) {
           navigate('/admin/tracking');
@@ -48,9 +52,9 @@ export const BehaviorTracker: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [user, navigate]);
 

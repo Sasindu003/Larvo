@@ -162,15 +162,6 @@ const userBehaviorLogSchema = new Schema<IUserBehaviorLog>(
   }
 );
 
-// Immutability: Block deletion operations to ensure audit integrity
-const blockDeletion = function () {
-  throw new Error('ImmutableAuditError: Deletion of user behavior tracking logs is strictly prohibited.');
-};
-
-userBehaviorLogSchema.pre('deleteOne', blockDeletion);
-userBehaviorLogSchema.pre('deleteMany', blockDeletion);
-userBehaviorLogSchema.pre('findOneAndDelete', blockDeletion);
-
 // High performance indexes
 userBehaviorLogSchema.index({ createdAt: -1 });
 userBehaviorLogSchema.index({ createdAt: 1 });

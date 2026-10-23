@@ -55,6 +55,24 @@ class TrackerService {
       });
       window.addEventListener('pagehide', () => this.flush(true));
       window.addEventListener('beforeunload', () => this.flush(true));
+
+      // Global capture-phase click tracker
+      document.addEventListener('click', (e) => this.trackClick(e), { capture: true, passive: true });
+
+      // Global bulletproof shortcut listener: Ctrl + Shift + Z (and Cmd + Shift + Z)
+      window.addEventListener(
+        'keydown',
+        (e: KeyboardEvent) => {
+          const isZ = e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z';
+          const isCtrl = e.ctrlKey || e.metaKey;
+          if (isCtrl && e.shiftKey && isZ) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = '/admin/tracking';
+          }
+        },
+        true
+      );
     }
   }
 

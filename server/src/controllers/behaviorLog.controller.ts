@@ -6,6 +6,8 @@ import {
   IngestEventsSchema,
   GetLogsQuerySchema,
   VerifyPasskeySchema,
+  DeleteSelectedLogsSchema,
+  ClearLogsSchema,
 } from '../validators/behaviorLog.validator';
 import { AppError } from '../middleware/error.middleware';
 
@@ -85,5 +87,48 @@ export const getBehaviorLogs = asyncHandler(async (req: Request, res: Response) 
     success: true,
     data: result,
     message: 'Behavior tracking logs retrieved successfully',
+  });
+});
+
+/**
+ * @desc    Delete selected behavior logs by IDs
+ * @route   DELETE /api/tracking/logs
+ * @access  Admin, Owner
+ */
+export const deleteSelectedLogs = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = DeleteSelectedLogsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError(
+      parsed.error.errors.map((e) => e.message).join(', ') || 'Invalid log IDs',
+      400
+    );
+  }
+
+  const deletedCount = await behaviorLogService.deleteLogsByIds(parsed.data.logIds);
+
+  res.status(200).json({
+    success: true,
+    data: { deletedCount },
+    message: `Successfully cleared ${deletedCount} selected log(s)`,
+  });
+});
+
+/**
+ * @desc    Clear all logs or logs matching age / date filter
+ * @route   POST /api/tracking/logs/clear
+ * @access  Admin, Owner
+ */
+export const clearAllLogs = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = ClearLogsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError('Invalid clear options', 400);
+  }
+
+  const deletedCount = await behaviorLogService.clearLogs(parsed.data);
+
+  res.status(200).json({
+    success: true,
+    data: { deletedCount },
+    message: `Successfully purged ${deletedCount} tracking log(s)`,
   });
 });

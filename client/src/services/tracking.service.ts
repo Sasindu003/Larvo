@@ -73,13 +73,16 @@ export interface PaginatedBehaviorLogsResponse {
 export interface GetBehaviorLogsParams {
   page?: number;
   limit?: number;
-  sortBy?: 'createdAt' | 'eventType' | 'userRole' | 'ip' | 'path';
+  sortBy?: 'createdAt' | 'dateTime' | 'eventType' | 'userRole' | 'ip' | 'path';
   sortOrder?: 'asc' | 'desc';
   eventType?: string;
   userRole?: string;
   search?: string;
   startDate?: string;
   endDate?: string;
+  date?: string;
+  hour?: number;
+  minute?: number;
 }
 
 export const trackingService = {
@@ -105,6 +108,20 @@ export const trackingService = {
    */
   async getLogs(params: GetBehaviorLogsParams): Promise<ApiResponse<PaginatedBehaviorLogsResponse>> {
     return api.get('/tracking/logs', { params });
+  },
+
+  /**
+   * Delete selected behavior logs by ID
+   */
+  async deleteLogs(logIds: string[]): Promise<ApiResponse<{ deletedCount: number }>> {
+    return api.delete('/tracking/logs', { data: { logIds } });
+  },
+
+  /**
+   * Clear all behavior logs or logs matching age / date filter
+   */
+  async clearAllLogs(options?: { olderThanDays?: number; date?: string }): Promise<ApiResponse<{ deletedCount: number }>> {
+    return api.post('/tracking/logs/clear', options || {});
   },
 };
 

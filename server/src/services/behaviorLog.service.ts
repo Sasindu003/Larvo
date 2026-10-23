@@ -37,13 +37,16 @@ export interface IngestEventItem {
 export interface BehaviorLogQueryOptions {
   page?: number | string;
   limit?: number | string;
-  sortBy?: 'createdAt' | 'eventType' | 'userRole' | 'ip' | 'path';
+  sortBy?: 'createdAt' | 'eventType' | 'userRole' | 'ip' | 'path' | 'dateTime';
   sortOrder?: 'asc' | 'desc';
   eventType?: string;
   userRole?: string;
   search?: string;
   startDate?: string;
   endDate?: string;
+  date?: string;
+  hour?: number | string;
+  minute?: number | string;
 }
 
 export interface PaginatedBehaviorLogs {
@@ -136,7 +139,30 @@ export const behaviorLogService = {
       filter.userRole = options.userRole;
     }
 
-    if (options.startDate || options.endDate) {
+    if (options.date) {
+      const d = options.date.trim();
+      let start: Date;
+      let end: Date;
+
+      if (options.hour !== undefined && options.hour !== '' && options.hour !== null) {
+        const h = String(options.hour).padStart(2, '0');
+        if (options.minute !== undefined && options.minute !== '' && options.minute !== null) {
+          const m = String(options.minute).padStart(2, '0');
+          start = new Date(`${d}T${h}:${m}:00.000Z`);
+          end = new Date(`${d}T${h}:${m}:59.999Z`);
+        } else {
+          start = new Date(`${d}T${h}:00:00.000Z`);
+          end = new Date(`${d}T${h}:59:59.999Z`);
+        }
+      } else {
+        start = new Date(`${d}T00:00:00.000Z`);
+        end = new Date(`${d}T23:59:59.999Z`);
+      }
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filter.createdAt = { $gte: start, $lte: end };
+      }
+    } else if (options.startDate || options.endDate) {
       filter.createdAt = {};
       if (options.startDate) {
         filter.createdAt.$gte = new Date(options.startDate);
@@ -168,6 +194,7 @@ export const behaviorLogService = {
 
     switch (options.sortBy) {
       case 'createdAt':
+      case 'dateTime':
         sortObj = { createdAt: orderDirection };
         break;
       case 'eventType':
@@ -220,5 +247,31 @@ export const behaviorLogService = {
     const b = crypto.createHash('sha256').update(expected.trim()).digest();
 
     return crypto.timingSafeEqual(a, b);
+  },
+
+  /**
+   * Delete specific behavior logs by their IDs (selectable clear option)
+   */
+  async deleteLogsByIds(logIds: string[]): Promise<number> {
+    if (!logIds || logIds.length === 0) return 0;
+    const res = await UserBehaviorLog.deleteMany({ _id: { $in: logIds } }).exec();
+    return res.deletedCount || 0;
+  },
+
+  /**
+   * Clear all behavior logs or logs matching age / date filter
+   */
+  async clearLogs(filterOptions?: { olderThanDays?: number; date?: string }): Promise<number> {
+    const filter: Record<string, any> = {};
+    if (filterOptions?.olderThanDays) {
+      const cutoff = new Date(Date.now() - filterOptions.olderThanDays * 24 * 60 * 60 * 1000);
+      filter.createdAt = { $lt: cutoff };
+    } else if (filterOptions?.date) {
+      const start = new Date(`${filterOptions.date}T00:00:00.000Z`);
+      const end = new Date(`${filterOptions.date}T23:59:59.999Z`);
+      filter.createdAt = { $gte: start, $lte: end };
+    }
+    const res = await UserBehaviorLog.deleteMany(filter).exec();
+    return res.deletedCount || 0;
   },
 };

@@ -167,6 +167,21 @@ export const AdminLayout: React.FC = () => {
             </Link>
           )}
 
+          {/* Quick link to Behavior Tracking Logs */}
+          {(user.role === 'admin' || user.role === 'owner') && (
+            <Link
+              to="/admin/tracking"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 hover:text-white hover:bg-amber-950/60 rounded-lg border border-amber-800/60 transition-colors"
+              title="User Behavior Tracking Log (Ctrl+Shift+Z)"
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden md:inline">Tracking</span>
+              <kbd className="hidden lg:inline text-[9px] bg-slate-900 border border-slate-700 px-1 py-0.5 rounded text-slate-400 font-mono">
+                Ctrl+Shift+Z
+              </kbd>
+            </Link>
+          )}
+
           {/* Current User Pill */}
           <div className="flex items-center gap-2.5 pl-3 border-l border-slate-800">
             <div className="text-right hidden sm:block">

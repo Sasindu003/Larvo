@@ -4,6 +4,8 @@ import {
   collectBehaviorEvents,
   verifyTrackingPasskey,
   getBehaviorLogs,
+  deleteSelectedLogs,
+  clearAllLogs,
 } from '../controllers/behaviorLog.controller';
 import { optionalAuth, requireAuth } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/rbac.middleware';
@@ -66,6 +68,30 @@ router.get(
   requireAuth,
   requireRole('admin', 'owner'),
   getBehaviorLogs
+);
+
+/**
+ * @route   DELETE /api/tracking/logs
+ * @desc    Delete selected behavior logs by IDs
+ * @access  Admin, Owner
+ */
+router.delete(
+  '/logs',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  deleteSelectedLogs
+);
+
+/**
+ * @route   POST /api/tracking/logs/clear
+ * @desc    Clear all logs or logs matching filter
+ * @access  Admin, Owner
+ */
+router.post(
+  '/logs/clear',
+  requireAuth,
+  requireRole('admin', 'owner'),
+  clearAllLogs
 );
 
 export default router;

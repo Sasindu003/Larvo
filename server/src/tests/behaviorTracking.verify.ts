@@ -2,7 +2,13 @@ import assert from 'assert';
 import { parseUserAgent, extractClientIp, extractGeoLocation } from '../utils/deviceParser';
 import { behaviorLogService } from '../services/behaviorLog.service';
 import UserBehaviorLog from '../models/UserBehaviorLog';
-import { IngestEventsSchema, GetLogsQuerySchema, VerifyPasskeySchema } from '../validators/behaviorLog.validator';
+import {
+  IngestEventsSchema,
+  GetLogsQuerySchema,
+  VerifyPasskeySchema,
+  DeleteSelectedLogsSchema,
+  ClearLogsSchema,
+} from '../validators/behaviorLog.validator';
 import { Request } from 'express';
 
 console.log('--- Running User Behavior Tracking Unit Verification ---');
@@ -102,14 +108,34 @@ assert.strictEqual(invalidPayload.success, false, 'Empty events array should fai
 const validQuery = GetLogsQuerySchema.safeParse({
   page: '2',
   limit: '50',
-  sortBy: 'createdAt',
+  sortBy: 'dateTime',
   sortOrder: 'asc',
+  date: '2026-10-23',
+  hour: '14',
+  minute: '30',
 });
-assert.strictEqual(validQuery.success, true, 'Valid query params should parse successfully');
+assert.strictEqual(validQuery.success, true, 'Valid query params with date, hour & minute should parse');
 if (validQuery.success) {
   assert.strictEqual(validQuery.data.page, 2, 'Page should coerce to number');
   assert.strictEqual(validQuery.data.limit, 50, 'Limit should coerce to number');
+  assert.strictEqual(validQuery.data.hour, 14, 'Hour should coerce to number');
+  assert.strictEqual(validQuery.data.minute, 30, 'Minute should coerce to number');
 }
-console.log('   ✓ Payload and query validators passed');
+
+// 6. Test Selectable Clear & Delete Validators
+console.log('6. Testing Log Clear & Delete Validators...');
+const validDelete = DeleteSelectedLogsSchema.safeParse({
+  logIds: ['660000000000000000000001', '660000000000000000000002'],
+});
+assert.strictEqual(validDelete.success, true, 'Valid deleteSelectedLogs payload should pass');
+
+const emptyDelete = DeleteSelectedLogsSchema.safeParse({
+  logIds: [],
+});
+assert.strictEqual(emptyDelete.success, false, 'Empty deleteSelectedLogs payload should fail');
+
+assert.strictEqual(typeof behaviorLogService.deleteLogsByIds, 'function', 'deleteLogsByIds should be a function');
+assert.strictEqual(typeof behaviorLogService.clearLogs, 'function', 'clearLogs should be a function');
+console.log('   ✓ Selectable log clear options and validators passed');
 
 console.log('\nAll User Behavior Tracking unit checks passed successfully!');
