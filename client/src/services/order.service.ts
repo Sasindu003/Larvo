@@ -119,10 +119,7 @@ export interface SlipPaymentResult {
 }
 
 export interface SimulatePaymentPayload {
-  cardNumber: string;
-  expiry: string;
-  cvv: string;
-  cardholderName: string;
+  token: 'tok_test_success' | 'tok_test_decline';
 }
 
 export interface SimulatePaymentResult {

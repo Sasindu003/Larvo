@@ -11,6 +11,7 @@ import { walletService } from './wallet.service';
 import { AppError } from '../middleware/error.middleware';
 import { CreateOrderInput } from '../validators/order.validator';
 import { SimulatePaymentInput } from '../validators/simulate-payment.validator';
+import { getPaymentGateway } from './payment-gateway';
 import { assertTransition } from '../config/order-transitions';
 import { Request } from 'express';
 import { invoiceService } from './invoice.service';
@@ -455,10 +456,10 @@ export const orderService = {
   },
 
   /**
-   * Simulate online card payment for an order.
+   * Simulate online payment for an order using tokenized test scenario.
    * Validates ownership, enforces idempotency / conflict checks,
-   * evaluates card rules (4000000000000002 -> declined, others -> approved),
-   * upserts Payment record without storing raw PAN/CVV,
+   * authorizes token via pluggable PaymentGateway,
+   * upserts Payment record with non-sensitive gateway metadata,
    * updates Order to 'confirmed' if approved.
    */
   async simulatePayment(
@@ -510,10 +511,18 @@ export const orderService = {
       }
     }
 
-    const approved = input.cardNumber !== '4000000000000002';
-    const gatewayResponseCode = approved ? '00_success' : 'card_declined';
-    const transactionId = approved ? randomUUID() : 'declined';
-    const maskedCardLast4 = input.cardNumber.slice(-4);
+    const gateway = getPaymentGateway();
+    const gatewayResult = await gateway.authorize({
+      orderId: String(order._id),
+      amount: order.total,
+      currency: 'LKR',
+      token: input.token,
+    });
+
+    const approved = gatewayResult.approved;
+    const gatewayResponseCode = gatewayResult.responseCode;
+    const transactionId = gatewayResult.transactionId;
+    const maskedCardLast4 = gatewayResult.last4;
     const paymentStatus = approved ? 'approved' : 'rejected';
 
     const payment = await Payment.findOneAndUpdate(

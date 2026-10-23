@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Payment } from '../../services/order.service';
@@ -13,138 +14,77 @@ interface CardSimulatePaymentProps {
   grandTotal: number;
   simulateState: SimulateState;
   setSimulateState: (state: SimulateState) => void;
-  cardNumber: string;
-  cardExpiry: string;
-  cardCvv: string;
-  cardName: string;
-  setCardName: (name: string) => void;
   cardError: string | null;
   setCardError: (err: string | null) => void;
   submittedPayment: Payment | null;
-  fillSuccessCard: () => void;
-  fillDeclineCard: () => void;
-  handleCardNumberChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleCardExpiryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleCardCvvChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSimulatePayment: () => Promise<void>;
+  handleSimulatePayment: (token: 'tok_test_success' | 'tok_test_decline') => Promise<void>;
 }
 
 export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
   grandTotal,
   simulateState,
   setSimulateState,
-  cardNumber,
-  cardExpiry,
-  cardCvv,
-  cardName,
-  setCardName,
   cardError,
-  setCardError,
   submittedPayment,
-  fillSuccessCard,
-  fillDeclineCard,
-  handleCardNumberChange,
-  handleCardExpiryChange,
-  handleCardCvvChange,
   handleSimulatePayment,
 }) => {
+  const isProcessing = simulateState === 'processing';
+  const isApproved = simulateState === 'approved';
+
   return (
     <div
       className="mt-5 pt-5 border-t border-sand-200/80 space-y-4"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Quick fill buttons */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-ink-500 font-medium">Quick Test Cards:</span>
-        <button
-          type="button"
-          id="btn-fill-success-card"
-          onClick={fillSuccessCard}
-          className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-mono transition-colors"
-        >
-          4242 (Success)
-        </button>
-        <button
-          type="button"
-          id="btn-fill-decline-card"
-          onClick={fillDeclineCard}
-          className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 font-mono transition-colors"
-        >
-          4000...0002 (Decline)
-        </button>
-      </div>
-
-      {/* Card input form */}
-      <div className="space-y-3 bg-white p-4 rounded-xl border border-sand-200">
+      <div className="bg-sand-50/60 p-4 rounded-xl border border-sand-200 space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-ink-700 mb-1">
-            Cardholder Name
-          </label>
-          <input
-            id="input-cardholder-name"
-            type="text"
-            value={cardName}
-            onChange={(e) => {
-              setCardName(e.target.value);
-              if (simulateState !== 'idle' && simulateState !== 'processing') setSimulateState('idle');
-              setCardError(null);
-            }}
-            disabled={simulateState === 'approved' || simulateState === 'processing'}
-            placeholder="e.g. Jane Doe"
-            className="w-full text-sm px-3 py-2 rounded-lg border border-sand-300 focus:outline-none focus:ring-2 focus:ring-ink-950/20 disabled:bg-sand-50"
-          />
+          <h4 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-ink-700" />
+            Simulated Test Card Scenarios
+          </h4>
+          <p className="text-xs text-ink-600 mt-1">
+            Choose a non-sensitive test scenario to simulate gateway authorization. No raw card data is collected or sent to the server.
+          </p>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-ink-700 mb-1">
-            Card Number
-          </label>
-          <div className="relative">
-            <input
-              id="input-card-number"
-              type="text"
-              value={cardNumber}
-              onChange={handleCardNumberChange}
-              disabled={simulateState === 'approved' || simulateState === 'processing'}
-              placeholder="4242 4242 4242 4242"
-              maxLength={23}
-              className="w-full text-sm font-mono px-3 py-2 pl-9 rounded-lg border border-sand-300 focus:outline-none focus:ring-2 focus:ring-ink-950/20 disabled:bg-sand-50"
-            />
-            <CreditCard className="w-4 h-4 text-ink-400 absolute left-3 top-2.5" />
-          </div>
-        </div>
+        {/* Scenario Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            id="btn-simulate-approve"
+            type="button"
+            onClick={() => handleSimulatePayment('tok_test_success')}
+            disabled={isProcessing || isApproved}
+            className="flex items-center justify-center gap-2 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-medium"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Authorizing...</span>
+              </>
+            ) : isApproved ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Authorized</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Pay with test card (approve)</span>
+              </>
+            )}
+          </Button>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-ink-700 mb-1">
-              Expiration (MM/YY)
-            </label>
-            <input
-              id="input-card-expiry"
-              type="text"
-              value={cardExpiry}
-              onChange={handleCardExpiryChange}
-              disabled={simulateState === 'approved' || simulateState === 'processing'}
-              placeholder="MM/YY"
-              maxLength={5}
-              className="w-full text-sm font-mono px-3 py-2 rounded-lg border border-sand-300 focus:outline-none focus:ring-2 focus:ring-ink-950/20 disabled:bg-sand-50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-ink-700 mb-1">
-              CVV / CVC
-            </label>
-            <input
-              id="input-card-cvv"
-              type="password"
-              value={cardCvv}
-              onChange={handleCardCvvChange}
-              disabled={simulateState === 'approved' || simulateState === 'processing'}
-              placeholder="•••"
-              maxLength={4}
-              className="w-full text-sm font-mono px-3 py-2 rounded-lg border border-sand-300 focus:outline-none focus:ring-2 focus:ring-ink-950/20 disabled:bg-sand-50"
-            />
-          </div>
+          <Button
+            id="btn-simulate-decline"
+            type="button"
+            variant="secondary"
+            onClick={() => handleSimulatePayment('tok_test_decline')}
+            disabled={isProcessing || isApproved}
+            className="flex items-center justify-center gap-2 py-2.5 border-rose-300 text-rose-700 hover:bg-rose-50 font-medium"
+          >
+            <XCircle className="w-4 h-4 text-rose-600" />
+            <span>Pay with test card (decline)</span>
+          </Button>
         </div>
 
         {/* Status Messages */}
@@ -156,7 +96,7 @@ export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
             <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs space-y-0.5">
               <p className="font-semibold text-emerald-900">Payment Authorized Successfully</p>
-              <p>Card: •••• {submittedPayment?.maskedCardLast4 || cardNumber.slice(-4)}</p>
+              <p>Card: •••• {submittedPayment?.maskedCardLast4 || '4242'}</p>
               {submittedPayment?.transactionId && (
                 <p className="font-mono text-[11px] text-emerald-700">TXN: {submittedPayment.transactionId}</p>
               )}
@@ -175,9 +115,9 @@ export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
             <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs space-y-0.5">
               <p className="font-semibold text-rose-900">Transaction Declined</p>
-              <p>The simulated bank declined authorization for card {cardNumber.slice(-4)}.</p>
+              <p>The simulated bank declined authorization for card {submittedPayment?.maskedCardLast4 || '0002'}.</p>
               <p className="pt-1 text-rose-900 font-medium">
-                Click &quot;4242 (Success)&quot; above to switch to an authorized test card and retry.
+                Click &quot;Pay with test card (approve)&quot; above to switch to an authorized test card and retry.
               </p>
             </div>
           </div>
@@ -192,34 +132,6 @@ export const CardSimulatePayment: React.FC<CardSimulatePaymentProps> = ({
             <span>{cardError}</span>
           </div>
         )}
-
-        {/* Action Button */}
-        <Button
-          id="btn-simulate-pay"
-          type="button"
-          onClick={handleSimulatePayment}
-          disabled={simulateState === 'processing' || simulateState === 'approved'}
-          className="w-full flex items-center justify-center gap-2 py-2.5"
-        >
-          {simulateState === 'processing' ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Authorizing with Gateway...</span>
-            </>
-          ) : simulateState === 'approved' ? (
-            <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-              <span>Payment Authorized</span>
-            </>
-          ) : (
-            <>
-              <CreditCard className="w-4 h-4" />
-              <span>
-                Authorize Payment (Rs. {grandTotal.toFixed(2)})
-              </span>
-            </>
-          )}
-        </Button>
       </div>
     </div>
   );

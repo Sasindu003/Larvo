@@ -51,6 +51,16 @@ export const envSchema = z
         if (val === 'false' || val === false) return false;
         return undefined;
       }, z.boolean().optional()),
+    PAYMENT_SIMULATOR_ENABLED: z
+      .preprocess((val) => {
+        if (val === 'true' || val === true) return true;
+        if (val === 'false' || val === false) return false;
+        if (val === undefined || val === '') {
+          return process.env.NODE_ENV !== 'production';
+        }
+        return val;
+      }, z.boolean())
+      .default(process.env.NODE_ENV !== 'production'),
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
       .default('info'),

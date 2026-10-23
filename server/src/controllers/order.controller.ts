@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { env } from '../config/env';
 import { asyncHandler } from '../utils/asyncHandler';
 import { orderService } from '../services/order.service';
 import { AppError } from '../middleware/error.middleware';
@@ -119,6 +120,10 @@ export const uploadPaymentSlip = asyncHandler(async (req: Request, res: Response
  * @access  Private (customer, staff, admin, owner)
  */
 export const simulatePayment = asyncHandler(async (req: Request, res: Response) => {
+  if (!env.PAYMENT_SIMULATOR_ENABLED) {
+    throw new AppError('Payment simulator is not enabled', 404);
+  }
+
   if (!req.user?._id) {
     throw new AppError('Authentication required', 401);
   }
@@ -132,7 +137,7 @@ export const simulatePayment = asyncHandler(async (req: Request, res: Response) 
         field: e.path.join('.'),
         message: e.message,
       }));
-      throw new AppError('Validation failed', 422, errors);
+      throw new AppError('Validation failed', 400, errors);
     }
     throw err;
   }

@@ -28,6 +28,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   const {
     paymentMethod,
     setPaymentMethod,
+    isSimulatorEnabled,
     slipFile,
     setSlipFile,
     slipPreviewUrl,
@@ -41,19 +42,9 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
     handleUploadSlip,
     simulateState,
     setSimulateState,
-    cardNumber,
-    cardExpiry,
-    cardCvv,
-    cardName,
-    setCardName,
     cardError,
     setCardError,
     submittedPayment,
-    fillSuccessCard,
-    fillDeclineCard,
-    handleCardNumberChange,
-    handleCardExpiryChange,
-    handleCardCvvChange,
     handleSimulatePayment,
     walletBalance,
     walletLoading,
@@ -145,67 +136,59 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           </div>
 
           {/* OPTION 2: Simulated Online Payment (Card Gateway) */}
-          <div
-            id="payment-option-simulate"
-            onClick={() => setPaymentMethod('simulate')}
-            className={`border rounded-2xl p-5 cursor-pointer transition-all ${
-              paymentMethod === 'simulate'
-                ? 'border-ink-950 bg-sand-50/40 shadow-sm'
-                : 'border-sand-200 hover:border-sand-300'
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 transition-colors ${
-                    paymentMethod === 'simulate'
-                      ? 'border-ink-950 bg-ink-950'
-                      : 'border-sand-300 bg-white'
-                  }`}
-                >
-                  {paymentMethod === 'simulate' && (
-                    <div className="w-2 h-2 rounded-full bg-white" />
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-ink-800" />
-                    <span className="font-display font-bold text-ink-950 text-base">
-                      Pay Online (Simulated Card Gateway)
-                    </span>
+          {isSimulatorEnabled && (
+            <div
+              id="payment-option-simulate"
+              onClick={() => setPaymentMethod('simulate')}
+              className={`border rounded-2xl p-5 cursor-pointer transition-all ${
+                paymentMethod === 'simulate'
+                  ? 'border-ink-950 bg-sand-50/40 shadow-sm'
+                  : 'border-sand-200 hover:border-sand-300'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 transition-colors ${
+                      paymentMethod === 'simulate'
+                        ? 'border-ink-950 bg-ink-950'
+                        : 'border-sand-300 bg-white'
+                    }`}
+                  >
+                    {paymentMethod === 'simulate' && (
+                      <div className="w-2 h-2 rounded-full bg-white" />
+                    )}
                   </div>
-                  <p className="text-xs text-ink-600 mt-1">
-                    Simulate instant card authorization end-to-end without real card charges.
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-ink-800" />
+                      <span className="font-display font-bold text-ink-950 text-base">
+                        Pay Online (Simulated Card Gateway)
+                      </span>
+                    </div>
+                    <p className="text-xs text-ink-600 mt-1">
+                      Simulate instant card authorization end-to-end without real card charges.
+                    </p>
+                  </div>
                 </div>
+                <span className="text-xs font-semibold text-ink-700 px-2.5 py-1 bg-sand-100 rounded-full flex-shrink-0">
+                  Instant Authorization
+                </span>
               </div>
-              <span className="text-xs font-semibold text-ink-700 px-2.5 py-1 bg-sand-100 rounded-full flex-shrink-0">
-                Instant Authorization
-              </span>
-            </div>
 
-            {paymentMethod === 'simulate' && (
-              <CardSimulatePayment
-                grandTotal={grandTotal}
-                simulateState={simulateState}
-                setSimulateState={setSimulateState}
-                cardNumber={cardNumber}
-                cardExpiry={cardExpiry}
-                cardCvv={cardCvv}
-                cardName={cardName}
-                setCardName={setCardName}
-                cardError={cardError}
-                setCardError={setCardError}
-                submittedPayment={submittedPayment}
-                fillSuccessCard={fillSuccessCard}
-                fillDeclineCard={fillDeclineCard}
-                handleCardNumberChange={handleCardNumberChange}
-                handleCardExpiryChange={handleCardExpiryChange}
-                handleCardCvvChange={handleCardCvvChange}
-                handleSimulatePayment={handleSimulatePayment}
-              />
-            )}
-          </div>
+              {paymentMethod === 'simulate' && (
+                <CardSimulatePayment
+                  grandTotal={grandTotal}
+                  simulateState={simulateState}
+                  setSimulateState={setSimulateState}
+                  cardError={cardError}
+                  setCardError={setCardError}
+                  submittedPayment={submittedPayment}
+                  handleSimulatePayment={handleSimulatePayment}
+                />
+              )}
+            </div>
+          )}
 
           {/* OPTION 3: Reward Points */}
           <div

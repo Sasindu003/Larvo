@@ -20,6 +20,11 @@ export function useCheckoutPayment(
   setCurrentStep: React.Dispatch<React.SetStateAction<CheckoutStep>>,
   clearCart: () => void,
 ) {
+  const isSimulatorEnabled =
+    import.meta.env.VITE_PAYMENT_SIMULATOR_ENABLED !== undefined
+      ? import.meta.env.VITE_PAYMENT_SIMULATOR_ENABLED === 'true'
+      : import.meta.env.DEV;
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>('bank_transfer');
 
   const [createdOrder, setCreatedOrder] = useState<Order | null>(() => {
@@ -200,9 +205,16 @@ export function useCheckoutPayment(
     }
   };
 
+  useEffect(() => {
+    if (!isSimulatorEnabled && paymentMethod === 'simulate') {
+      setPaymentMethod('bank_transfer');
+    }
+  }, [isSimulatorEnabled, paymentMethod]);
+
   return {
     paymentMethod,
     setPaymentMethod,
+    isSimulatorEnabled,
     createdOrder,
     createdOrderId,
     isCreatingOrder,
@@ -218,18 +230,8 @@ export function useCheckoutPayment(
     handleUploadSlip: slip.handleUploadSlip,
     simulateState: card.simulateState,
     setSimulateState: card.setSimulateState,
-    cardNumber: card.cardNumber,
-    cardExpiry: card.cardExpiry,
-    cardCvv: card.cardCvv,
-    cardName: card.cardName,
-    setCardName: card.setCardName,
     cardError: card.cardError,
     setCardError: card.setCardError,
-    handleCardNumberChange: card.handleCardNumberChange,
-    handleCardExpiryChange: card.handleCardExpiryChange,
-    handleCardCvvChange: card.handleCardCvvChange,
-    fillSuccessCard: card.fillSuccessCard,
-    fillDeclineCard: card.fillDeclineCard,
     handleSimulatePayment: card.handleSimulatePayment,
     walletBalance,
     walletLoading,
