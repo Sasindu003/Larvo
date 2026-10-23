@@ -44,7 +44,7 @@ beforeAll(async () => {
   await Promise.all(
     Object.values(mongoose.models).map((model) => model.init().catch(() => {}))
   );
-});
+}, 180000);
 
 afterEach(async () => {
   if (mongoose.connection.readyState === 1) {

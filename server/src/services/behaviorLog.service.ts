@@ -190,7 +190,7 @@ export const behaviorLogService = {
 
     // Determine sort key and direction
     const orderDirection = options.sortOrder === 'asc' ? 1 : -1;
-    let sortObj: Record<string, 1 | -1> = { createdAt: -1 };
+    let sortObj: Record<string, 1 | -1>;
 
     switch (options.sortBy) {
       case 'createdAt':
