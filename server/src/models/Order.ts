@@ -33,6 +33,7 @@ export interface IAddressSnapshot {
   province: string;
   postalCode: string;
   country: string;
+  phone?: string;
 }
 
 export interface IOrder extends Document {
@@ -76,6 +77,7 @@ const addressSchema = new Schema<IAddressSnapshot>(
     province: { type: String, required: true },
     postalCode: { type: String, required: true },
     country: { type: String, required: true },
+    phone: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -125,7 +127,7 @@ const orderSchema = new Schema<IOrder>(
 );
 
 orderSchema.plugin(encryptedFieldsPlugin, {
-  fields: ['shippingAddress.line1', 'shippingAddress.line2'],
+  fields: ['shippingAddress.line1', 'shippingAddress.line2', 'shippingAddress.phone'],
 });
 
 orderSchema.virtual('discountTotal').get(function (this: IOrder) {

@@ -14,6 +14,8 @@
     "test:pci": "jest --runInBand --testMatch=\"<rootDir>/src/tests/pci-*.test.ts\" --testPathIgnorePatterns=\"/node_modules/|/dist/\"",
     "test:crypto": "jest --runInBand --testMatch=\"<rootDir>/src/tests/field-crypto.test.ts\" --testPathIgnorePatterns=\"/node_modules/|/dist/\"",
     "test:enc": "jest --runInBand --testMatch=\"<rootDir>/src/tests/encrypted-models.test.ts\" --testPathIgnorePatterns=\"/node_modules/|/dist/\"",
+    "test:access": "jest --runInBand --testMatch=\"<rootDir>/src/tests/field-access.test.ts\" --testPathIgnorePatterns=\"/node_modules/|/dist/\"",
+    "test:phi": "jest --runInBand --testMatch=\"<rootDir>/src/tests/phi-protection.test.ts\" --testPathIgnorePatterns=\"/node_modules/|/dist/\"",
     "test:p09": "ts-node src/seed/product.check.ts",
     "test:order": "ts-node src/tests/order-transition.test.ts",
     "test:return": "ts-node src/tests/return-transition.test.ts",

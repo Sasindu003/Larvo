@@ -87,14 +87,26 @@ export const envSchema = z
           const keyMap = parseKeyRing(val);
           return keyMap.size > 0;
         },
-        'FIELD_ENCRYPTION_KEYS must contain valid 32-byte base64 keys'
+        'FIELD_ENCRYPTION_KEYS must contain valid 32-byte keys'
+      ),
+    ENCRYPTION_KEY: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true;
+          const keyMap = parseKeyRing(val);
+          return keyMap.size > 0;
+        },
+        'ENCRYPTION_KEY must contain a valid 32-byte key'
       ),
     FIELD_ENCRYPTION_ACTIVE_VERSION: z.string().default('v1'),
   })
   .refine(
     (data) => {
       if (data.NODE_ENV === 'production') {
-        return typeof data.FIELD_ENCRYPTION_KEYS === 'string' && data.FIELD_ENCRYPTION_KEYS.trim().length > 0;
+        const keys = data.FIELD_ENCRYPTION_KEYS || data.ENCRYPTION_KEY;
+        return typeof keys === 'string' && keys.trim().length > 0;
       }
       return true;
     },
@@ -120,19 +132,20 @@ export const envSchema = z
   )
   .refine(
     (data) => {
+      const keys = data.FIELD_ENCRYPTION_KEYS || data.ENCRYPTION_KEY;
       if (
         data.NODE_ENV === 'production' &&
-        data.FIELD_ENCRYPTION_KEYS &&
+        keys &&
         data.FIELD_ENCRYPTION_ACTIVE_VERSION
       ) {
-        const keyMap = parseKeyRing(data.FIELD_ENCRYPTION_KEYS);
+        const keyMap = parseKeyRing(keys);
         const norm = normalizeVersion(data.FIELD_ENCRYPTION_ACTIVE_VERSION);
         return keyMap.has(norm) || keyMap.has(`v${norm}`);
       }
       return true;
     },
     {
-      message: 'FIELD_ENCRYPTION_ACTIVE_VERSION must match a key defined in FIELD_ENCRYPTION_KEYS',
+      message: 'FIELD_ENCRYPTION_ACTIVE_VERSION must match a key defined in FIELD_ENCRYPTION_KEYS or ENCRYPTION_KEY',
       path: ['FIELD_ENCRYPTION_ACTIVE_VERSION'],
     }
   )

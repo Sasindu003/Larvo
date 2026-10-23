@@ -53,6 +53,7 @@ const invoiceAddressSchema = new Schema<IAddressSnapshot>(
     province: { type: String, required: true },
     postalCode: { type: String, required: true },
     country: { type: String, required: true },
+    phone: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -105,7 +106,7 @@ const invoiceSchema = new Schema<IInvoice>(
 );
 
 invoiceSchema.plugin(encryptedFieldsPlugin, {
-  fields: ['snapshot.shippingAddress.line1', 'snapshot.shippingAddress.line2'],
+  fields: ['snapshot.shippingAddress.line1', 'snapshot.shippingAddress.line2', 'snapshot.shippingAddress.phone'],
 });
 
 invoiceSchema.index({ user: 1, createdAt: -1 });

@@ -33,10 +33,10 @@ const BATCH_SIZE = 200;
  *
  * Encrypts personal-data fields directly in raw MongoDB collections using bulkWrite:
  * - users: addresses[].line1, line2, phone
- * - orders: shippingAddress.line1, line2
- * - invoices: snapshot.shippingAddress.line1, line2
+ * - orders: shippingAddress.line1, line2, phone
+ * - invoices: snapshot.shippingAddress.line1, line2, phone
  * - suppliers: phone, address
- * - returnrequests: pickup.address, address
+ * - returnrequests: pickup.address, pickup.phone, address
  *
  * Guaranteed safe:
  * - Dry-run by default; requires --apply to mutate data.
@@ -303,6 +303,19 @@ async function migrateOrdersCollection(
           docModified = true;
         }
       }
+      if (addr.phone) {
+        if (isEncrypted(addr.phone)) {
+          stats.alreadyEncrypted++;
+        } else {
+          stats.wouldEncrypt++;
+          const enc = encryptField(addr.phone, 'Order.shippingAddress.phone');
+          if (decryptField(enc, 'Order.shippingAddress.phone') !== addr.phone) {
+            throw new Error(`Self-test decryption failure for order ${doc._id} phone`);
+          }
+          addr.phone = enc;
+          docModified = true;
+        }
+      }
     } else {
       if (addr.line1) {
         if (isEncrypted(addr.line1)) {
@@ -317,6 +330,15 @@ async function migrateOrdersCollection(
         if (isEncrypted(addr.line2)) {
           stats.wouldDecrypt++;
           addr.line2 = decryptField(addr.line2, 'Order.shippingAddress.line2');
+          docModified = true;
+        } else {
+          stats.alreadyPlaintext++;
+        }
+      }
+      if (addr.phone) {
+        if (isEncrypted(addr.phone)) {
+          stats.wouldDecrypt++;
+          addr.phone = decryptField(addr.phone, 'Order.shippingAddress.phone');
           docModified = true;
         } else {
           stats.alreadyPlaintext++;
@@ -405,6 +427,19 @@ async function migrateInvoicesCollection(
           docModified = true;
         }
       }
+      if (addr.phone) {
+        if (isEncrypted(addr.phone)) {
+          stats.alreadyEncrypted++;
+        } else {
+          stats.wouldEncrypt++;
+          const enc = encryptField(addr.phone, 'Invoice.snapshot.shippingAddress.phone');
+          if (decryptField(enc, 'Invoice.snapshot.shippingAddress.phone') !== addr.phone) {
+            throw new Error(`Self-test decryption failure for invoice ${doc._id} phone`);
+          }
+          addr.phone = enc;
+          docModified = true;
+        }
+      }
     } else {
       if (addr.line1) {
         if (isEncrypted(addr.line1)) {
@@ -419,6 +454,15 @@ async function migrateInvoicesCollection(
         if (isEncrypted(addr.line2)) {
           stats.wouldDecrypt++;
           addr.line2 = decryptField(addr.line2, 'Invoice.snapshot.shippingAddress.line2');
+          docModified = true;
+        } else {
+          stats.alreadyPlaintext++;
+        }
+      }
+      if (addr.phone) {
+        if (isEncrypted(addr.phone)) {
+          stats.wouldDecrypt++;
+          addr.phone = decryptField(addr.phone, 'Invoice.snapshot.shippingAddress.phone');
           docModified = true;
         } else {
           stats.alreadyPlaintext++;
@@ -582,6 +626,7 @@ async function migrateReturnRequestsCollection(
 
     let docModified = false;
     let pickupAddr = doc.pickup?.address;
+    let pickupPhone = doc.pickup?.phone;
     let directAddr = doc.address;
 
     if (!isRollback) {
@@ -595,6 +640,19 @@ async function migrateReturnRequestsCollection(
             throw new Error(`Self-test decryption failure for return request ${doc._id} pickup address`);
           }
           pickupAddr = enc;
+          docModified = true;
+        }
+      }
+      if (pickupPhone) {
+        if (isEncrypted(pickupPhone)) {
+          stats.alreadyEncrypted++;
+        } else {
+          stats.wouldEncrypt++;
+          const enc = encryptField(pickupPhone, 'ReturnRequest.pickup.phone');
+          if (decryptField(enc, 'ReturnRequest.pickup.phone') !== pickupPhone) {
+            throw new Error(`Self-test decryption failure for return request ${doc._id} pickup phone`);
+          }
+          pickupPhone = enc;
           docModified = true;
         }
       }
@@ -621,6 +679,15 @@ async function migrateReturnRequestsCollection(
           stats.alreadyPlaintext++;
         }
       }
+      if (pickupPhone) {
+        if (isEncrypted(pickupPhone)) {
+          stats.wouldDecrypt++;
+          pickupPhone = decryptField(pickupPhone, 'ReturnRequest.pickup.phone');
+          docModified = true;
+        } else {
+          stats.alreadyPlaintext++;
+        }
+      }
       if (directAddr) {
         if (isEncrypted(directAddr)) {
           stats.wouldDecrypt++;
@@ -636,6 +703,9 @@ async function migrateReturnRequestsCollection(
       const updateFields: Record<string, any> = {};
       if (doc.pickup && pickupAddr !== undefined) {
         updateFields['pickup.address'] = pickupAddr;
+      }
+      if (doc.pickup && pickupPhone !== undefined) {
+        updateFields['pickup.phone'] = pickupPhone;
       }
       if (directAddr !== undefined) {
         updateFields.address = directAddr;

@@ -44,6 +44,21 @@ export function parseKeyRing(keysString?: string): Map<string, Buffer> {
     } catch {
       // Ignore parse errors; validated at boot
     }
+  } else if (!trimmed.includes(':')) {
+    // Single key without version tag (hex or base64)
+    let buf: Buffer | null = null;
+    if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+      buf = Buffer.from(trimmed, 'hex');
+    } else {
+      const b64Buf = Buffer.from(trimmed, 'base64');
+      if (b64Buf.length === 32) {
+        buf = b64Buf;
+      }
+    }
+    if (buf && buf.length === 32) {
+      map.set('1', buf);
+      map.set('v1', buf);
+    }
   } else {
     const entries = trimmed.split(',');
     for (const entry of entries) {
@@ -72,7 +87,7 @@ export function getKeyRing(): Map<string, Buffer> {
     return keyRingCache;
   }
 
-  const envKeys = process.env.FIELD_ENCRYPTION_KEYS;
+  const envKeys = process.env.FIELD_ENCRYPTION_KEYS || process.env.ENCRYPTION_KEY;
   const parsed = parseKeyRing(envKeys);
 
   if (parsed.size > 0) {

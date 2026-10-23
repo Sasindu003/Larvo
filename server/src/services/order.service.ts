@@ -73,6 +73,7 @@ export const orderService = {
       province: address.province,
       postalCode: address.postalCode,
       country: address.country,
+      ...(address.phone ? { phone: address.phone } : {}),
     };
 
     // 2. Consolidate duplicate items if sent by client

@@ -26,6 +26,7 @@ export interface IReturnPickup {
   scheduledDate?: Date | null;
   timeWindow?: string | null;
   address?: string | null;
+  phone?: string | null;
 }
 
 export interface IReturnItem {
@@ -86,6 +87,7 @@ const returnPickupSchema = new Schema<IReturnPickup>(
     scheduledDate: { type: Date },
     timeWindow: { type: String, trim: true },
     address: { type: String, trim: true },
+    phone: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -151,7 +153,7 @@ const returnRequestSchema = new Schema<IReturnRequest>(
 );
 
 returnRequestSchema.plugin(encryptedFieldsPlugin, {
-  fields: ['pickup.address', 'address'],
+  fields: ['pickup.address', 'pickup.phone', 'address'],
 });
 
 returnRequestSchema.index({ order: 1 });
