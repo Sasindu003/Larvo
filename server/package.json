@@ -11,6 +11,7 @@
     "seed:categories": "ts-node-dev src/seed/category.seed.ts",
     "seed:products": "ts-node src/seed/product.seed.ts",
     "test": "jest --runInBand",
+    "test:pci": "jest --runInBand --testMatch=\"<rootDir>/src/tests/pci-*.test.ts\" --testPathIgnorePatterns=\"/node_modules/|/dist/\"",
     "test:p09": "ts-node src/seed/product.check.ts",
     "test:order": "ts-node src/tests/order-transition.test.ts",
     "test:return": "ts-node src/tests/return-transition.test.ts",

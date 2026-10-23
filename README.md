@@ -21,6 +21,7 @@
 - [⚙️ Environment Configuration](#️-environment-configuration)
 - [📦 Core Modules & Features](#-core-modules--features)
 - [🛡️ Security & Validation](#️-security--validation)
+- [💳 Payments & PCI](#-payments--pci)
 - [📜 Scripts & Verification](#-scripts--verification)
 
 ---
@@ -258,6 +259,17 @@ Pre-configured accounts for role-based authentication testing (Password: `Passwo
 
 ---
 
+## 💳 Payments & PCI
+
+Larvo implements a **Zero-Cardholder-Data** server architecture. The platform never receives, processes, or stores primary account numbers (PAN), CVVs, expiration dates, or cardholder names on the server.
+
+* **Simulator is Test-Only**: The built-in card payment simulator operates exclusively via allowlisted non-sensitive scenario tokens (`tok_test_success`, `tok_test_decline`). It is designed strictly for local development and staging tests, and must remain disabled in production (`PAYMENT_SIMULATOR_ENABLED=false` and `VITE_PAYMENT_SIMULATOR_ENABLED=false`).
+* **Gateway Interface Seam**: Payment processing is abstracted behind a clean `PaymentGateway` interface ready for integration with PCI-certified hosted-fields or redirect providers (e.g., Stripe, Braintree, PayHere).
+* **Payment Slip Isolation**: Bank transfer receipts in MongoDB GridFS are protected by strict order-owner and staff RBAC checks, served with `Cache-Control: private, no-store`, and return HTTP 404 for unauthenticated or unauthorized requests.
+* **Scope Documentation**: Detailed data flows, isolation controls, and PCI DSS SAQ A compliance details are documented in [docs/PCI_SCOPE.md](docs/PCI_SCOPE.md).
+
+---
+
 ## 📜 Scripts & Verification
 
 | Command | Location | Description |
@@ -270,6 +282,7 @@ Pre-configured accounts for role-based authentication testing (Password: `Passwo
 | `npm run import:local` | `server/` | Restores local MongoDB snapshot from `server/.local/local-data.json` |
 | `npm run sync:atlas` | `server/` | Syncs local export snapshot into MongoDB Atlas |
 | `npm run test:all` | `server/` | Runs comprehensive verification check scripts across core modules |
+| `npm run test:pci` | `server/` | Executes automated PCI DSS card data elimination and slip isolation test suites |
 
 > [!WARNING]
 > Database export snapshots (`server/.local/local-data.json` and `local-data*.json`) are strictly local development files and must never be committed to Git.
