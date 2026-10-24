@@ -9,9 +9,9 @@ import {
   parseKeyRing,
   setKeyRingForTesting,
   resetKeyRing,
-} from '../utils/fieldCrypto';
-import { encryptedFieldsPlugin } from '../models/plugins/encryptedFields';
-import { env, envSchema } from '../config/env';
+} from '../src/utils/fieldCrypto';
+import { encryptedFieldsPlugin } from '../src/models/plugins/encryptedFields';
+import { env, envSchema } from '../src/config/env';
 
 describe('HIPAA01: AES-256-GCM Field-Level Cryptography Engine (fieldCrypto.ts)', () => {
   const testKey1 = crypto.randomBytes(32);

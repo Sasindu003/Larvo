@@ -1,6 +1,6 @@
 import { Category, ICategory } from '../models/Category';
 import { Department } from '../models/Department';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { CreateCategoryInput, UpdateCategoryInput } from '../validators/category.validator';
 
 export class CategoryService {

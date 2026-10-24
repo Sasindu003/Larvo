@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import User from '../models/User';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { audit } from '../services/audit.service';
 
 /**

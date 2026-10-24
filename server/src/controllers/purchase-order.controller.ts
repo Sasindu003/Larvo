@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { purchaseOrderService } from '../services/purchase-order.service';
 import { audit } from '../services/audit.service';
 import { asyncHandler } from '../utils/asyncHandler';

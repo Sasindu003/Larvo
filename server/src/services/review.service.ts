@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { Review, IReview, ReviewStatus } from '../models/Review';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { CreateReviewInput } from '../validators/review.validator';
 
 export interface EligibilityResult {

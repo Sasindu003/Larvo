@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import { env } from '../config/env';
 import User from '../models/User';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { RegisterSchema } from '../validators/auth.validator';
 import { OAuth2Client } from 'google-auth-library';
 import { setAuthCookie, clearAuthCookie } from '../utils/authCookie';

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from './error.middleware';
+import { AppError } from '../utils/AppError';
 import type { UserRole } from '../models/User';
 
 /**

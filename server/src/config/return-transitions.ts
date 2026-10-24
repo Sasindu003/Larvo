@@ -1,6 +1,6 @@
 import { ReturnStatus } from '../models/ReturnRequest';
 import { UserRole } from '../models/User';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 
 export interface ReturnTransitionRule {
   from: ReturnStatus;

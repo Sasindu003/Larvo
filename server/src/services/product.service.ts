@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Product, IProduct, VALID_SIZES, ProductSize } from '../models/Product';
 import { Category } from '../models/Category';
 import { Department } from '../models/Department';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import slugify from 'slugify';
 
 export interface GetProductsQuery {

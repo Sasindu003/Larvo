@@ -1,5 +1,5 @@
 import mongoose, { Types } from 'mongoose';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { Order } from '../models/Order';
 import ReturnRequest, { IReturnRequest, ReturnStatus } from '../models/ReturnRequest';
 import { UserRole } from '../models/User';

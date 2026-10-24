@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Types } from 'mongoose';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import Supplier, { ISupplier } from '../models/Supplier';
 import User from '../models/User';
 import { Product } from '../models/Product';

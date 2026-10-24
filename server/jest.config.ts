@@ -5,7 +5,7 @@ const config: Config = {
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testMatch: ['<rootDir>/tests/**/*.test.ts'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/src/tests/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   verbose: true,
   forceExit: true,
   clearMocks: true,

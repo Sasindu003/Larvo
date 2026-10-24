@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { returnService } from '../services/return.service';
 import { audit, auditPiiRead } from '../services/audit.service';
 import {

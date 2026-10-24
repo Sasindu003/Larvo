@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 let bucket: mongoose.mongo.GridFSBucket | null = null;
 let currentDb: any = null;
 
-export const getGridFSBucket = (): mongoose.mongo.GridFSBucket => {
+const getGridFSBucket = (): mongoose.mongo.GridFSBucket => {
   if (!mongoose.connection.db) {
     throw new Error('Database connection not established for GridFS');
   }

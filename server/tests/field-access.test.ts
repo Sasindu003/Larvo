@@ -4,23 +4,23 @@ import path from 'path';
 import request from 'supertest';
 import mongoose, { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import app from '../app';
-import { env } from '../config/env';
-import User from '../models/User';
-import Order, { IOrder } from '../models/Order';
-import { Product } from '../models/Product';
-import { Category } from '../models/Category';
-import AuditLog from '../models/AuditLog';
+import app from '../src/app';
+import { env } from '../src/config/env';
+import User from '../src/models/User';
+import Order, { IOrder } from '../src/models/Order';
+import { Product } from '../src/models/Product';
+import { Category } from '../src/models/Category';
+import AuditLog from '../src/models/AuditLog';
 import {
   generateFieldAccessMatrixMarkdown,
   FIELD_ACCESS_POLICIES,
-} from '../config/field-access';
+} from '../src/config/field-access';
 import {
   applyFieldPolicy,
   maskPhone,
   maskEmail,
   checkPiiRateLimit,
-} from '../utils/fieldAccess';
+} from '../src/utils/fieldAccess';
 
 function generateAuthToken(userId: Types.ObjectId, role = 'customer'): string {
   return jwt.sign(
@@ -126,7 +126,7 @@ describe('HIPAA03: Role-Based Field Access Control & PII Read Auditing', () => {
 
   describe('Policy Drift Verification', () => {
     it('verifies docs/FIELD_ACCESS_MATRIX.md matches field-access.ts exactly', () => {
-      const matrixDocPath = path.resolve(__dirname, '../../../docs/FIELD_ACCESS_MATRIX.md');
+      const matrixDocPath = path.resolve(__dirname, '../../docs/FIELD_ACCESS_MATRIX.md');
       expect(fs.existsSync(matrixDocPath)).toBe(true);
 
       const docContent = fs.readFileSync(matrixDocPath, 'utf8').trim().replace(/\r\n/g, '\n');
