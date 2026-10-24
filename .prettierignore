@@ -1,8 +1,0 @@
-dist
-build
-node_modules
-package-lock.json
-.local
-coverage
-.system_generated
-.git
