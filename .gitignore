@@ -12,3 +12,5 @@ local-data.json
 local-data*.json
 server/.local/
 docs/*
+
+.hygiene/

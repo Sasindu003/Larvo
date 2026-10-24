@@ -273,11 +273,13 @@ export const Footer: React.FC = () => {
                   Staff & Admin Portal
                 </Link>
               </li>
-              <li>
-                <Link to="/dev/components" className="text-ink-500 hover:text-ink-300 transition-colors">
-                  Design System Primitives
-                </Link>
-              </li>
+              {import.meta.env.DEV && (
+                <li>
+                  <Link to="/dev/components" className="text-ink-500 hover:text-ink-300 transition-colors">
+                    Design System Primitives
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

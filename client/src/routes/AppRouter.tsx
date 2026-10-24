@@ -143,7 +143,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      { path: 'dev/components', element: <ComponentPreviewPage /> },
+      ...(import.meta.env.DEV ? [{ path: 'dev/components', element: <ComponentPreviewPage /> }] : []),
       {
         path: 'tracking',
         element: (
