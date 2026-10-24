@@ -1,8 +1,8 @@
 # Larvo E-Commerce
 
 <p align="center">
-  <a href="https://github.com/Sasindu003/Larvo/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Sasindu003/Larvo/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Pipeline" alt="CI Status" /></a>
   <a href="https://githubmate.ai/analyze?repo=Sasindu003%2FLarvo"><img src="https://img.shields.io/badge/GitHubMate-78.05%25_medium_risk-yellow?style=flat-square" alt="GitHubMate Security Score" /></a>
+  <a href="https://github.com/Sasindu003/Larvo/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Sasindu003/Larvo/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Pipeline" alt="CI Status" /></a>
   <a href="#-tech-stack--ecosystem"><img src="https://img.shields.io/badge/Stack-MERN%20+%20TypeScript-6366f1?style=for-the-badge&logo=react&logoColor=white" alt="Stack" /></a>
   <a href="#-tech-stack--ecosystem"><img src="https://img.shields.io/badge/Database-MongoDB%20%2B%20GridFS-10b981?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" /></a>
   <a href="#-security-cryptography--compliance"><img src="https://img.shields.io/badge/Security-AES--256--GCM%20%2B%20RBAC-f43f5e?style=for-the-badge&logo=shield&logoColor=white" alt="Security" /></a>
