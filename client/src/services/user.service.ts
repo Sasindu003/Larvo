@@ -1,4 +1,4 @@
-import api, { ApiResponse } from './api';
+import api, { ApiResponse, extractError } from './api';
 import { User } from './auth.service';
 
 export interface Address {
@@ -21,16 +21,6 @@ export interface UpdateProfileData {
 export interface UpdatePasswordData {
   currentPassword: string;
   newPassword: string;
-}
-
-function extractError(error: any): never {
-  if (error?.message) {
-    throw new Error(error.message);
-  }
-  if (error?.response?.data?.message) {
-    throw new Error(error.response.data.message);
-  }
-  throw error;
 }
 
 export const userService = {

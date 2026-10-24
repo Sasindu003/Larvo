@@ -29,15 +29,15 @@ type CartAction =
   | { type: 'CLEAR_CART' }
   | { type: 'SET_DRAWER_OPEN'; isOpen: boolean };
 
-export const GUEST_CART_KEY = 'larvo_cart_guest';
-export const ACTIVE_CART_STORAGE_KEY = 'larvo_active_cart_key';
+const GUEST_CART_KEY = 'larvo_cart_guest';
+const ACTIVE_CART_STORAGE_KEY = 'larvo_active_cart_key';
 const LEGACY_CART_KEY = 'larvo_cart_v1';
 
-export function getCartStorageKey(userId?: string | null): string {
+function getCartStorageKey(userId?: string | null): string {
   return userId ? `larvo_cart_${userId}` : GUEST_CART_KEY;
 }
 
-export function loadCartFromStorage(key: string): CartItem[] {
+function loadCartFromStorage(key: string): CartItem[] {
   if (typeof window === 'undefined') return [];
   try {
     const saved = localStorage.getItem(key);
@@ -51,7 +51,7 @@ export function loadCartFromStorage(key: string): CartItem[] {
   return [];
 }
 
-export function saveCartToStorage(key: string, items: CartItem[]): void {
+function saveCartToStorage(key: string, items: CartItem[]): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(items));
@@ -60,7 +60,7 @@ export function saveCartToStorage(key: string, items: CartItem[]): void {
   }
 }
 
-export function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem[] {
+function mergeCartItems(userItems: CartItem[], guestItems: CartItem[]): CartItem[] {
   const merged = [...userItems];
 
   for (const gItem of guestItems) {

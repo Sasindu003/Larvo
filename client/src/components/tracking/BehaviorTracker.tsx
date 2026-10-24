@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { tracker } from '../../services/tracker.service';
+import { tracker } from '../../services/behaviorTracker';
 import { useAuth } from '../../context/AuthContext';
 
 export const BehaviorTracker: React.FC = () => {

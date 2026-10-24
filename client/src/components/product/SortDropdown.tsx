@@ -9,7 +9,7 @@ interface SortDropdownProps {
   className?: string;
 }
 
-export const SORT_OPTIONS: { label: string; value: SortOption | '' }[] = [
+const SORT_OPTIONS: { label: string; value: SortOption | '' }[] = [
   { label: 'Newest Arrivals', value: '' }, // default / newest
   { label: 'Price: Low to High', value: 'price_asc' },
   { label: 'Price: High to Low', value: 'price_desc' },
@@ -53,5 +53,3 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({
     </div>
   );
 };
-
-export default SortDropdown;

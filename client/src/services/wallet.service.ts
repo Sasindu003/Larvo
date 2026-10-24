@@ -1,4 +1,4 @@
-import api, { ApiResponse } from './api';
+import api, { ApiResponse, extractError } from './api';
 
 export const POINT_VALUE = 0.01;
 
@@ -75,16 +75,6 @@ export interface PaginatedAdminWallets {
   total: number;
   page: number;
   pages: number;
-}
-
-function extractError(error: any): never {
-  if (error?.message) {
-    throw new Error(error.message);
-  }
-  if (error?.response?.data?.message) {
-    throw new Error(error.response.data.message);
-  }
-  throw error;
 }
 
 export const walletService = {

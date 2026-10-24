@@ -223,5 +223,3 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '
     </div>
   );
 };
-
-export default ProductCard;

@@ -9,36 +9,8 @@ import {
   TERMINAL_RETURN_STATUSES,
 } from './returnTimeline.config';
 
-export const formatDateTime = (isoString?: string): string => {
-  if (!isoString) return 'Pending';
-  try {
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return 'Pending';
-    return new Intl.DateTimeFormat('en-LK', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(date);
-  } catch {
-    return 'Pending';
-  }
-};
-
-export const formatLKR = (amount: number): string => {
-  return new Intl.NumberFormat('en-LK', {
-    style: 'currency',
-    currency: 'LKR',
-    currencyDisplay: 'symbol',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })
-    .format(amount)
-    .replace('LKR', 'Rs.')
-    .trim();
-};
+import { formatDateTime, formatLKR } from '../../../utils/format';
+export { formatDateTime, formatLKR };
 
 /**
  * Pure function deriving timeline steps, active index, progress percentage,

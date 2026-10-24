@@ -37,6 +37,7 @@ import {
   CustomerGrowthPoint,
   WalletSummaryMetrics,
 } from '../../services/analytics.service';
+import { formatDate } from '../../utils/format';
 
 type DatePreset = '7d' | '30d' | '90d' | 'this_month' | 'custom';
 type Granularity = 'day' | 'week' | 'month';
@@ -46,10 +47,6 @@ function formatCurrency(val: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-}
-
-function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
 }
 
 export const AdminAnalyticsPage: React.FC = () => {

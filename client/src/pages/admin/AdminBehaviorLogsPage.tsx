@@ -33,7 +33,7 @@ import {
   Square,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { trackingService, BehaviorLogItem, GetBehaviorLogsParams } from '../../services/tracking.service';
+import { trackingService, BehaviorLogItem, GetBehaviorLogsParams } from '../../services/behaviorLog.service';
 
 export const AdminBehaviorLogsPage: React.FC = () => {
   const [unlocked, setUnlocked] = useState<boolean>(() => {

@@ -60,4 +60,14 @@ export const getFileUrl = (url?: string | null): string => {
   return `${base}${path}`;
 };
 
+export function extractError(error: any): never {
+  if (error?.message) {
+    throw new Error(error.message);
+  }
+  if (error?.response?.data?.message) {
+    throw new Error(error.response.data.message);
+  }
+  throw error;
+}
+
 export default api;
