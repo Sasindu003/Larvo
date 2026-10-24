@@ -144,15 +144,19 @@ export interface AdminOrdersResult {
   pages: number;
 }
 
+function extractData<T>(res: unknown): T {
+  return (res as ApiResponse<T>).data as T;
+}
+
 export const orderService = {
   async createOrder(payload: CreateOrderPayload): Promise<CreateOrderResult> {
     const res = await api.post<ApiResponse<CreateOrderResult>>('/orders', payload);
-    return (res as any).data;
+    return extractData<CreateOrderResult>(res);
   },
 
   async payWithWallet(orderId: string): Promise<WalletPaymentResult> {
     const res = await api.post<ApiResponse<WalletPaymentResult>>(`/orders/${orderId}/payment/wallet`);
-    return (res as any).data;
+    return extractData<WalletPaymentResult>(res);
   },
 
   async uploadPaymentSlip(
@@ -178,7 +182,7 @@ export const orderService = {
         },
       }
     );
-    return (res as any).data;
+    return extractData<SlipPaymentResult>(res);
   },
 
   async simulatePayment(
@@ -189,7 +193,7 @@ export const orderService = {
       `/orders/${orderId}/payment/simulate`,
       payload
     );
-    return (res as any).data;
+    return extractData<SimulatePaymentResult>(res);
   },
 
   async updateOrderStatus(
@@ -201,22 +205,22 @@ export const orderService = {
       `/orders/${orderId}/status`,
       { status, trackingNumber }
     );
-    return (res as any).data;
+    return extractData<{ order: Order }>(res);
   },
 
   async getMyOrders(params?: { page?: number; limit?: number }): Promise<PaginatedOrdersResult> {
     const res = await api.get<ApiResponse<PaginatedOrdersResult>>('/orders/me', { params });
-    return (res as any).data;
+    return extractData<PaginatedOrdersResult>(res);
   },
 
   async getOrderById(orderId: string): Promise<{ order: Order }> {
     const res = await api.get<ApiResponse<{ order: Order }>>(`/orders/${orderId}`);
-    return (res as any).data;
+    return extractData<{ order: Order }>(res);
   },
 
   async cancelOrder(orderId: string): Promise<{ order: Order }> {
     const res = await api.patch<ApiResponse<{ order: Order }>>(`/orders/${orderId}/cancel`);
-    return (res as any).data;
+    return extractData<{ order: Order }>(res);
   },
 
   async getAdminOrders(params?: {
@@ -226,12 +230,12 @@ export const orderService = {
     search?: string;
   }): Promise<AdminOrdersResult> {
     const res = await api.get<ApiResponse<AdminOrdersResult>>('/admin/orders', { params });
-    return (res as any).data;
+    return extractData<AdminOrdersResult>(res);
   },
 
   async getAdminOrderById(orderId: string): Promise<{ order: AdminOrder }> {
     const res = await api.get<ApiResponse<{ order: AdminOrder }>>(`/admin/orders/${orderId}`);
-    return (res as any).data;
+    return extractData<{ order: AdminOrder }>(res);
   },
 
   async reviewPayment(
@@ -243,7 +247,7 @@ export const orderService = {
       `/admin/payments/${paymentId}/review`,
       { decision, note }
     );
-    return (res as any).data;
+    return extractData<{ payment: Payment; order: Order }>(res);
   },
 
   async getDeliveryOrders(params?: {
@@ -253,7 +257,7 @@ export const orderService = {
     search?: string;
   }): Promise<DeliveryOrdersResult> {
     const res = await api.get<ApiResponse<DeliveryOrdersResult>>('/delivery/orders', { params });
-    return (res as any).data;
+    return extractData<DeliveryOrdersResult>(res);
   },
 
   async updateOrderTracking(
@@ -264,7 +268,7 @@ export const orderService = {
       `/orders/${orderId}/tracking`,
       { trackingNumber }
     );
-    return (res as any).data;
+    return extractData<{ order: AdminOrder }>(res);
   },
 };
 

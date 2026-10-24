@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Product, IProduct, VALID_SIZES, ProductSize } from '../models/Product';
+import { Product, IProduct, IVariant, VALID_SIZES, ProductSize } from '../models/Product';
 import { Category } from '../models/Category';
 import { Department } from '../models/Department';
 import { AppError } from '../utils/AppError';
@@ -212,7 +212,7 @@ export const productService = {
     const pages = Math.ceil(total / limit) || 1;
 
     return {
-      items: items as any,
+      items: items as unknown as IProduct[],
       results: items.length,
       total,
       page,
@@ -240,7 +240,7 @@ export const productService = {
       .limit(5)
       .lean();
 
-    return suggestions as any;
+    return suggestions as unknown as IProduct[];
   },
 
   /**
@@ -255,7 +255,7 @@ export const productService = {
       throw new AppError(`Product with slug '${slug}' not found`, 404);
     }
 
-    return product as any;
+    return product as unknown as IProduct;
   },
 
   /**
@@ -268,8 +268,9 @@ export const productService = {
       throw new AppError(`Category not found.`, 400);
     }
 
-    if (categoryDoc.department && !(categoryDoc.department as any).active) {
-      throw new AppError(`Cannot assign category: Department '${(categoryDoc.department as any).name}' is currently deactivated.`, 400);
+    const dept = categoryDoc.department as unknown as { active?: boolean; name?: string } | null;
+    if (dept && !dept.active) {
+      throw new AppError(`Cannot assign category: Department '${dept.name}' is currently deactivated.`, 400);
     }
   },
 
@@ -311,7 +312,7 @@ export const productService = {
     ]);
 
     return {
-      items: items as any,
+      items: items as unknown as IProduct[],
       results: items.length,
       total,
       page,
@@ -355,12 +356,12 @@ export const productService = {
       slug = `${baseSlug}-${attempt}`;
     }
 
-    const productPayload: any = {
+    const productPayload = {
       ...input,
       slug,
       variants: input.variants.map((v) => {
         const { supplier: vSupplier, ...rest } = v;
-        const mapped: any = {
+        const mapped: IVariant = {
           ...rest,
           sku: v.sku.trim(),
         };
@@ -456,7 +457,7 @@ export const productService = {
 
     if (input.name !== undefined) existing.name = input.name;
     if (input.description !== undefined) existing.description = input.description;
-    if (input.category !== undefined) existing.category = new mongoose.Types.ObjectId(input.category) as any;
+    if (input.category !== undefined) existing.category = new mongoose.Types.ObjectId(input.category);
     if (input.images !== undefined) existing.images = input.images;
     if (input.basePrice !== undefined) existing.basePrice = Number(input.basePrice);
     if (input.discountPrice !== undefined) {
@@ -467,9 +468,9 @@ export const productService = {
     }
     if (input.status !== undefined) existing.status = input.status;
     if (input.variants !== undefined) {
-      existing.variants = input.variants.map((v) => {
+      const mappedVariants: IVariant[] = input.variants.map((v) => {
         const { supplier: vSupplier, ...rest } = v;
-        const mapped: any = {
+        const mapped: IVariant = {
           ...rest,
           sku: v.sku.trim(),
         };
@@ -477,7 +478,8 @@ export const productService = {
           mapped.supplier = new mongoose.Types.ObjectId(String(vSupplier));
         }
         return mapped;
-      }) as any;
+      });
+      existing.set('variants', mappedVariants);
     }
 
     await existing.save();

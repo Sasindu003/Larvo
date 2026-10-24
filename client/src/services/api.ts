@@ -3,14 +3,14 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 export interface ApiError {
   message: string;
   status?: number;
-  errors?: any;
+  errors?: unknown;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
-  errors?: any;
+  errors?: unknown;
 }
 
 const isVercelDeployment =
@@ -60,12 +60,13 @@ export const getFileUrl = (url?: string | null): string => {
   return `${base}${path}`;
 };
 
-export function extractError(error: any): never {
-  if (error?.message) {
-    throw new Error(error.message);
+export function extractError(error: unknown): never {
+  const err = error as { message?: string; response?: { data?: { message?: string } } } | null | undefined;
+  if (err?.message) {
+    throw new Error(err.message);
   }
-  if (error?.response?.data?.message) {
-    throw new Error(error.response.data.message);
+  if (err?.response?.data?.message) {
+    throw new Error(err.response.data.message);
   }
   throw error;
 }

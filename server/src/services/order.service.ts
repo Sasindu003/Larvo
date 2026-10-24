@@ -4,7 +4,7 @@ import { Order, IOrder, IOrderItem, IAddressSnapshot, OrderStatus } from '../mod
 import { Payment, IPayment } from '../models/Payment';
 import { Product } from '../models/Product';
 import { ReturnRequest } from '../models/ReturnRequest';
-import User, { IUser } from '../models/User';
+import User, { IUser, IAddress } from '../models/User';
 import { inventoryService } from './inventory.service';
 import { couponService } from './coupon.service';
 import { walletService } from './wallet.service';
@@ -58,7 +58,7 @@ export const orderService = {
 
     const targetAddressId = input.shippingAddressId.trim();
     const address = user.addresses.find(
-      (a) => a._id?.toString() === targetAddressId || (a as any).id === targetAddressId
+      (a) => a._id?.toString() === targetAddressId || ('id' in a && (a as { id?: string }).id === targetAddressId)
     );
 
     if (!address) {
@@ -169,9 +169,10 @@ export const orderService = {
             couponWarning =
               validation.message || 'Coupon is no longer valid; order placed without discount';
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
           couponWarning =
-            err?.message || 'Coupon validation failed; order placed without discount';
+            message || 'Coupon validation failed; order placed without discount';
         }
       }
 
@@ -608,9 +609,11 @@ export const orderService = {
       throw new AppError('Order not found', 404);
     }
 
-    const orderUserId = (order.user as any)?._id
-      ? (order.user as any)._id.toString()
-      : order.user.toString();
+    const userRef = order.user as Types.ObjectId | { _id: Types.ObjectId };
+    const orderUserId =
+      typeof userRef === 'object' && userRef !== null && '_id' in userRef && userRef._id
+        ? userRef._id.toString()
+        : userRef.toString();
     const isOwner = orderUserId === user._id.toString();
 
     // Limit customers to cancel transition only, and only for their own orders
@@ -760,7 +763,7 @@ export const orderService = {
   async getOrderById(
     user: IUser,
     orderId: string
-  ): Promise<any> {
+  ): Promise<IOrder & { payment?: IPayment | null; returnRequest?: Record<string, unknown> | null }> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
     }
@@ -770,7 +773,8 @@ export const orderService = {
       throw new AppError('Order not found', 404);
     }
 
-    const orderUserId = (order.user as any)?._id?.toString() || order.user.toString();
+    const populatedUser = order.user as unknown as { _id?: Types.ObjectId; name?: string; email?: string; addresses?: IAddress[] } | null;
+    const orderUserId = populatedUser?._id?.toString() || order.user.toString();
     const isOwner = orderUserId === user._id.toString();
 
     // Plain customer can only view own orders; suppliers have no access to customer orders
@@ -781,10 +785,11 @@ export const orderService = {
     // Fetch latest return request associated with the order
     const latestReturn = await ReturnRequest.findOne({ order: order._id }).sort({ createdAt: -1 });
 
-    let returnRequestDTO: any = null;
+    let returnRequestDTO: Record<string, unknown> | null = null;
     if (latestReturn) {
       // Ownership check: customer can only receive return request belonging to their own user account
-      const returnUserId = (latestReturn.user as any)?._id?.toString() || latestReturn.user.toString();
+      const returnUser = latestReturn.user as unknown as { _id?: Types.ObjectId } | null;
+      const returnUserId = returnUser?._id?.toString() || latestReturn.user.toString();
       if (user.role !== 'customer' || returnUserId === user._id.toString()) {
         const defaultPickupAddress = order.shippingAddress
           ? `${order.shippingAddress.line1}, ${order.shippingAddress.city}`
@@ -793,7 +798,7 @@ export const orderService = {
         const formattedItems = latestReturn.items.map((item) => {
           const orderItem =
             order.items[item.orderItemRef] ||
-            order.items.find((oi: any) => oi.variantSku === item.sku);
+            order.items.find((oi) => oi.variantSku === item.sku);
 
           return {
             productName: orderItem ? orderItem.name : 'Product Item',
@@ -830,29 +835,30 @@ export const orderService = {
       }
     }
 
-    const userDoc = (order.user && (order.user as any).addresses)
-      ? (order.user as any)
+    const userDoc = (populatedUser && populatedUser.addresses)
+      ? populatedUser
       : await User.findById(orderUserId);
     const matchingAddr =
-      userDoc?.addresses?.find((a: any) => a.line1 === order.shippingAddress?.line1) ||
+      userDoc?.addresses?.find((a) => a.line1 === order.shippingAddress?.line1) ||
       userDoc?.addresses?.[0];
-    const customerPhone = matchingAddr?.phone || (order.shippingAddress as any)?.phone || '';
+    const rawShippingAddr = order.shippingAddress as unknown as Record<string, unknown> | undefined;
+    const customerPhone = matchingAddr?.phone || (rawShippingAddr?.phone as string | undefined) || '';
 
     const rawAddr =
-      typeof (order.shippingAddress as any)?.toObject === 'function'
-        ? (order.shippingAddress as any).toObject()
+      rawShippingAddr && typeof rawShippingAddr.toObject === 'function'
+        ? (rawShippingAddr.toObject as () => Record<string, unknown>)()
         : { ...order.shippingAddress };
     const shippingAddressWithPhone = {
       ...rawAddr,
       ...(customerPhone ? { phone: customerPhone } : {}),
-    };
+    } as unknown as IAddressSnapshot;
 
     // delivery_manager sees only fields needed for fulfillment:
     // shipping address, items, status, tracking number, deliveredAt, user name
     if (user.role === 'delivery_manager') {
       return {
         _id: order._id,
-        user: { name: (order.user as any)?.name || 'Customer' },
+        user: { name: populatedUser?.name || 'Customer' },
         items: order.items.map((item) => ({
           product: item.product,
           name: item.name,
@@ -869,14 +875,14 @@ export const orderService = {
         returnRequest: returnRequestDTO,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
-      };
+      } as unknown as IOrder & { payment?: IPayment | null; returnRequest?: Record<string, unknown> | null };
     }
 
     const payment = await Payment.findOne({ order: order._id });
-    const orderObj = order.toObject();
-    (orderObj as any).shippingAddress = shippingAddressWithPhone;
-    (orderObj as any).payment = payment || null;
-    (orderObj as any).returnRequest = returnRequestDTO;
+    const orderObj = order.toObject() as unknown as IOrder & { payment?: IPayment | null; returnRequest?: Record<string, unknown> | null };
+    orderObj.shippingAddress = shippingAddressWithPhone;
+    orderObj.payment = payment || null;
+    orderObj.returnRequest = returnRequestDTO;
     return orderObj;
   },
 
@@ -896,12 +902,12 @@ export const orderService = {
     limit?: string | number;
     status?: string;
     search?: string;
-  }): Promise<{ orders: any[]; results: number; total: number; page: number; pages: number }> {
+  }): Promise<{ orders: (IOrder & { payment?: IPayment | null })[]; results: number; total: number; page: number; pages: number }> {
     const page = Math.max(1, parseInt(String(query?.page || 1), 10) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(String(query?.limit || 10), 10) || 10));
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = {};
+    const filter: mongoose.FilterQuery<IOrder> = {};
 
     if (query?.status && query.status !== 'all') {
       filter.status = query.status;
@@ -909,7 +915,7 @@ export const orderService = {
 
     if (query?.search && query.search.trim()) {
       const searchTerm = query.search.trim();
-      const orConditions: any[] = [];
+      const orConditions: mongoose.FilterQuery<IOrder>[] = [];
 
       if (Types.ObjectId.isValid(searchTerm)) {
         orConditions.push({ _id: new Types.ObjectId(searchTerm) });
@@ -948,8 +954,8 @@ export const orderService = {
     const paymentMap = new Map(payments.map((p) => [p.order.toString(), p]));
 
     const orders = rawOrders.map((o) => {
-      const obj = o.toObject();
-      (obj as any).payment = paymentMap.get(o._id.toString()) || null;
+      const obj = o.toObject() as unknown as IOrder & { payment?: IPayment | null };
+      obj.payment = paymentMap.get(o._id.toString()) || null;
       return obj;
     });
 
@@ -979,7 +985,7 @@ export const orderService = {
       search?: string;
     }
   ): Promise<{
-    orders: any[];
+    orders: Record<string, unknown>[];
     results: number;
     total: number;
     page: number;
@@ -999,7 +1005,7 @@ export const orderService = {
 
     const ALL_DELIVERY_ALLOWED: OrderStatus[] = [...FULFILLMENT_RANGE, 'delivered'];
 
-    const filter: Record<string, any> = {};
+    const filter: mongoose.FilterQuery<IOrder> = {};
 
     if (query?.status && query.status !== 'all') {
       if (ALL_DELIVERY_ALLOWED.includes(query.status as OrderStatus)) {
@@ -1015,7 +1021,7 @@ export const orderService = {
 
     if (query?.search && query.search.trim()) {
       const term = query.search.trim();
-      const conditions: any[] = [];
+      const conditions: mongoose.FilterQuery<IOrder>[] = [];
 
       if (Types.ObjectId.isValid(term)) {
         conditions.push({ _id: new Types.ObjectId(term) });
@@ -1050,13 +1056,14 @@ export const orderService = {
     const isDeliveryOnly = user.role === 'delivery_manager';
 
     const orders = rawOrders.map((o) => {
+      const populatedUser = o.user as unknown as { _id?: Types.ObjectId; name?: string; email?: string } | null;
       if (isDeliveryOnly) {
         return {
           _id: o._id,
           user: {
-            _id: (o.user as any)?._id,
-            name: (o.user as any)?.name || 'Customer',
-            email: (o.user as any)?.email || '',
+            _id: populatedUser?._id,
+            name: populatedUser?.name || 'Customer',
+            email: populatedUser?.email || '',
           },
           items: o.items.map((item) => ({
             product: item.product,
@@ -1073,9 +1080,9 @@ export const orderService = {
           deliveredAt: o.deliveredAt,
           createdAt: o.createdAt,
           updatedAt: o.updatedAt,
-        };
+        } as Record<string, unknown>;
       }
-      return o.toObject();
+      return o.toObject() as unknown as Record<string, unknown>;
     });
 
     return {
@@ -1095,7 +1102,7 @@ export const orderService = {
     user: IUser,
     orderId: string,
     trackingNumber: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID', 400);
     }
@@ -1108,13 +1115,15 @@ export const orderService = {
     order.trackingNumber = trackingNumber.trim();
     await order.save();
 
+    const populatedUser = order.user as unknown as { _id?: Types.ObjectId; name?: string; email?: string } | null;
+
     if (user.role === 'delivery_manager') {
       return {
         _id: order._id,
         user: {
-          _id: (order.user as any)?._id,
-          name: (order.user as any)?.name || 'Customer',
-          email: (order.user as any)?.email || '',
+          _id: populatedUser?._id,
+          name: populatedUser?.name || 'Customer',
+          email: populatedUser?.email || '',
         },
         items: order.items.map((item) => ({
           product: item.product,
@@ -1134,7 +1143,7 @@ export const orderService = {
       };
     }
 
-    return order.toObject();
+    return order.toObject() as unknown as Record<string, unknown>;
   },
 };
 
