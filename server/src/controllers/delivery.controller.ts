@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { orderService } from '../services/order.service';
 import {
   applyFieldPolicy,

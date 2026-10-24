@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import User, { IUser, UserRole } from '../models/User';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import {
   CreateStaffInput,
   UpdateStaffInput,

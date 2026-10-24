@@ -4,7 +4,7 @@ import { IOrder } from '../models/Order';
 import { IUser } from '../models/User';
 import { orderService } from './order.service';
 import { Request } from 'express';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { audit } from './audit.service';
 
 export const paymentService = {

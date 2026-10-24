@@ -42,7 +42,7 @@ function sanitizeRecursive(val: unknown, seen: WeakSet<object>): unknown {
  * Strips sensitive keys, resolves circular references, and truncates oversized
  * metadata payloads before persistence.
  */
-export function sanitizeAndTruncateMeta(meta?: unknown): Record<string, unknown> {
+function sanitizeAndTruncateMeta(meta?: unknown): Record<string, unknown> {
   if (!meta || typeof meta !== 'object') {
     return {};
   }

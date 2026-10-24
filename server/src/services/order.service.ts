@@ -8,7 +8,7 @@ import User, { IUser } from '../models/User';
 import { inventoryService } from './inventory.service';
 import { couponService } from './coupon.service';
 import { walletService } from './wallet.service';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { CreateOrderInput } from '../validators/order.validator';
 import { SimulatePaymentInput } from '../validators/simulate-payment.validator';
 import { getPaymentGateway } from './payment-gateway';
@@ -17,8 +17,8 @@ import { Request } from 'express';
 import { invoiceService } from './invoice.service';
 import { audit } from './audit.service';
 
-export const FREE_SHIPPING_THRESHOLD = 1500;
-export const FLAT_SHIPPING_FEE = 60;
+const FREE_SHIPPING_THRESHOLD = 1500;
+const FLAT_SHIPPING_FEE = 60;
 
 export interface CreateOrderResult {
   order: IOrder;

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { analyticsService } from '../services/analytics.service';
 import {
   DateRangeQuerySchema,

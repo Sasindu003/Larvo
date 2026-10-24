@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { staffService } from '../services/staff.service';
 import User, { UserRole } from '../models/User';
 import { audit, auditPiiRead } from '../services/audit.service';

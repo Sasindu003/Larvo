@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { env } from '../config/env';
 import { asyncHandler } from '../utils/asyncHandler';
 import { orderService } from '../services/order.service';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { CreateOrderSchema } from '../validators/order.validator';
 import { SimulatePaymentSchema } from '../validators/simulate-payment.validator';
 import { UpdateOrderStatusSchema } from '../validators/update-status.validator';

@@ -1,6 +1,6 @@
 import multer from 'multer';
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from './error.middleware';
+import { AppError } from '../utils/AppError';
 
 // In-memory storage buffer for streaming directly to MongoDB GridFS
 const storage = multer.memoryStorage();

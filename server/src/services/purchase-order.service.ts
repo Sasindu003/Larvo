@@ -1,5 +1,5 @@
 import mongoose, { Types } from 'mongoose';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { PurchaseOrder, IPurchaseOrder, PO_VALID_TRANSITIONS, POStatus } from '../models/PurchaseOrder';
 import { Product } from '../models/Product';
 import Supplier from '../models/Supplier';

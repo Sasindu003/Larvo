@@ -5,7 +5,7 @@ import { Invoice, IInvoice, IInvoiceSnapshot, deriveInvoiceNumber } from '../mod
 import { IOrder, Order } from '../models/Order';
 import { IPayment, Payment } from '../models/Payment';
 import User, { IUser } from '../models/User';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 
 export const invoiceService = {
   /**

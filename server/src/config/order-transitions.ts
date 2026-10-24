@@ -1,6 +1,6 @@
 import { OrderStatus } from '../models/Order';
 import { UserRole } from '../models/User';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 
 export interface TransitionRule {
   from: OrderStatus;

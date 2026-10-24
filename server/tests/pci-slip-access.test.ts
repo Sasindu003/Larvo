@@ -2,13 +2,13 @@
 import request from 'supertest';
 import mongoose, { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import app from '../app';
-import { env } from '../config/env';
-import User from '../models/User';
-import Order, { IOrder } from '../models/Order';
-import { Product } from '../models/Product';
-import { Category } from '../models/Category';
-import { uploadToGridFS } from '../services/gridfs.service';
+import app from '../src/app';
+import { env } from '../src/config/env';
+import User from '../src/models/User';
+import Order, { IOrder } from '../src/models/Order';
+import { Product } from '../src/models/Product';
+import { Category } from '../src/models/Category';
+import { uploadToGridFS } from '../src/services/gridfs.service';
 
 // Minimal 1x1 valid PNG with valid PNG magic bytes
 const VALID_PNG_BUFFER = Buffer.from([

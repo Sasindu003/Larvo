@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
 import { walletService } from '../services/wallet.service';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import {
   AdminAdjustWalletSchema,
   WalletTransactionsQuerySchema,

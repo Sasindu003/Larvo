@@ -2,17 +2,17 @@
 import request from 'supertest';
 import mongoose, { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import app from '../app';
-import { env } from '../config/env';
-import User from '../models/User';
-import Order from '../models/Order';
-import Invoice from '../models/Invoice';
-import Supplier from '../models/Supplier';
-import ReturnRequest from '../models/ReturnRequest';
-import { Category } from '../models/Category';
-import { Product } from '../models/Product';
-import { isEncrypted, decryptField } from '../utils/fieldCrypto';
-import { migrateEncryptPersonalFields } from '../migrations/2026_encrypt_personal_fields';
+import app from '../src/app';
+import { env } from '../src/config/env';
+import User from '../src/models/User';
+import Order from '../src/models/Order';
+import Invoice from '../src/models/Invoice';
+import Supplier from '../src/models/Supplier';
+import ReturnRequest from '../src/models/ReturnRequest';
+import { Category } from '../src/models/Category';
+import { Product } from '../src/models/Product';
+import { isEncrypted, decryptField } from '../src/utils/fieldCrypto';
+import { migrateEncryptPersonalFields } from '../src/migrations/2026_encrypt_personal_fields';
 
 function generateAuthToken(userId: Types.ObjectId, role = 'customer'): string {
   return jwt.sign(

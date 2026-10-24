@@ -8,7 +8,7 @@ import {
 import { User } from '../models/User';
 import { Setting } from '../models/Setting';
 import { Request } from 'express';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { audit } from './audit.service';
 import {
   POINT_VALUE,

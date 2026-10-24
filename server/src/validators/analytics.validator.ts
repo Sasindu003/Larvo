@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 
 export const GranularityEnum = z.enum(['day', 'week', 'month'], {
   errorMap: () => ({ message: 'Invalid granularity. Allowed values: day, week, month' }),

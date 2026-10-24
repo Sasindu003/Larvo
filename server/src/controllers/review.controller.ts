@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { reviewService } from '../services/review.service';
 import {
   CreateReviewSchema,

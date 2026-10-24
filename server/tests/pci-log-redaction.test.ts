@@ -2,8 +2,8 @@
 import pino from 'pino';
 import { Writable } from 'stream';
 import { Request, Response } from 'express';
-import { errorSerializer } from '../utils/logger';
-import { errorHandler } from '../middleware/errorHandler';
+import { errorSerializer } from '../src/utils/logger';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 describe('PCI04: Log Redaction & Error Sanitization', () => {
   describe('Pino Logger Sensitive Field Redaction', () => {
