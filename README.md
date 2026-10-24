@@ -6,7 +6,7 @@
   <a href="#-tech-stack--ecosystem"><img src="https://img.shields.io/badge/Database-MongoDB%20%2B%20GridFS-10b981?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" /></a>
   <a href="#-security-cryptography--compliance"><img src="https://img.shields.io/badge/Security-AES--256--GCM%20%2B%20RBAC-f43f5e?style=for-the-badge&logo=shield&logoColor=white" alt="Security" /></a>
   <a href="#-zero-cardholder-payments--pci"><img src="https://img.shields.io/badge/PCI%20DSS-Zero--Cardholder--Data-06b6d4?style=for-the-badge&logo=visa&logoColor=white" alt="PCI DSS" /></a>
-  <a href="VERCEL_ATLAS_GUIDE.md"><img src="https://img.shields.io/badge/Deploy-Vercel%20Serverless-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" /></a>
+  <a href="docs/VERCEL_ATLAS_GUIDE.md"><img src="https://img.shields.io/badge/Deploy-Vercel%20Serverless-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" /></a>
 </p>
 
 ---
@@ -314,9 +314,8 @@ Larvo/
 │   │   └── server.ts                # Application boot, database connection, and graceful shutdown
 │   └── package.json
 │
-├── 📁 docs/                         # Security audits, PCI scopes, and deployment manuals
+├── 📁 docs/                         # Security audits, PCI scopes, and deployment manuals (including VERCEL_ATLAS_GUIDE.md)
 ├── 📄 start-dev.bat                 # One-click Windows development runner
-├── 📄 VERCEL_ATLAS_GUIDE.md         # Production serverless & MongoDB Atlas deployment manual
 └── 📄 package.json                  # Root monorepo workspace configuration
 ```
 
