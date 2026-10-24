@@ -250,5 +250,3 @@ export const CartDrawer: React.FC = () => {
     </div>
   );
 };
-
-export default CartDrawer;

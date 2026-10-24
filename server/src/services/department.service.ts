@@ -1,8 +1,8 @@
 import { Department, IDepartment } from '../models/Department';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { CreateDepartmentInput, UpdateDepartmentInput } from '../validators/department.validator';
 
-export const slugify = (text: string): string => {
+const slugify = (text: string): string => {
   return text
     .toLowerCase()
     .trim()

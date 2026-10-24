@@ -1,7 +1,7 @@
 import mongoose, { ClientSession, Types } from 'mongoose';
 import { Request } from 'express';
 import { Product, IProduct, IVariant } from '../models/Product';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { audit } from './audit.service';
 
 /**
@@ -10,7 +10,7 @@ import { audit } from './audit.service';
  * stock <= LOW_STOCK_THRESHOLD (1..5) -> 'low_stock'
  * stock > LOW_STOCK_THRESHOLD -> 'in_stock'
  */
-export const LOW_STOCK_THRESHOLD = 5;
+const LOW_STOCK_THRESHOLD = 5;
 
 export type StockStatus = 'out_of_stock' | 'low_stock' | 'in_stock';
 

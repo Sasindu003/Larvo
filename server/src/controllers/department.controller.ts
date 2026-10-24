@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
 import { departmentService } from '../services/department.service';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { ROLES } from '../config/roles';
 import { UserRole } from '../models/User';
 import {

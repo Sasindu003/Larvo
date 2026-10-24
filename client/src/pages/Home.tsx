@@ -34,7 +34,3 @@ export const Home: React.FC = () => {
     </div>
   );
 };
-
-// Also export as HomePage for backward compatibility
-export const HomePage = Home;
-export default Home;

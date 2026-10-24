@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import { Product } from '../models/Product';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 
 /**
  * @desc    Get current user's populated wishlist

@@ -35,7 +35,7 @@ import {
 } from '../../services/purchase-order.service';
 
 // ── Status Badge Component covering all 12 statuses ──────────────────────────
-export const POStatusBadge: React.FC<{ status: POStatus }> = ({ status }) => {
+export const SupplierPOStatusBadge: React.FC<{ status: POStatus }> = ({ status }) => {
   const configs: Record<POStatus, { label: string; bg: string; text: string; border: string }> = {
     requested: {
       label: 'Request Received',
@@ -561,7 +561,7 @@ export const SupplierPurchaseOrdersPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <POStatusBadge status={po.status} />
+                        <SupplierPOStatusBadge status={po.status} />
                       </td>
                       <td className="py-3 px-4 font-semibold text-slate-200">
                         ${(po.totalCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -1007,7 +1007,7 @@ export const SupplierPurchaseOrdersPage: React.FC = () => {
                 <h2 className="text-lg font-bold text-white font-mono">
                   PO #{activePO._id.slice(-6).toUpperCase()}
                 </h2>
-                <POStatusBadge status={activePO.status} />
+                <SupplierPOStatusBadge status={activePO.status} />
               </div>
               <button
                 onClick={() => setDetailModalOpen(false)}

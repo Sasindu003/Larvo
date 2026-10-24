@@ -1,4 +1,4 @@
-import api, { ApiResponse } from './api';
+import api, { ApiResponse, extractError } from './api';
 import { User } from './auth.service';
 
 export interface Address {
@@ -23,14 +23,12 @@ export interface UpdatePasswordData {
   newPassword: string;
 }
 
-function extractError(error: any): never {
-  if (error?.message) {
-    throw new Error(error.message);
+function unwrapResponse<T>(res: unknown): T {
+  const obj = res as { data?: T } | null | undefined;
+  if (obj && typeof obj === 'object' && obj.data !== undefined) {
+    return obj.data;
   }
-  if (error?.response?.data?.message) {
-    throw new Error(error.response.data.message);
-  }
-  throw error;
+  return res as T;
 }
 
 export const userService = {
@@ -40,8 +38,8 @@ export const userService = {
   async updateProfile(data: UpdateProfileData): Promise<User> {
     try {
       const res = await api.patch<ApiResponse<User>>('/users/me', data);
-      return (res as any).data || (res as any);
-    } catch (error: any) {
+      return unwrapResponse(res);
+    } catch (error: unknown) {
       extractError(error);
     }
   },
@@ -52,8 +50,8 @@ export const userService = {
   async updatePassword(data: UpdatePasswordData): Promise<User> {
     try {
       const res = await api.patch<ApiResponse<User>>('/users/me/password', data);
-      return (res as any).data || (res as any);
-    } catch (error: any) {
+      return unwrapResponse(res);
+    } catch (error: unknown) {
       extractError(error);
     }
   },
@@ -64,8 +62,8 @@ export const userService = {
   async addAddress(data: Omit<Address, '_id'>): Promise<Address[]> {
     try {
       const res = await api.post<ApiResponse<Address[]>>('/users/me/addresses', data);
-      return (res as any).data || (res as any);
-    } catch (error: any) {
+      return unwrapResponse(res);
+    } catch (error: unknown) {
       extractError(error);
     }
   },
@@ -76,8 +74,8 @@ export const userService = {
   async updateAddress(id: string, data: Partial<Address>): Promise<Address[]> {
     try {
       const res = await api.patch<ApiResponse<Address[]>>(`/users/me/addresses/${id}`, data);
-      return (res as any).data || (res as any);
-    } catch (error: any) {
+      return unwrapResponse(res);
+    } catch (error: unknown) {
       extractError(error);
     }
   },
@@ -88,8 +86,8 @@ export const userService = {
   async deleteAddress(id: string): Promise<Address[]> {
     try {
       const res = await api.delete<ApiResponse<Address[]>>(`/users/me/addresses/${id}`);
-      return (res as any).data || (res as any);
-    } catch (error: any) {
+      return unwrapResponse(res);
+    } catch (error: unknown) {
       extractError(error);
     }
   },

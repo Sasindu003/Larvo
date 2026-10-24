@@ -1,6 +1,6 @@
 import { Coupon, ICoupon } from '../models/Coupon';
 import { Order } from '../models/Order';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { CreateCouponInput, UpdateCouponInput } from '../validators/coupon.validator';
 
 export interface GetCouponsQuery {
@@ -269,6 +269,4 @@ export const couponService = {
   },
 };
 
-export const computeDiscount = couponService.computeDiscount;
-export const validateCoupon = couponService.validateCoupon.bind(couponService);
 export default couponService;

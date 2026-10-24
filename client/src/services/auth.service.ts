@@ -1,4 +1,4 @@
-import api, { ApiResponse } from './api';
+import api, { ApiResponse, extractError } from './api';
 import type { UserRole } from '../config/roles';
 import type { Address } from './user.service';
 
@@ -22,16 +22,6 @@ export interface User {
   addresses: Address[];
   wishlist: string[];
   createdAt: string;
-}
-
-function extractError(error: any): never {
-  if (error?.message) {
-    throw new Error(error.message);
-  }
-  if (error?.response?.data?.message) {
-    throw new Error(error.response.data.message);
-  }
-  throw error;
 }
 
 export const authService = {

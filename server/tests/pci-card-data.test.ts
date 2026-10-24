@@ -2,15 +2,15 @@
 import request from 'supertest';
 import mongoose, { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import app from '../app';
-import { env } from '../config/env';
-import User from '../models/User';
-import Order, { IOrder } from '../models/Order';
-import { Payment } from '../models/Payment';
-import { Invoice } from '../models/Invoice';
-import AuditLog from '../models/AuditLog';
-import { Product } from '../models/Product';
-import { Category } from '../models/Category';
+import app from '../src/app';
+import { env } from '../src/config/env';
+import User from '../src/models/User';
+import Order, { IOrder } from '../src/models/Order';
+import { Payment } from '../src/models/Payment';
+import { Invoice } from '../src/models/Invoice';
+import AuditLog from '../src/models/AuditLog';
+import { Product } from '../src/models/Product';
+import { Category } from '../src/models/Category';
 
 // Helper: Luhn algorithm validator
 export function passesLuhn(digits: string): boolean {

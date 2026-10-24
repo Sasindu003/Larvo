@@ -1,5 +1,5 @@
 import mongoose, { Types } from 'mongoose';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { Order } from '../models/Order';
 import ReturnRequest, { IReturnRequest, ReturnStatus } from '../models/ReturnRequest';
 import { UserRole } from '../models/User';
@@ -121,7 +121,7 @@ export class ReturnService {
     const limit = options.limit && options.limit > 0 ? options.limit : 10;
     const skip = (page - 1) * limit;
 
-    const query: any = { user: userId };
+    const query: mongoose.FilterQuery<IReturnRequest> = { user: userId };
     if (options.orderId) {
       query.order = options.orderId;
     }
@@ -160,10 +160,10 @@ export class ReturnService {
     }
 
     const isPrivileged = ['staff', 'admin', 'owner'].includes(requester.role);
-    const ownerId =
-      returnRequest.user && (returnRequest.user as any)._id
-        ? (returnRequest.user as any)._id.toString()
-        : returnRequest.user.toString();
+    const populatedUser = returnRequest.user as unknown as { _id?: Types.ObjectId } | null;
+    const ownerId = populatedUser?._id
+      ? populatedUser._id.toString()
+      : returnRequest.user.toString();
 
     if (!isPrivileged && ownerId !== requester.userId.toString()) {
       throw new AppError('Access denied', 403);
@@ -189,10 +189,10 @@ export class ReturnService {
     }
 
     const isPrivileged = ['staff', 'admin', 'owner'].includes(requester.role);
-    const ownerId =
-      returnRequest.user && (returnRequest.user as any)._id
-        ? (returnRequest.user as any)._id.toString()
-        : returnRequest.user.toString();
+    const populatedUser = returnRequest.user as unknown as { _id?: Types.ObjectId } | null;
+    const ownerId = populatedUser?._id
+      ? populatedUser._id.toString()
+      : returnRequest.user.toString();
 
     if (!isPrivileged && ownerId !== requester.userId.toString()) {
       throw new AppError('Access denied', 403);
@@ -209,7 +209,7 @@ export class ReturnService {
     const limit = options.limit && options.limit > 0 ? options.limit : 10;
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: mongoose.FilterQuery<IReturnRequest> = {};
     if (options.status) {
       query.status = options.status;
     }
@@ -230,7 +230,7 @@ export class ReturnService {
 
     const pointsPerRupee = await walletService.getPointsPerRupee();
 
-    const results = returnDocs.map((doc: any) => {
+    const results = returnDocs.map((doc) => {
       let estimatedRefundPoints: number | null = null;
 
       if (doc.status === 'refunded') {
@@ -240,14 +240,14 @@ export class ReturnService {
       } else if (doc.status === 'approved' && doc.estimatedRefundPoints != null) {
         estimatedRefundPoints = doc.estimatedRefundPoints;
       } else {
-        const order = doc.order;
+        const order = doc.order as unknown as { subtotal?: number; discountAmount?: number; items?: Array<{ variantSku?: string; unitPrice?: number }> } | null;
         if (order && Array.isArray(order.items)) {
-          const returnItems = doc.items.map((item: any) => {
+          const returnItems = doc.items.map((item) => {
             const orderItem =
-              order.items[item.orderItemRef] ||
-              order.items.find((oi: any) => oi.variantSku === item.sku);
+              order.items?.[item.orderItemRef] ||
+              order.items?.find((oi) => oi.variantSku === item.sku);
             return {
-              unitPrice: orderItem ? orderItem.unitPrice : 0,
+              unitPrice: typeof orderItem?.unitPrice === 'number' ? orderItem.unitPrice : 0,
               quantity: item.qty,
             };
           });
@@ -313,7 +313,7 @@ export class ReturnService {
     } else if (input.decision === 'approved') {
       assertReturnTransition(returnRequest.status, 'pickup_scheduled', 'staff');
 
-      let order = returnRequest.order as any;
+      let order = returnRequest.order as unknown as import('../models/Order').IOrder | null;
       if (!order || !Array.isArray(order.items)) {
         order = await Order.findById(returnRequest.order);
       }
@@ -323,8 +323,8 @@ export class ReturnService {
 
       const returnItems = returnRequest.items.map((item) => {
         const orderItem =
-          order.items[item.orderItemRef] ||
-          order.items.find((oi: any) => oi.variantSku === item.sku);
+          order!.items[item.orderItemRef] ||
+          order!.items.find((oi) => oi.variantSku === item.sku);
         return {
           unitPrice: orderItem ? orderItem.unitPrice : 0,
           quantity: item.qty,
@@ -392,7 +392,7 @@ export class ReturnService {
       return returnRequest;
     }
 
-    assertReturnTransition(returnRequest.status, 'under_review', requester.role as any);
+    assertReturnTransition(returnRequest.status, 'under_review', requester.role as UserRole);
 
     returnRequest.status = 'under_review';
     returnRequest.statusHistory.push({
@@ -411,12 +411,12 @@ export class ReturnService {
    */
   async getDeliveryReturns(
     query: GetDeliveryReturnsQuery
-  ): Promise<{ results: any[]; total: number; page: number; pages: number }> {
+  ): Promise<{ results: IReturnRequest[]; total: number; page: number; pages: number }> {
     const page = Math.max(1, query.page || 1);
     const limit = Math.max(1, Math.min(50, query.limit || 10));
     const skip = (page - 1) * limit;
 
-    const filter: any = {};
+    const filter: mongoose.FilterQuery<IReturnRequest> = {};
     if (query.status) {
       filter.status = query.status;
     } else {
@@ -502,7 +502,7 @@ export class ReturnService {
     assertReturnTransition(existing.status, 'refunded', 'admin');
 
     // Fetch order to compute or confirm refund points
-    let order: any = await Order.findById(existing.order);
+    const order = await Order.findById(existing.order);
     if (!order) {
       throw new AppError('Associated order not found', 404);
     }
@@ -510,7 +510,7 @@ export class ReturnService {
     const returnItems = existing.items.map((item) => {
       const orderItem =
         order.items[item.orderItemRef] ||
-        order.items.find((oi: any) => oi.variantSku === item.sku);
+        order.items.find((oi) => oi.variantSku === item.sku);
       return {
         unitPrice: orderItem ? orderItem.unitPrice : 0,
         quantity: item.qty,
@@ -613,7 +613,7 @@ export class ReturnService {
     returnId: string,
     newStatus: ReturnStatus,
     actor: { userId: string | Types.ObjectId; role: UserRole },
-    options?: { note?: string; rejectionReason?: string; pickup?: any }
+    options?: { note?: string; rejectionReason?: string; pickup?: Record<string, unknown> }
   ): Promise<IReturnRequest> {
     const returnRequest = await ReturnRequest.findById(returnId);
     if (!returnRequest) {
@@ -628,17 +628,18 @@ export class ReturnService {
       returnRequest.rejectionReason = options.rejectionReason;
     }
     if (options?.pickup) {
-      const existingPickup = returnRequest.pickup
-        ? ((returnRequest.pickup as any).toObject?.() || returnRequest.pickup)
+      const rawPickup = returnRequest.pickup as unknown as { toObject?: () => Record<string, unknown> } | Record<string, unknown> | undefined;
+      const existingPickup = rawPickup
+        ? (typeof rawPickup.toObject === 'function' ? rawPickup.toObject() : rawPickup)
         : {};
       const merged = { ...existingPickup, ...options.pickup };
-      const cleaned: any = {};
+      const cleaned: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(merged)) {
         if (v !== null && v !== undefined && v !== '') {
           cleaned[k] = v;
         }
       }
-      returnRequest.pickup = Object.keys(cleaned).length > 0 ? cleaned : undefined;
+      returnRequest.pickup = Object.keys(cleaned).length > 0 ? (cleaned as unknown as typeof returnRequest.pickup) : undefined;
     }
 
     returnRequest.statusHistory.push({

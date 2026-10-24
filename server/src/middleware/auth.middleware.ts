@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import User, { IUser } from '../models/User';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from './error.middleware';
+import { AppError } from '../utils/AppError';
 
 // Extend Express Request to include the authenticated user
 declare global {

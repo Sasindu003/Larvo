@@ -9,7 +9,7 @@ import {
   DeleteSelectedLogsSchema,
   ClearLogsSchema,
 } from '../validators/behaviorLog.validator';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 
 /**
  * @desc    Collect batch of user behavior events (clicks, navigations, pageviews)

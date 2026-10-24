@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import Supplier from '../models/Supplier';
 import User from '../models/User';
 import { purchaseOrderService } from '../services/purchase-order.service';

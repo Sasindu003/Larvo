@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Mail,
   Phone,
@@ -13,10 +13,10 @@ import {
   Twitter,
   Facebook,
   Pin as PinterestIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
 const newsletterSchema = z.object({
-  email: z.string().min(1, 'Email address is required').email('Please enter a valid email address'),
+  email: z.string().min(1, "Email address is required").email("Please enter a valid email address"),
 });
 
 type NewsletterFormData = z.infer<typeof newsletterSchema>;
@@ -33,8 +33,7 @@ export const Footer: React.FC = () => {
     resolver: zodResolver(newsletterSchema),
   });
 
-  const onSubmit = (data: NewsletterFormData) => {
-    console.log('Newsletter subscription stub:', data.email);
+  const onSubmit = () => {
     setSubscribed(true);
     reset();
     setTimeout(() => {
@@ -53,7 +52,8 @@ export const Footer: React.FC = () => {
                 Join the LARVO Privé List
               </h3>
               <p className="text-xs text-ink-400">
-                Subscribe for private collection previews, exclusive seasonal lookbooks, and VIP event invitations.
+                Subscribe for private collection previews, exclusive seasonal lookbooks, and VIP
+                event invitations.
               </p>
             </div>
 
@@ -61,7 +61,9 @@ export const Footer: React.FC = () => {
               {subscribed ? (
                 <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs animate-fade-in">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Thank you for subscribing! Check your inbox for your welcome invitation.</span>
+                  <span>
+                    Thank you for subscribing! Check your inbox for your welcome invitation.
+                  </span>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-1.5" noValidate>
@@ -71,11 +73,11 @@ export const Footer: React.FC = () => {
                       <input
                         type="email"
                         placeholder="Enter your email address"
-                        {...register('email')}
+                        {...register("email")}
                         className={`w-full bg-ink-900 border text-xs text-white placeholder:text-ink-500 rounded-lg pl-9 pr-3 py-2.5 transition-colors focus:outline-none focus:ring-1 ${
                           errors.email
-                            ? 'border-danger focus:ring-danger'
-                            : 'border-ink-700 focus:border-white focus:ring-white'
+                            ? "border-danger focus:ring-danger"
+                            : "border-ink-700 focus:border-white focus:ring-white"
                         }`}
                       />
                     </div>
@@ -89,7 +91,9 @@ export const Footer: React.FC = () => {
                     </button>
                   </div>
                   {errors.email && (
-                    <p className="text-[11px] text-danger pl-1 font-medium">{errors.email.message}</p>
+                    <p className="text-[11px] text-danger pl-1 font-medium">
+                      {errors.email.message}
+                    </p>
                   )}
                 </form>
               )}
@@ -111,7 +115,8 @@ export const Footer: React.FC = () => {
             </div>
 
             <p className="text-xs text-ink-400 leading-relaxed">
-              Curated contemporary fashion, essential silhouettes, and elevated wardrobe staples crafted for timeless style.
+              Curated contemporary fashion, essential silhouettes, and elevated wardrobe staples
+              crafted for timeless style.
             </p>
 
             {/* Social Icons Row */}
@@ -183,27 +188,42 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=womens-apparel" className="hover:text-white transition-colors">
+                <Link
+                  to="/products?category=womens-apparel"
+                  className="hover:text-white transition-colors"
+                >
                   Women's Apparel
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=mens-collection" className="hover:text-white transition-colors">
+                <Link
+                  to="/products?category=mens-collection"
+                  className="hover:text-white transition-colors"
+                >
                   Men's Collection
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=footwear" className="hover:text-white transition-colors">
+                <Link
+                  to="/products?category=footwear"
+                  className="hover:text-white transition-colors"
+                >
                   Footwear & Shoes
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=accessories" className="hover:text-white transition-colors">
+                <Link
+                  to="/products?category=accessories"
+                  className="hover:text-white transition-colors"
+                >
                   Accessories & Handbags
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=new-arrivals" className="hover:text-white transition-colors">
+                <Link
+                  to="/products?category=new-arrivals"
+                  className="hover:text-white transition-colors"
+                >
                   New Season Arrivals
                 </Link>
               </li>
@@ -226,10 +246,14 @@ export const Footer: React.FC = () => {
                 <span className="text-ink-500 cursor-not-allowed">Sustainability & Ethics</span>
               </li>
               <li>
-                <span className="text-ink-500 cursor-not-allowed">Complimentary Shipping & Returns</span>
+                <span className="text-ink-500 cursor-not-allowed">
+                  Complimentary Shipping & Returns
+                </span>
               </li>
               <li>
-                <span className="text-ink-500 cursor-not-allowed">Bank Transfer Payment Guidelines</span>
+                <span className="text-ink-500 cursor-not-allowed">
+                  Bank Transfer Payment Guidelines
+                </span>
               </li>
               <li>
                 <span className="text-ink-500 cursor-not-allowed">Frequently Asked Questions</span>
@@ -269,15 +293,23 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/admin" className="text-amber-400 hover:text-amber-300 transition-colors font-medium">
+                <Link
+                  to="/admin"
+                  className="text-amber-400 hover:text-amber-300 transition-colors font-medium"
+                >
                   Staff & Admin Portal
                 </Link>
               </li>
-              <li>
-                <Link to="/dev/components" className="text-ink-500 hover:text-ink-300 transition-colors">
-                  Design System Primitives
-                </Link>
-              </li>
+              {import.meta.env.DEV && (
+                <li>
+                  <Link
+                    to="/dev/components"
+                    className="text-ink-500 hover:text-ink-300 transition-colors"
+                  >
+                    Design System Primitives
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

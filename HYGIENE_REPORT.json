@@ -1,0 +1,81 @@
+{
+  "deleted_files": [
+    "server/src/middleware/error.middleware.ts",
+    "server/src/seed/product.check.ts",
+    "server/src/seed/seed_admin.ts",
+    "server/src/seed/seed_customer_wallet.ts",
+    "server/src/tests/behaviorTracking.verify.ts"
+  ],
+  "removed_exports": [
+    "server/src/middleware/error.middleware.ts:AppError",
+    "server/src/middleware/error.middleware.ts:notFound",
+    "server/src/middleware/error.middleware.ts:errorHandler",
+    "client/src/pages/Home.tsx:HomePage",
+    "client/src/pages/Home.tsx:default"
+  ],
+  "renamed": [
+    {
+      "from": "client/src/services/tracking.service.ts",
+      "to": "client/src/services/behaviorLog.service.ts"
+    },
+    {
+      "from": "client/src/services/tracker.service.ts",
+      "to": "client/src/services/behaviorTracker.ts"
+    },
+    {
+      "from": "client/src/services/user.service.ts:changePassword",
+      "to": "client/src/services/user.service.ts:updateMyPassword"
+    },
+    {
+      "from": "server/src/tests/encrypted-models.test.ts",
+      "to": "server/tests/encrypted-models.test.ts"
+    },
+    {
+      "from": "server/src/tests/field-access.test.ts",
+      "to": "server/tests/field-access.test.ts"
+    },
+    {
+      "from": "server/src/tests/field-crypto.test.ts",
+      "to": "server/tests/field-crypto.test.ts"
+    },
+    {
+      "from": "server/src/tests/pci-card-data.test.ts",
+      "to": "server/tests/pci-card-data.test.ts"
+    },
+    {
+      "from": "server/src/tests/pci-log-redaction.test.ts",
+      "to": "server/tests/pci-log-redaction.test.ts"
+    },
+    {
+      "from": "server/src/tests/pci-slip-access.test.ts",
+      "to": "server/tests/pci-slip-access.test.ts"
+    },
+    {
+      "from": "server/src/tests/phi-protection.test.ts",
+      "to": "server/tests/phi-protection.test.ts"
+    },
+    {
+      "from": "server/src/tests/order-transition.test.ts",
+      "to": "server/tests/order-transition.test.ts (converted to Jest)"
+    },
+    {
+      "from": "server/src/tests/return-transition.test.ts",
+      "to": "server/tests/return-transition.test.ts (converted to Jest)"
+    },
+    {
+      "from": "server/src/tests/null-omission.test.ts",
+      "to": "server/tests/null-omission.test.ts (converted to Jest)"
+    }
+  ],
+  "any_replaced_count": 82,
+  "loc_before": 67158,
+  "loc_after": 64433,
+  "knip_before": 298,
+  "knip_after": 268,
+  "deferred": [
+    "Size-ranked god files list deferred per F6: client/src/pages/ProductDetailsPage.tsx (1676 LOC), client/src/components/layout/Header.tsx (1576 LOC), client/src/pages/admin/AdminSuppliersPage.tsx (1318 LOC), client/src/pages/admin/AdminPurchaseOrdersPage.tsx (1291 LOC), client/src/pages/admin/AdminOrdersPage.tsx (1278 LOC), client/src/pages/supplier/SupplierPurchaseOrdersPage.tsx (1217 LOC), server/src/services/order.service.ts (1150 LOC), client/src/pages/admin/AdminBehaviorLogsPage.tsx (1144 LOC)",
+    "Remaining any types in client/src/services/{return,review,supplier,wallet,wishlist}.service.ts deferred to prevent regressions in callers",
+    "Carve-out security logic strictly preserved: auth/JWT/cookie, csrfGuard, rbac, fieldCrypto, encryptedFields plugin, fieldAccess, payment/PCI code, Mongoose schemas/indexes, order/return state transition tables",
+    "All schema migrations in server/src/migrations/* and all 17 test suites preserved"
+  ]
+}

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler';
 import { couponService } from '../services/coupon.service';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
 import { audit } from '../services/audit.service';
 import {
   CreateCouponSchema,

@@ -8,7 +8,8 @@ import {
 import { User } from '../models/User';
 import { Setting } from '../models/Setting';
 import { Request } from 'express';
-import { AppError } from '../middleware/error.middleware';
+import { AppError } from '../utils/AppError';
+import { logger } from '../utils/logger';
 import { audit } from './audit.service';
 import {
   POINT_VALUE,
@@ -317,7 +318,7 @@ export class WalletService {
         return doc.value;
       }
     } catch (err) {
-      console.error('Failed to load points_per_rupee setting from DB:', err);
+      logger.error({ err }, 'Failed to load points_per_rupee setting from DB');
     }
 
     this.cachedPointsPerRupee = REFUND_POINTS_PER_CURRENCY_UNIT;
