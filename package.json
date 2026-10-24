@@ -1,0 +1,39 @@
+{
+  "name": "shop-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "build": "npm run build:server && npm run build:client",
+    "build:client": "npm run build --workspace=client",
+    "build:server": "npm run build --workspace=server",
+    "lint": "npm run lint --workspace=server && npm run lint --workspace=client",
+    "lint:fix": "npm run lint:fix --workspace=server && npm run lint:fix --workspace=client",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.25.0",
+    "@rollup/rollup-linux-x64-gnu": "^4.62.4"
+  },
+  "overrides": {
+    "ip-address": "^10.7.4",
+    "proxy-addr": "^2.0.8",
+    "qs": "^6.16.1",
+    "source-map-js": "^1.2.2",
+    "esbuild": "^0.25.0",
+    "vite": {
+      "esbuild": "^0.25.0"
+    },
+    "tailwindcss": {
+      "postcss-selector-parser": "^7.1.6"
+    },
+    "postcss-nested": {
+      "postcss-selector-parser": "^7.1.6"
+    },
+    "brace-expansion": "^5.0.12"
+  }
+}

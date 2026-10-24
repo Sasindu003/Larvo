@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+uploads/
+.agents/
+larvo_backup/
+
+# Local data exports and backups (never commit)
+local-data.json
+local-data*.json
+server/.local/
+docs/*
